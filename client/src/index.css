@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap");
 
 @custom-variant dark (&:is(.dark *));
 
@@ -70,13 +71,51 @@
   --border: oklch(0.92 0.004 286.32);
   --input: oklch(0.92 0.004 286.32);
   --ring: oklch(0.623 0.214 259.815);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.235 0.015 65);
-  --sidebar-accent: oklch(0.967 0.001 286.375);
-  --sidebar-accent-foreground: oklch(0.141 0.005 285.823);
-  --sidebar-border: oklch(0.92 0.004 286.32);
-  --sidebar-ring: oklch(0.623 0.214 259.815);
+  --sidebar: oklch(0.13 0.02 255);
+  --sidebar-foreground: oklch(0.92 0.01 250);
+  --sidebar-accent: oklch(0.22 0.03 255);
+  --sidebar-accent-foreground: oklch(0.92 0.01 250);
+  --sidebar-border: oklch(0.22 0.02 255);
+  --sidebar-ring: oklch(0.52 0.19 260);
 }
+
+/* Stage badge colors */
+.stage-lead { @apply bg-slate-100 text-slate-700 border border-slate-200; }
+.stage-quoted { @apply bg-blue-50 text-blue-700 border border-blue-200; }
+.stage-scheduled { @apply bg-violet-50 text-violet-700 border border-violet-200; }
+.stage-in_progress { @apply bg-amber-50 text-amber-700 border border-amber-200; }
+.stage-completed { @apply bg-emerald-50 text-emerald-700 border border-emerald-200; }
+.stage-paid { @apply bg-green-50 text-green-700 border border-green-200; }
+
+/* Kanban column accent */
+.kanban-lead { border-top: 3px solid oklch(0.55 0.02 250); }
+.kanban-quoted { border-top: 3px solid oklch(0.52 0.19 260); }
+.kanban-scheduled { border-top: 3px solid oklch(0.52 0.22 295); }
+.kanban-in_progress { border-top: 3px solid oklch(0.72 0.18 65); }
+.kanban-completed { border-top: 3px solid oklch(0.55 0.16 160); }
+.kanban-paid { border-top: 3px solid oklch(0.52 0.18 145); }
+
+/* TipTap editor */
+.tiptap-editor .ProseMirror { @apply outline-none min-h-[200px] p-3; }
+.tiptap-editor .ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  @apply text-muted-foreground pointer-events-none float-left h-0;
+}
+.tiptap-editor .ProseMirror ul, .tiptap-editor .ProseMirror ol { @apply pl-6 my-2; }
+.tiptap-editor .ProseMirror ul { @apply list-disc; }
+.tiptap-editor .ProseMirror ol { @apply list-decimal; }
+.tiptap-editor .ProseMirror strong { @apply font-semibold; }
+.tiptap-editor .ProseMirror em { @apply italic; }
+.tiptap-editor .ProseMirror a { @apply text-primary underline; }
+.tiptap-editor .ProseMirror h1 { @apply text-2xl font-bold my-2; }
+.tiptap-editor .ProseMirror h2 { @apply text-xl font-bold my-2; }
+.tiptap-editor .ProseMirror h3 { @apply text-lg font-semibold my-2; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { @apply bg-border rounded-full; }
+::-webkit-scrollbar-thumb:hover { @apply bg-muted-foreground/30; }
 
 .dark {
   --primary: var(--color-blue-700);
@@ -118,7 +157,11 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
+    font-family: "Inter", sans-serif;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: "Plus Jakarta Sans", sans-serif;
   }
   button:not(:disabled),
   [role="button"]:not([aria-disabled="true"]),
