@@ -77,3 +77,13 @@
 - [x] Vitest tests for core routers (19 tests passing)
 - [x] Documentation page (Customer Guide + Admin Setup Guide)
 - [x] Final checkpoint
+
+## Phase 12: Environment Variable Audit & Centralization
+- [x] Audit all hardcoded URLs and credentials in frontend and backend
+- [x] Create client/src/config.ts as single source of truth for all frontend env vars
+- [x] Replace all import.meta.env references in frontend with config.ts imports
+- [x] Audit backend for hardcoded URLs/credentials and ensure process.env usage via ENV object
+- [x] Add STRIPE_SECRET_KEY, TWILIO_*, APP_URL to server/_core/env.ts ENV object
+- [x] Update stripe router to use ENV.stripeSecretKey instead of direct process.env
+- [x] Create env.example listing every required environment variable
+- [x] Run tests and save checkpoint

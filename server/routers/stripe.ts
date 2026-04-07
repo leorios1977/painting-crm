@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { protectedProcedure, router } from "../_core/trpc";
 import { getLeadById, updateLead, createCommunicationLogEntry } from "../db";
+import { ENV } from "../_core/env";
 
 export const stripeRouter = router({
   createPaymentLink: protectedProcedure
@@ -15,7 +16,7 @@ export const stripeRouter = router({
       const lead = await getLeadById(input.leadId);
       if (!lead) throw new Error("Lead not found");
 
-      const stripeKey = process.env.STRIPE_SECRET_KEY;
+      const stripeKey = ENV.stripeSecretKey || undefined;
       if (!stripeKey) {
         // Return mock link when Stripe is not configured
         const mockUrl = `https://buy.stripe.com/test_mock_${input.leadId}_${Date.now()}`;
