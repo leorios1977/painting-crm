@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/sidebar";
 import { getLoginUrl } from "@/const";
 import { useIsMobile } from "@/hooks/useMobile";
+import { useBranding } from "@/contexts/BrandingContext";
 import { BarChart3, BookOpen, CalendarDays, LayoutDashboard, LogOut, Mail, MessageSquare, PanelLeft, Receipt, Settings, Users } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
@@ -114,6 +115,7 @@ function DashboardLayoutContent({
   setSidebarWidth,
 }: DashboardLayoutContentProps) {
   const { user, logout } = useAuth();
+  const { branding } = useBranding();
   const [location, setLocation] = useLocation();
   const { state, toggleSidebar } = useSidebar();
   const isCollapsed = state === "collapsed";
@@ -121,6 +123,11 @@ function DashboardLayoutContent({
   const sidebarRef = useRef<HTMLDivElement>(null);
   const activeMenuItem = menuItems.find(item => item.path === location || (item.path !== '/' && location.startsWith(item.path)));
   const isMobile = useIsMobile();
+
+  // Apply primary color as CSS variable on the sidebar element
+  const sidebarStyle: CSSProperties = branding.primaryColor
+    ? { "--sidebar-background": branding.primaryColor } as CSSProperties
+    : {};
 
   useEffect(() => {
     if (isCollapsed) {
@@ -177,11 +184,24 @@ function DashboardLayoutContent({
               </button>
               {!isCollapsed ? (
                 <div className="flex items-center gap-2 min-w-0">
-                  <div className="h-7 w-7 rounded-lg bg-primary flex items-center justify-center shrink-0">
-                    <span className="text-white text-xs font-bold">P</span>
-                  </div>
+                  {branding.logoUrl ? (
+                    <img
+                      src={branding.logoUrl}
+                      alt={branding.businessName}
+                      className="h-7 w-7 rounded-lg object-cover shrink-0"
+                    />
+                  ) : (
+                    <div
+                      className="h-7 w-7 rounded-lg flex items-center justify-center shrink-0"
+                      style={{ backgroundColor: branding.primaryColor }}
+                    >
+                      <span className="text-white text-xs font-bold">
+                        {branding.businessName.charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                  )}
                   <span className="font-semibold tracking-tight truncate text-sidebar-foreground">
-                    PaintPro CRM
+                    {branding.businessName}
                   </span>
                 </div>
               ) : null}

@@ -162,3 +162,15 @@
 - [x] Add lead.id to PortalData type so CustomerPortal can load photos by leadId
 - [x] Write Vitest tests for photos router (8 tests)
 - [x] Save checkpoint
+
+## Phase 19: White-Label Branding
+- [x] Add businessName, logoUrl, logoKey, primaryColor, secondaryColor to app_settings schema
+- [x] Generate and apply migration for branding columns
+- [x] Add getBranding() public procedure to settings router
+- [x] Add uploadLogo() and removeLogo() procedures to settings router (S3 upload)
+- [x] Create client/src/contexts/BrandingContext.tsx (load on startup, expose globally, update <title>)
+- [x] Wrap App.tsx with BrandingProvider
+- [x] Update DashboardLayout.tsx to use branding (name, logo, primaryColor)
+- [x] Update Settings.tsx with Branding section (name, logo upload, color pickers)
+- [x] Write Vitest tests for branding procedures (6 tests)
+- [x] Save checkpoint

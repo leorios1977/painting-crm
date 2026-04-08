@@ -176,6 +176,17 @@ export const appSettings = mysqlTable("app_settings", {
   googleReviewLink: text("googleReviewLink"),
   /** When true, automatically send a review request SMS when a lead is moved to 'completed' */
   autoReviewEnabled: boolean("autoReviewEnabled").default(false).notNull(),
+  // ─── White-label branding ───────────────────────────────────────────────────
+  /** Business display name shown in sidebar and browser tab */
+  businessName: varchar("businessName", { length: 200 }),
+  /** S3/CDN URL of the uploaded business logo */
+  logoUrl: text("logoUrl"),
+  /** S3 key for the logo file (used for deletion) */
+  logoKey: varchar("logoKey", { length: 500 }),
+  /** Primary brand color as a hex string, e.g. '#1e40af' */
+  primaryColor: varchar("primaryColor", { length: 20 }),
+  /** Secondary brand color as a hex string */
+  secondaryColor: varchar("secondaryColor", { length: 20 }),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
 
