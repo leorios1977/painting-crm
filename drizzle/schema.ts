@@ -63,6 +63,9 @@ export const leads = mysqlTable("leads", {
   paidAt: timestamp("paidAt"),
   // Google Calendar
   calendarEventId: varchar("calendarEventId", { length: 200 }),
+  // Customer Portal
+  portalToken: varchar("portalToken", { length: 64 }).unique(),
+  portalPhotos: json("portalPhotos").$type<{ url: string; caption: string; type: "before" | "after" | "progress" }[]>(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   createdBy: int("createdBy"),

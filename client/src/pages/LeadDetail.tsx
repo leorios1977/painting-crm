@@ -32,6 +32,7 @@ import {
   Edit,
   ExternalLink,
   FileText,
+  Link2,
   Mail,
   MessageSquare,
   Paperclip,
@@ -65,6 +66,20 @@ export default function LeadDetail() {
   const [invTaxRate, setInvTaxRate] = useState(0);
   const [invDueDate, setInvDueDate] = useState("");
   const [invNotes, setInvNotes] = useState("");
+
+  // ── Portal state ──────────────────────────────────────────────────────────
+  const [portalCopied, setPortalCopied] = useState(false);
+
+  const generatePortalToken = trpc.portal.generateToken.useMutation({
+    onSuccess: (data) => {
+      navigator.clipboard.writeText(data.url).then(() => {
+        setPortalCopied(true);
+        toast.success("Portal link copied to clipboard!");
+        setTimeout(() => setPortalCopied(false), 3000);
+      });
+    },
+    onError: (e) => toast.error(`Portal error: ${e.message}`),
+  });
 
   // ── Book Appointment modal state ──────────────────────────────────────────
   const [bookingOpen, setBookingOpen] = useState(false);
@@ -301,6 +316,22 @@ export default function LeadDetail() {
           >
             <Receipt className="h-4 w-4 mr-2" />
             Create Invoice
+          </Button>
+
+          {/* Copy Portal Link */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() =>
+              generatePortalToken.mutate({
+                leadId: id,
+                origin: window.location.origin,
+              })
+            }
+            disabled={generatePortalToken.isPending}
+          >
+            <Link2 className="h-4 w-4 mr-2" />
+            {portalCopied ? "Copied!" : "Copy Portal Link"}
           </Button>
         </div>
       </div>

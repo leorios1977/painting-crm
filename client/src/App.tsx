@@ -15,10 +15,16 @@ import Docs from "./pages/Docs";
 import Settings from "./pages/Settings";
 import Schedule from "./pages/Schedule";
 import Invoices from "./pages/Invoices";
+import CustomerPortal from "./pages/CustomerPortal";
 
 function Router() {
   return (
-    <DashboardLayout>
+    <Switch>
+      {/* Public portal route — no auth, no sidebar */}
+      <Route path="/portal/:token" component={CustomerPortal} />
+      {/* Admin dashboard routes */}
+      <Route>
+        <DashboardLayout>
       <Switch>
         <Route path="/" component={Dashboard} />
         <Route path="/pipeline" component={Pipeline} />
@@ -31,9 +37,11 @@ function Router() {
         <Route path="/docs" component={Docs} />
         <Route path="/settings" component={Settings} />
         <Route path="/404" component={NotFound} />
-        <Route component={NotFound} />
-      </Switch>
-    </DashboardLayout>
+          <Route component={NotFound} />
+        </Switch>
+      </DashboardLayout>
+      </Route>
+    </Switch>
   );
 }
 

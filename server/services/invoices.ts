@@ -15,6 +15,7 @@ import { invoices, leads, communicationLog } from "../../drizzle/schema";
 import { eq, desc } from "drizzle-orm";
 import { ENV } from "../_core/env";
 import { sendSMS } from "./sms";
+import { generatePortalToken, buildPortalUrl } from "./portal";
 import type { Invoice, InsertInvoice, InvoiceLineItem } from "../../drizzle/schema";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -239,9 +240,19 @@ export async function sendInvoice(
 
   if (input.sendSmsToCustomer !== false && lead.phone) {
     try {
+      // Generate (or retrieve) the portal token so we can include the portal link
+      let portalUrl = "";
+      try {
+        const portalToken = await generatePortalToken(lead.id);
+        portalUrl = buildPortalUrl(portalToken, ENV.appUrl ?? "");
+      } catch (e) {
+        console.warn("[Invoices] Could not generate portal token for SMS:", (e as Error).message);
+      }
+
       const smsBody =
         `Hi ${lead.firstName}! Your invoice ${invoice.invoiceNumber} for $${totalAmount.toFixed(2)} is ready. ` +
         `Pay securely here: ${stripeUrl}` +
+        (portalUrl ? ` | View your project portal: ${portalUrl}` : "") +
         (isMock ? " (test link)" : "");
 
       const smsResult = await sendSMS(smsBody, lead.phone, invoice.leadId);

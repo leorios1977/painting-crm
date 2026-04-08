@@ -1,0 +1,497 @@
+/**
+ * CustomerPortal.tsx — Public customer-facing project portal
+ *
+ * Accessible at /portal/:token — no login required.
+ * Shows:
+ *   - Company branding header
+ *   - Project details and current status
+ *   - Progress tracker (Scheduled → In Progress → Complete)
+ *   - Appointment date/time card
+ *   - Invoice with line items and Stripe payment button
+ *   - Before/After/Progress photo gallery
+ */
+
+import { trpc } from "@/lib/trpc";
+import { useParams } from "wouter";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import {
+  CalendarDays,
+  CheckCircle2,
+  Circle,
+  Clock,
+  CreditCard,
+  ExternalLink,
+  Home,
+  ImageIcon,
+  Loader2,
+  MapPin,
+  Paintbrush,
+  Phone,
+  User,
+  Wrench,
+} from "lucide-react";
+
+// ─── Stage progress config ────────────────────────────────────────────────────
+
+const PROGRESS_STAGES = [
+  { key: "lead", label: "Inquiry Received", icon: User },
+  { key: "quoted", label: "Quote Sent", icon: Paintbrush },
+  { key: "scheduled", label: "Job Scheduled", icon: CalendarDays },
+  { key: "in_progress", label: "Work In Progress", icon: Wrench },
+  { key: "completed", label: "Job Complete", icon: CheckCircle2 },
+  { key: "paid", label: "Payment Received", icon: CreditCard },
+];
+
+const STAGE_ORDER = ["lead", "quoted", "scheduled", "in_progress", "completed", "paid"];
+
+function getStageIndex(stage: string) {
+  return STAGE_ORDER.indexOf(stage);
+}
+
+// ─── Sub-components ───────────────────────────────────────────────────────────
+
+function ProgressTracker({ stage }: { stage: string }) {
+  const currentIdx = getStageIndex(stage);
+
+  return (
+    <div className="w-full">
+      <div className="flex items-start justify-between gap-1 overflow-x-auto pb-2">
+        {PROGRESS_STAGES.map((s, idx) => {
+          const isDone = idx < currentIdx;
+          const isCurrent = idx === currentIdx;
+          const Icon = s.icon;
+
+          return (
+            <div key={s.key} className="flex flex-col items-center gap-2 flex-1 min-w-[60px]">
+              {/* Connector line + icon row */}
+              <div className="flex items-center w-full">
+                {idx > 0 && (
+                  <div
+                    className={`h-0.5 flex-1 transition-colors ${
+                      isDone || isCurrent ? "bg-blue-600" : "bg-slate-200"
+                    }`}
+                  />
+                )}
+                <div
+                  className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-all ${
+                    isDone
+                      ? "bg-blue-600 text-white"
+                      : isCurrent
+                      ? "bg-blue-600 text-white ring-4 ring-blue-100"
+                      : "bg-slate-100 text-slate-400"
+                  }`}
+                >
+                  {isDone ? (
+                    <CheckCircle2 className="w-4 h-4" />
+                  ) : isCurrent ? (
+                    <Icon className="w-4 h-4" />
+                  ) : (
+                    <Circle className="w-4 h-4" />
+                  )}
+                </div>
+                {idx < PROGRESS_STAGES.length - 1 && (
+                  <div
+                    className={`h-0.5 flex-1 transition-colors ${
+                      isDone ? "bg-blue-600" : "bg-slate-200"
+                    }`}
+                  />
+                )}
+              </div>
+              {/* Label */}
+              <span
+                className={`text-[10px] text-center leading-tight ${
+                  isCurrent
+                    ? "text-blue-700 font-semibold"
+                    : isDone
+                    ? "text-slate-600"
+                    : "text-slate-400"
+                }`}
+              >
+                {s.label}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function InvoiceSection({
+  invoice,
+}: {
+  invoice: {
+    invoiceNumber: string;
+    lineItems: unknown;
+    subtotal: string;
+    tax: string;
+    total: string;
+    status: string;
+    dueDate: Date | null;
+    paidAt: Date | null;
+    stripePaymentLink: string | null;
+  };
+}) {
+  const lineItems = (invoice.lineItems as { description: string; quantity: number; unitPrice: number }[]) ?? [];
+
+  const statusColor =
+    invoice.status === "paid"
+      ? "bg-green-100 text-green-700"
+      : invoice.status === "overdue"
+      ? "bg-red-100 text-red-700"
+      : invoice.status === "sent"
+      ? "bg-blue-100 text-blue-700"
+      : "bg-slate-100 text-slate-600";
+
+  return (
+    <Card>
+      <CardHeader className="pb-3">
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-base flex items-center gap-2">
+            <CreditCard className="w-4 h-4 text-blue-600" />
+            Invoice {invoice.invoiceNumber}
+          </CardTitle>
+          <Badge className={`text-xs font-medium ${statusColor}`}>
+            {invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1)}
+          </Badge>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {/* Line items */}
+        {lineItems.length > 0 && (
+          <div className="space-y-2">
+            <div className="grid grid-cols-12 text-xs text-slate-500 font-medium pb-1 border-b">
+              <span className="col-span-6">Description</span>
+              <span className="col-span-2 text-right">Qty</span>
+              <span className="col-span-2 text-right">Unit Price</span>
+              <span className="col-span-2 text-right">Total</span>
+            </div>
+            {lineItems.map((item, i) => (
+              <div key={i} className="grid grid-cols-12 text-sm">
+                <span className="col-span-6 text-slate-700">{item.description}</span>
+                <span className="col-span-2 text-right text-slate-600">{item.quantity}</span>
+                <span className="col-span-2 text-right text-slate-600">
+                  ${Number(item.unitPrice).toFixed(2)}
+                </span>
+                <span className="col-span-2 text-right font-medium">
+                  ${(item.quantity * item.unitPrice).toFixed(2)}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Totals */}
+        <div className="space-y-1 pt-2 border-t">
+          <div className="flex justify-between text-sm text-slate-600">
+            <span>Subtotal</span>
+            <span>${Number(invoice.subtotal).toFixed(2)}</span>
+          </div>
+          <div className="flex justify-between text-sm text-slate-600">
+            <span>Tax</span>
+            <span>${Number(invoice.tax).toFixed(2)}</span>
+          </div>
+          <div className="flex justify-between text-base font-bold text-slate-900 pt-1 border-t">
+            <span>Total</span>
+            <span>${Number(invoice.total).toFixed(2)}</span>
+          </div>
+        </div>
+
+        {/* Due date / paid date */}
+        {invoice.paidAt ? (
+          <div className="flex items-center gap-2 text-sm text-green-700 bg-green-50 rounded-lg px-3 py-2">
+            <CheckCircle2 className="w-4 h-4" />
+            Paid on {new Date(invoice.paidAt).toLocaleDateString()}
+          </div>
+        ) : invoice.dueDate ? (
+          <div className="flex items-center gap-2 text-sm text-slate-600">
+            <Clock className="w-4 h-4" />
+            Due by {new Date(invoice.dueDate).toLocaleDateString()}
+          </div>
+        ) : null}
+
+        {/* Stripe payment button */}
+        {invoice.status !== "paid" && invoice.stripePaymentLink && (
+          <Button
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+            onClick={() => window.open(invoice.stripePaymentLink!, "_blank")}
+          >
+            <CreditCard className="w-4 h-4 mr-2" />
+            Pay Now
+            <ExternalLink className="w-3 h-3 ml-2" />
+          </Button>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function PhotoGallery({ photos }: { photos: { url: string; caption: string; type: "before" | "after" | "progress" }[] }) {
+  if (photos.length === 0) return null;
+
+  const before = photos.filter((p) => p.type === "before");
+  const after = photos.filter((p) => p.type === "after");
+  const progress = photos.filter((p) => p.type === "progress");
+
+  const Section = ({
+    title,
+    items,
+    color,
+  }: {
+    title: string;
+    items: typeof photos;
+    color: string;
+  }) => {
+    if (items.length === 0) return null;
+    return (
+      <div>
+        <h4 className={`text-sm font-semibold mb-2 ${color}`}>{title}</h4>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+          {items.map((p, i) => (
+            <div key={i} className="group relative rounded-lg overflow-hidden aspect-square bg-slate-100">
+              <img
+                src={p.url}
+                alt={p.caption || title}
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src =
+                    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect width='100' height='100' fill='%23e2e8f0'/%3E%3Ctext x='50' y='55' text-anchor='middle' fill='%2394a3b8' font-size='12'%3EPhoto%3C/text%3E%3C/svg%3E";
+                }}
+              />
+              {p.caption && (
+                <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-xs px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  {p.caption}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <Card>
+      <CardHeader className="pb-3">
+        <CardTitle className="text-base flex items-center gap-2">
+          <ImageIcon className="w-4 h-4 text-blue-600" />
+          Project Photos
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <Section title="Before" items={before} color="text-orange-600" />
+        <Section title="In Progress" items={progress} color="text-blue-600" />
+        <Section title="After" items={after} color="text-green-600" />
+      </CardContent>
+    </Card>
+  );
+}
+
+// ─── Main page ────────────────────────────────────────────────────────────────
+
+export default function CustomerPortal() {
+  const params = useParams<{ token: string }>();
+  const token = params.token ?? "";
+
+  const { data, isLoading, error } = trpc.portal.getData.useQuery(
+    { token },
+    { enabled: !!token, retry: false }
+  );
+
+  // ── Loading ──
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3 text-slate-500">
+          <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+          <p className="text-sm">Loading your project portal…</p>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Invalid token ──
+  if (error || !data) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+        <div className="text-center max-w-sm">
+          <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Home className="w-8 h-8 text-slate-400" />
+          </div>
+          <h1 className="text-xl font-semibold text-slate-800 mb-2">Portal Not Found</h1>
+          <p className="text-slate-500 text-sm">
+            This portal link may have expired or is invalid. Please contact your painting contractor for a new link.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  const { lead, invoice, appointment } = data;
+  const fullName = `${lead.firstName} ${lead.lastName}`;
+
+  // ── Stage label ──
+  const stageLabel =
+    PROGRESS_STAGES.find((s) => s.key === lead.stage)?.label ?? lead.stage;
+
+  return (
+    <div className="min-h-screen bg-slate-50">
+      {/* Header */}
+      <header className="bg-white border-b border-slate-200 sticky top-0 z-10">
+        <div className="max-w-2xl mx-auto px-4 py-4 flex items-center gap-3">
+          <div className="w-9 h-9 rounded-lg bg-blue-600 flex items-center justify-center shrink-0">
+            <Paintbrush className="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <h1 className="font-semibold text-slate-900 text-sm leading-tight">
+              Your Project Portal
+            </h1>
+            <p className="text-xs text-slate-500">Powered by PaintPro CRM</p>
+          </div>
+        </div>
+      </header>
+
+      <main className="max-w-2xl mx-auto px-4 py-6 space-y-5">
+        {/* Welcome card */}
+        <Card className="border-blue-100 bg-gradient-to-br from-blue-50 to-white">
+          <CardContent className="pt-5">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-sm text-slate-500 mb-0.5">Hello,</p>
+                <h2 className="text-xl font-bold text-slate-900">{fullName}</h2>
+                {lead.projectType && (
+                  <p className="text-sm text-slate-600 mt-1 flex items-center gap-1.5">
+                    <Paintbrush className="w-3.5 h-3.5 text-blue-500" />
+                    {lead.projectType}
+                  </p>
+                )}
+                {lead.projectAddress && (
+                  <p className="text-sm text-slate-500 mt-0.5 flex items-center gap-1.5">
+                    <MapPin className="w-3.5 h-3.5" />
+                    {lead.projectAddress}
+                  </p>
+                )}
+              </div>
+              <Badge className="bg-blue-600 text-white text-xs shrink-0">{stageLabel}</Badge>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Progress tracker */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 text-blue-600" />
+              Project Progress
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ProgressTracker stage={lead.stage} />
+          </CardContent>
+        </Card>
+
+        {/* Appointment card */}
+        {appointment && (
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <CalendarDays className="w-4 h-4 text-blue-600" />
+                Your Appointment
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex items-center gap-3 bg-blue-50 rounded-lg px-4 py-3">
+                <CalendarDays className="w-5 h-5 text-blue-600 shrink-0" />
+                <div>
+                  <p className="font-semibold text-slate-900">
+                    {new Date(appointment.scheduledDate).toLocaleDateString("en-US", {
+                      weekday: "long",
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    })}
+                  </p>
+                  {appointment.timeSlot && (
+                    <p className="text-sm text-slate-600 flex items-center gap-1 mt-0.5">
+                      <Clock className="w-3.5 h-3.5" />
+                      {appointment.timeSlot}
+                    </p>
+                  )}
+                </div>
+              </div>
+              {appointment.jobType && (
+                <div className="flex items-center gap-2 text-sm text-slate-600">
+                  <Wrench className="w-4 h-4 text-slate-400" />
+                  <span>{appointment.jobType}</span>
+                </div>
+              )}
+              {appointment.crewAssigned && (
+                <div className="flex items-center gap-2 text-sm text-slate-600">
+                  <User className="w-4 h-4 text-slate-400" />
+                  <span>Crew: {appointment.crewAssigned}</span>
+                </div>
+              )}
+              {appointment.notes && (
+                <div className="text-sm text-slate-600 bg-slate-50 rounded-lg px-3 py-2">
+                  {appointment.notes}
+                </div>
+              )}
+              <div className="flex items-center gap-2">
+                <Badge
+                  className={
+                    appointment.status === "confirmed"
+                      ? "bg-green-100 text-green-700"
+                      : appointment.status === "completed"
+                      ? "bg-blue-100 text-blue-700"
+                      : appointment.status === "cancelled"
+                      ? "bg-red-100 text-red-700"
+                      : "bg-yellow-100 text-yellow-700"
+                  }
+                >
+                  {appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)}
+                </Badge>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Invoice */}
+        {invoice && <InvoiceSection invoice={invoice} />}
+
+        {/* Photo gallery */}
+        {lead.portalPhotos && lead.portalPhotos.length > 0 && (
+          <PhotoGallery photos={lead.portalPhotos} />
+        )}
+
+        {/* Project description */}
+        {lead.projectDescription && (
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <Paintbrush className="w-4 h-4 text-blue-600" />
+                Project Details
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-slate-600 leading-relaxed">{lead.projectDescription}</p>
+            </CardContent>
+          </Card>
+        )}
+
+        <Separator />
+
+        {/* Footer */}
+        <div className="text-center text-xs text-slate-400 pb-6 space-y-1">
+          <p>Have questions? Contact your painting contractor directly.</p>
+          <p className="flex items-center justify-center gap-1">
+            <Phone className="w-3 h-3" />
+            Powered by PaintPro CRM
+          </p>
+        </div>
+      </main>
+    </div>
+  );
+}

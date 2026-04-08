@@ -11,6 +11,7 @@ import { settingsRouter } from "./routers/settings";
 import { smsRouter } from "./routers/sms";
 import { appointmentsRouter } from "./routers/appointments";
 import { invoicesRouter } from "./routers/invoices";
+import { portalRouter } from "./routers/portal";
 import { seedDefaultTemplates } from "./db";
 
 // Seed default templates on startup
@@ -37,6 +38,7 @@ export const appRouter = router({
   sms: smsRouter,
   appointments: appointmentsRouter,
   invoices: invoicesRouter,
+  portal: portalRouter,
 });
 
 export type AppRouter = typeof appRouter;

@@ -125,3 +125,16 @@
 - [x] SMS delivery of payment link on send
 - [x] Write Vitest tests for invoices router (6 tests)
 - [x] Save checkpoint
+
+## Phase 16: Customer-Facing Portal
+- [x] Add portal_token and portal_photos columns to leads table in schema.ts
+- [x] Generate and apply migration for portal columns
+- [x] Create server/services/portal.ts (generatePortalToken, buildPortalUrl, getPortalData, addPortalPhoto, removePortalPhoto)
+- [x] Create server/routers/portal.ts public tRPC router
+- [x] Register portal router in server/routers.ts
+- [x] Build client/src/pages/CustomerPortal.tsx (progress tracker, invoice, appointment, photo gallery)
+- [x] Register /portal/:token route in App.tsx outside DashboardLayout
+- [x] Update invoices.ts to include portal link in SMS on send
+- [x] Add Copy Portal Link button to LeadDetail.tsx
+- [x] Write Vitest tests for portal router (8 tests)
+- [x] Save checkpoint
