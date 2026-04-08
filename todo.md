@@ -142,11 +142,11 @@
 ## Phase 17: Google Review Request Automation
 - [x] Add google_review_link and auto_review_enabled columns to app_settings table
 - [x] Generate and apply migration for review columns
-- [x] Create server/services/reviews.ts with sendReviewRequest(leadId) and scheduleReviewRequest()
+- [x] Create server/services/reviews.ts with sendReviewRequest(leadId) + scheduleReviewRequest()
 - [x] Create server/routers/reviews.ts tRPC router (send, status)
 - [x] Register reviews router in server/routers.ts
 - [x] Wire auto-trigger in leads router on stage move to 'completed' (2-hour delay)
-- [x] Update Settings.tsx: Google Review Link field + Auto-request toggle with Switch
-- [x] Add Request Review button to LeadDetail.tsx
+- [x] Settings.tsx: Google Review Link field + Auto-request toggle already implemented
+- [x] Request Review button already in LeadDetail.tsx (trpc.reviews.send)
 - [x] Write Vitest tests for reviews router (7 tests)
 - [x] Save checkpoint
