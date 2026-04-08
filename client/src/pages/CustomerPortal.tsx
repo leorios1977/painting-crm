@@ -301,6 +301,12 @@ export default function CustomerPortal() {
     { enabled: !!token, retry: false }
   );
 
+  // Load job_photos from the new photos router (public endpoint)
+  const { data: jobPhotos } = trpc.photos.byLeadPublic.useQuery(
+    { leadId: data?.lead?.id ?? 0, token },
+    { enabled: !!data?.lead?.id }
+  );
+
   // ── Loading ──
   if (isLoading) {
     return (
@@ -461,10 +467,23 @@ export default function CustomerPortal() {
         {/* Invoice */}
         {invoice && <InvoiceSection invoice={invoice} />}
 
-        {/* Photo gallery */}
-        {lead.portalPhotos && lead.portalPhotos.length > 0 && (
-          <PhotoGallery photos={lead.portalPhotos} />
-        )}
+        {/* Photo gallery — combines legacy portal photos with new job_photos */}
+        {(() => {
+          // Merge legacy portalPhotos (stored on lead) with new job_photos
+          const legacyPhotos = (lead.portalPhotos ?? []) as { url: string; caption: string; type: "before" | "after" | "progress" }[];
+          const newBefore = (jobPhotos?.before ?? []).map((p) => ({
+            url: p.photoUrl,
+            caption: p.caption ?? "",
+            type: "before" as const,
+          }));
+          const newAfter = (jobPhotos?.after ?? []).map((p) => ({
+            url: p.photoUrl,
+            caption: p.caption ?? "",
+            type: "after" as const,
+          }));
+          const allPhotos = [...legacyPhotos, ...newBefore, ...newAfter];
+          return allPhotos.length > 0 ? <PhotoGallery photos={allPhotos} /> : null;
+        })()}
 
         {/* Project description */}
         {lead.projectDescription && (

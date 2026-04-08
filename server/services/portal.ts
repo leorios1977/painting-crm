@@ -24,6 +24,7 @@ export type PortalPhoto = {
 
 export type PortalData = {
   lead: {
+    id: number;
     firstName: string;
     lastName: string;
     projectType: string | null;
@@ -146,6 +147,7 @@ export async function getPortalData(token: string): Promise<PortalData | null> {
 
   return {
     lead: {
+      id: lead.id,
       firstName: lead.firstName,
       lastName: lead.lastName,
       projectType: lead.projectType,

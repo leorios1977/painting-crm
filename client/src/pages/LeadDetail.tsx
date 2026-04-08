@@ -27,11 +27,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {
   ArrowLeft,
   CalendarDays,
+  Camera,
   CheckCircle,
   DollarSign,
   Edit,
   ExternalLink,
   FileText,
+  ImageIcon,
   Link2,
   Mail,
   MessageSquare,
@@ -43,10 +45,11 @@ import {
   Send,
   Star,
   Trash2,
+  Upload,
   User,
   X,
 } from "lucide-react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useLocation, useParams } from "wouter";
 import { toast } from "sonner";
 
@@ -206,6 +209,70 @@ export default function LeadDetail() {
       toast.success("File deleted");
     },
   });
+
+  // ── Photos state, query, and mutations ──────────────────────────────────
+  const [photosUploading, setPhotosUploading] = useState<Record<string, boolean>>({});
+  const beforeInputRef = useRef<HTMLInputElement>(null);
+  const afterInputRef = useRef<HTMLInputElement>(null);
+
+  const { data: photos, refetch: refetchPhotos } = trpc.photos.byLead.useQuery({ leadId: id });
+
+  const uploadPhoto = trpc.photos.upload.useMutation({
+    onSuccess: () => {
+      refetchPhotos();
+      toast.success("Photo uploaded");
+    },
+    onError: (e) => toast.error(`Upload failed: ${e.message}`),
+  });
+
+  const deletePhoto = trpc.photos.delete.useMutation({
+    onSuccess: () => {
+      refetchPhotos();
+      toast.success("Photo deleted");
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
+  async function handlePhotoUpload(e: React.ChangeEvent<HTMLInputElement>, type: "before" | "after") {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+    for (const file of files) {
+      if (file.size > 10 * 1024 * 1024) {
+        toast.error(`${file.name} is too large (max 10 MB)`);
+        continue;
+      }
+      const key = `${type}-${file.name}`;
+      setPhotosUploading((prev) => ({ ...prev, [key]: true }));
+      try {
+        const base64Data = await fileToBase64(file);
+        await uploadPhoto.mutateAsync({
+          leadId: id,
+          type,
+          base64Data,
+          mimeType: file.type || "image/jpeg",
+          originalName: file.name,
+        });
+      } finally {
+        setPhotosUploading((prev) => { const n = { ...prev }; delete n[key]; return n; });
+        // Reset input so same file can be re-uploaded
+        if (type === "before" && beforeInputRef.current) beforeInputRef.current.value = "";
+        if (type === "after" && afterInputRef.current) afterInputRef.current.value = "";
+      }
+    }
+  }
+
+  function fileToBase64(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const result = reader.result as string;
+        // Strip the data URI prefix (data:image/jpeg;base64,)
+        resolve(result.split(",")[1] || "");
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
 
   // ── Google Review request ─────────────────────────────────────────────────
   const sendReviewRequest = trpc.reviews.send.useMutation({
@@ -453,6 +520,10 @@ export default function LeadDetail() {
                 <Paperclip className="h-4 w-4 mr-2" />
                 Files ({attachments?.length || 0})
               </TabsTrigger>
+              <TabsTrigger value="photos" className="flex-1">
+                <Camera className="h-4 w-4 mr-2" />
+                Photos ({(photos?.before?.length || 0) + (photos?.after?.length || 0)})
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="activity" className="mt-4 space-y-4">
@@ -679,6 +750,147 @@ export default function LeadDetail() {
                     </div>
                   </div>
                 ))}
+              </div>
+            </TabsContent>
+
+            {/* ── Photos Tab ─────────────────────────────────────────────────── */}
+            <TabsContent value="photos" className="mt-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                {/* Before Section */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-sm font-semibold flex items-center gap-2">
+                      <span className="inline-block w-2.5 h-2.5 rounded-full bg-amber-400" />
+                      Before ({photos?.before?.length || 0})
+                    </h3>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => beforeInputRef.current?.click()}
+                      disabled={Object.keys(photosUploading).some((k) => k.startsWith("before"))}
+                    >
+                      <Upload className="h-3.5 w-3.5 mr-1.5" />
+                      Upload
+                    </Button>
+                    <input
+                      ref={beforeInputRef}
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      className="hidden"
+                      onChange={(e) => handlePhotoUpload(e, "before")}
+                    />
+                  </div>
+
+                  {/* Upload drop zone */}
+                  <button
+                    type="button"
+                    className="w-full border-2 border-dashed border-amber-200 rounded-xl p-5 text-center hover:border-amber-400 hover:bg-amber-50/50 transition-colors cursor-pointer"
+                    onClick={() => beforeInputRef.current?.click()}
+                  >
+                    <ImageIcon className="h-7 w-7 mx-auto mb-1.5 text-amber-300" />
+                    <p className="text-xs text-muted-foreground">Tap to upload before photos</p>
+                    <p className="text-xs text-muted-foreground/60 mt-0.5">JPG, PNG, WEBP · max 10 MB each</p>
+                  </button>
+
+                  {/* Thumbnail grid */}
+                  {photos?.before && photos.before.length > 0 && (
+                    <div className="grid grid-cols-2 gap-2">
+                      {photos.before.map((photo) => (
+                        <div key={photo.id} className="relative group rounded-lg overflow-hidden border aspect-square bg-muted">
+                          <img
+                            src={photo.photoUrl}
+                            alt={photo.caption || "Before photo"}
+                            className="w-full h-full object-cover"
+                          />
+                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-start justify-end p-1.5">
+                            <button
+                              type="button"
+                              className="opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 hover:bg-red-50 text-red-600 rounded-full p-1 shadow"
+                              onClick={() => deletePhoto.mutate({ photoId: photo.id })}
+                              title="Delete photo"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                          {photo.caption && (
+                            <div className="absolute bottom-0 left-0 right-0 bg-black/50 px-2 py-1">
+                              <p className="text-white text-xs truncate">{photo.caption}</p>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* After Section */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-sm font-semibold flex items-center gap-2">
+                      <span className="inline-block w-2.5 h-2.5 rounded-full bg-emerald-500" />
+                      After ({photos?.after?.length || 0})
+                    </h3>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => afterInputRef.current?.click()}
+                      disabled={Object.keys(photosUploading).some((k) => k.startsWith("after"))}
+                    >
+                      <Upload className="h-3.5 w-3.5 mr-1.5" />
+                      Upload
+                    </Button>
+                    <input
+                      ref={afterInputRef}
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      className="hidden"
+                      onChange={(e) => handlePhotoUpload(e, "after")}
+                    />
+                  </div>
+
+                  {/* Upload drop zone */}
+                  <button
+                    type="button"
+                    className="w-full border-2 border-dashed border-emerald-200 rounded-xl p-5 text-center hover:border-emerald-400 hover:bg-emerald-50/50 transition-colors cursor-pointer"
+                    onClick={() => afterInputRef.current?.click()}
+                  >
+                    <ImageIcon className="h-7 w-7 mx-auto mb-1.5 text-emerald-300" />
+                    <p className="text-xs text-muted-foreground">Tap to upload after photos</p>
+                    <p className="text-xs text-muted-foreground/60 mt-0.5">JPG, PNG, WEBP · max 10 MB each</p>
+                  </button>
+
+                  {/* Thumbnail grid */}
+                  {photos?.after && photos.after.length > 0 && (
+                    <div className="grid grid-cols-2 gap-2">
+                      {photos.after.map((photo) => (
+                        <div key={photo.id} className="relative group rounded-lg overflow-hidden border aspect-square bg-muted">
+                          <img
+                            src={photo.photoUrl}
+                            alt={photo.caption || "After photo"}
+                            className="w-full h-full object-cover"
+                          />
+                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-start justify-end p-1.5">
+                            <button
+                              type="button"
+                              className="opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 hover:bg-red-50 text-red-600 rounded-full p-1 shadow"
+                              onClick={() => deletePhoto.mutate({ photoId: photo.id })}
+                              title="Delete photo"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                          {photo.caption && (
+                            <div className="absolute bottom-0 left-0 right-0 bg-black/50 px-2 py-1">
+                              <p className="text-white text-xs truncate">{photo.caption}</p>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
             </TabsContent>
           </Tabs>

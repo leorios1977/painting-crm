@@ -13,6 +13,7 @@ import { appointmentsRouter } from "./routers/appointments";
 import { invoicesRouter } from "./routers/invoices";
 import { portalRouter } from "./routers/portal";
 import { reviewsRouter } from "./routers/reviews";
+import { photosRouter } from "./routers/photos";
 import { seedDefaultTemplates } from "./db";
 
 // Seed default templates on startup
@@ -41,6 +42,7 @@ export const appRouter = router({
   invoices: invoicesRouter,
   portal: portalRouter,
   reviews: reviewsRouter,
+  photos: photosRouter,
 });
 
 export type AppRouter = typeof appRouter;

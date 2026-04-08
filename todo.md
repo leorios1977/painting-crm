@@ -150,3 +150,15 @@
 - [x] Request Review button already in LeadDetail.tsx (trpc.reviews.send)
 - [x] Write Vitest tests for reviews router (7 tests)
 - [x] Save checkpoint
+
+## Phase 18: Before/After Photo Upload
+- [x] Add job_photos table to drizzle/schema.ts
+- [x] Generate and apply migration for job_photos table
+- [x] Create server/services/photos.ts (uploadPhoto to S3, listPhotos, deletePhoto, getPhotosByLead)
+- [x] Create server/routers/photos.ts tRPC router (upload, list, byLead, byLeadPublic, delete)
+- [x] Register photos router in server/routers.ts
+- [x] Add Photos tab to LeadDetail.tsx (before/after sections, tap-to-upload, thumbnail grid, delete)
+- [x] Update CustomerPortal.tsx to display before/after photo gallery (merged job_photos + legacy)
+- [x] Add lead.id to PortalData type so CustomerPortal can load photos by leadId
+- [x] Write Vitest tests for photos router (8 tests)
+- [x] Save checkpoint

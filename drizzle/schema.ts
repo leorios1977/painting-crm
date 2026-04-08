@@ -290,3 +290,24 @@ export interface InvoiceLineItem {
   quantity: number;
   unitPrice: number;
 }
+
+// ─── Job Photos ───────────────────────────────────────────────────────────────
+export const jobPhotos = mysqlTable("job_photos", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Foreign key to leads.id */
+  leadId: int("leadId").notNull(),
+  /** Public S3/CDN URL of the uploaded photo */
+  photoUrl: text("photoUrl").notNull(),
+  /** S3 object key for deletion */
+  photoKey: varchar("photoKey", { length: 500 }).notNull(),
+  /** Photo type: before the job or after the job */
+  type: mysqlEnum("type", ["before", "after"]).notNull(),
+  /** Optional caption or label */
+  caption: varchar("caption", { length: 300 }),
+  /** ID of the user who uploaded the photo */
+  uploadedBy: int("uploadedBy"),
+  uploadedAt: timestamp("uploadedAt").defaultNow().notNull(),
+});
+
+export type JobPhoto = typeof jobPhotos.$inferSelect;
+export type InsertJobPhoto = typeof jobPhotos.$inferInsert;
