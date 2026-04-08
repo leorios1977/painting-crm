@@ -1,6 +1,7 @@
 import { trpc } from "@/lib/trpc";
 import { formatCurrency, formatDateTime, STAGE_LABELS, STAGES, type Stage } from "@/lib/stages";
 import { StageBadge } from "@/components/StageBadge";
+import { SMS } from "@/components/SMS";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -288,6 +289,10 @@ export default function LeadDetail() {
                 <MessageSquare className="h-4 w-4 mr-2" />
                 Activity ({logs?.length || 0})
               </TabsTrigger>
+              <TabsTrigger value="sms" className="flex-1">
+                <Phone className="h-4 w-4 mr-2" />
+                SMS
+              </TabsTrigger>
               <TabsTrigger value="attachments" className="flex-1">
                 <Paperclip className="h-4 w-4 mr-2" />
                 Files ({attachments?.length || 0})
@@ -371,6 +376,10 @@ export default function LeadDetail() {
                   </div>
                 ))}
               </div>
+            </TabsContent>
+
+            <TabsContent value="sms" className="mt-4">
+              <SMS leadId={id} customerPhone={lead.phone} />
             </TabsContent>
 
             <TabsContent value="attachments" className="mt-4 space-y-4">

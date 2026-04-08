@@ -174,3 +174,23 @@ export const appSettings = mysqlTable("app_settings", {
 
 export type AppSettings = typeof appSettings.$inferSelect;
 export type InsertAppSettings = typeof appSettings.$inferInsert;
+
+// ─── SMS Conversations ────────────────────────────────────────────────────────
+export const conversations = mysqlTable("conversations", {
+  id: int("id").autoincrement().primaryKey(),
+  leadId: int("leadId").notNull(),
+  direction: mysqlEnum("direction", ["inbound", "outbound"]).notNull(),
+  body: text("body").notNull(),
+  fromNumber: varchar("fromNumber", { length: 30 }).notNull(),
+  toNumber: varchar("toNumber", { length: 30 }).notNull(),
+  /** Twilio message SID for deduplication and status tracking */
+  twilioSid: varchar("twilioSid", { length: 64 }),
+  /** Twilio delivery status: queued, sent, delivered, failed, received, etc. */
+  status: varchar("status", { length: 30 }).default("queued").notNull(),
+  /** Optional tenantId for multi-tenant support */
+  tenantId: varchar("tenantId", { length: 64 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type Conversation = typeof conversations.$inferSelect;
+export type InsertConversation = typeof conversations.$inferInsert;

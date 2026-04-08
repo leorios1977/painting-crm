@@ -8,6 +8,7 @@ import { communicationsRouter, attachmentsRouter } from "./routers/communication
 import { dashboardRouter } from "./routers/dashboard";
 import { stripeRouter } from "./routers/stripe";
 import { settingsRouter } from "./routers/settings";
+import { smsRouter } from "./routers/sms";
 import { seedDefaultTemplates } from "./db";
 
 // Seed default templates on startup
@@ -31,6 +32,7 @@ export const appRouter = router({
   dashboard: dashboardRouter,
   stripe: stripeRouter,
   settings: settingsRouter,
+  sms: smsRouter,
 });
 
 export type AppRouter = typeof appRouter;

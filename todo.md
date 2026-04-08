@@ -87,3 +87,14 @@
 - [x] Update stripe router to use ENV.stripeSecretKey instead of direct process.env
 - [x] Create env.example listing every required environment variable
 - [x] Run tests and save checkpoint
+
+## Phase 13: Twilio SMS Integration
+- [x] Add conversations table to drizzle/schema.ts
+- [x] Generate and apply migration for conversations table
+- [x] Create server/services/sms.ts with sendSMS(to, message, tenantId)
+- [x] Add sms tRPC router (list conversations, send SMS mutation, status check)
+- [x] Add POST /webhook/sms inbound Twilio webhook Express route with signature validation
+- [x] Create client/src/components/SMS.tsx chat-style thread UI
+- [x] Add SMS tab to LeadDetail.tsx
+- [x] Write Vitest tests for SMS router (6 tests passing)
+- [x] Save checkpoint
