@@ -187,6 +187,8 @@ export const appSettings = mysqlTable("app_settings", {
   primaryColor: varchar("primaryColor", { length: 20 }),
   /** Secondary brand color as a hex string */
   secondaryColor: varchar("secondaryColor", { length: 20 }),
+  /** Stripe Publishable Key (pk_live_... or pk_test_...) stored in DB, overrides ENV */
+  stripePublishableKey: text("stripePublishableKey"),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
 

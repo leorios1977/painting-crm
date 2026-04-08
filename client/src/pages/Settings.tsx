@@ -8,17 +8,16 @@ import { Separator } from "@/components/ui/separator";
 import {
   CreditCard,
   Calendar,
-  Settings as SettingsIcon,
   CheckCircle2,
   AlertCircle,
   Building2,
-  Mail,
   Star,
-  ToggleLeft,
-  ToggleRight,
   Palette,
   Upload,
   X,
+  Loader2,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { useState, useRef } from "react";
@@ -28,6 +27,7 @@ import { useBranding } from "@/contexts/BrandingContext";
 export default function Settings() {
   const { data: settings, refetch } = trpc.settings.get.useQuery();
   const { refetch: refetchBranding } = useBranding();
+
   const updateSettings = trpc.settings.update.useMutation({
     onSuccess: () => {
       refetch();
@@ -55,13 +55,35 @@ export default function Settings() {
     onError: (e) => toast.error(e.message),
   });
 
-  const [stripeKey, setStripeKey] = useState("");
+  const testStripeConnection = trpc.settings.testStripeConnection.useMutation({
+    onSuccess: (data) => {
+      if (data.success) {
+        toast.success(data.message ?? "Stripe connection verified!");
+        setStripeTestResult("success");
+      } else {
+        toast.error(data.error ?? "Stripe connection failed");
+        setStripeTestResult("error");
+      }
+    },
+    onError: (e) => {
+      toast.error(e.message);
+      setStripeTestResult("error");
+    },
+  });
+
+  // General state
   const [calendarId, setCalendarId] = useState("");
   const [companyName, setCompanyName] = useState("");
   const [companyEmail, setCompanyEmail] = useState("");
   const [reviewLink, setReviewLink] = useState("");
   const [googleReviewLink, setGoogleReviewLink] = useState("");
   const [autoReviewEnabled, setAutoReviewEnabled] = useState<boolean | null>(null);
+
+  // Payment Settings state
+  const [stripePublishableKey, setStripePublishableKey] = useState("");
+  const [stripeSecretKey, setStripeSecretKey] = useState("");
+  const [showSecretKey, setShowSecretKey] = useState(false);
+  const [stripeTestResult, setStripeTestResult] = useState<"success" | "error" | null>(null);
 
   // Branding state
   const [businessName, setBusinessName] = useState("");
@@ -106,10 +128,28 @@ export default function Settings() {
     });
   }
 
-  function saveStripe() {
-    if (!stripeKey.trim()) return;
-    updateSettings.mutate({ stripeSecretKey: stripeKey });
-    setStripeKey("");
+  function savePaymentSettings() {
+    const update: { stripeSecretKey?: string; stripePublishableKey?: string } = {};
+    if (stripeSecretKey.trim()) update.stripeSecretKey = stripeSecretKey.trim();
+    if (stripePublishableKey.trim()) update.stripePublishableKey = stripePublishableKey.trim();
+    if (!update.stripeSecretKey && !update.stripePublishableKey) return;
+    updateSettings.mutate(update, {
+      onSuccess: () => {
+        setStripeSecretKey("");
+        setStripePublishableKey("");
+        setStripeTestResult(null);
+      },
+    });
+  }
+
+  function handleTestConnection() {
+    const keyToTest = stripeSecretKey.trim() || "";
+    if (!keyToTest) {
+      toast.error("Enter a Stripe Secret Key to test");
+      return;
+    }
+    setStripeTestResult(null);
+    testStripeConnection.mutate({ secretKey: keyToTest });
   }
 
   function saveCalendar() {
@@ -147,7 +187,7 @@ export default function Settings() {
         </p>
       </div>
 
-      {/* Branding */}
+      {/* ── Branding ─────────────────────────────────────────────────────────── */}
       <Card className="border shadow-sm">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
@@ -262,17 +302,13 @@ export default function Settings() {
             </div>
           </div>
 
-          <Button
-            size="sm"
-            onClick={saveBranding}
-            disabled={updateSettings.isPending}
-          >
+          <Button size="sm" onClick={saveBranding} disabled={updateSettings.isPending}>
             Save Branding
           </Button>
         </CardContent>
       </Card>
 
-      {/* Company Info */}
+      {/* ── Company Info ─────────────────────────────────────────────────────── */}
       <Card className="border shadow-sm">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
@@ -311,37 +347,32 @@ export default function Settings() {
               onChange={(e) => setReviewLink(e.target.value)}
             />
           </div>
-          <Button
-            size="sm"
-            onClick={saveCompany}
-            disabled={updateSettings.isPending}
-          >
+          <Button size="sm" onClick={saveCompany} disabled={updateSettings.isPending}>
             Save Business Info
           </Button>
         </CardContent>
       </Card>
 
-      {/* Stripe */}
+      {/* ── Payment Settings ─────────────────────────────────────────────────── */}
       <Card className="border shadow-sm">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <CreditCard className="h-4 w-4 text-primary" />
-            Stripe Payments
+            Payment Settings
             {settings?.stripeEnabled ? (
-              <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200 text-xs">
+              <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200 text-xs ml-1">
                 <CheckCircle2 className="h-3 w-3 mr-1" />
                 Connected
               </Badge>
             ) : (
-              <Badge variant="secondary" className="text-xs">
+              <Badge variant="secondary" className="text-xs ml-1">
                 <AlertCircle className="h-3 w-3 mr-1" />
                 Not configured
               </Badge>
             )}
           </CardTitle>
           <CardDescription>
-            Add your Stripe secret key to enable real payment links and invoice generation.
-            Get your key from{" "}
+            Enter your Stripe API keys to enable real payment links and invoice generation. Get your keys from{" "}
             <a
               href="https://dashboard.stripe.com/apikeys"
               target="_blank"
@@ -350,28 +381,94 @@ export default function Settings() {
             >
               Stripe Dashboard → API Keys
             </a>
+            .
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-3">
+        <CardContent className="space-y-4">
+          {/* Publishable Key */}
           <div className="space-y-1.5">
-            <Label>Stripe Secret Key</Label>
+            <Label>Stripe Publishable Key</Label>
             <Input
-              type="password"
-              placeholder="sk_live_... or sk_test_..."
-              value={stripeKey}
-              onChange={(e) => setStripeKey(e.target.value)}
+              placeholder={settings?.stripePublishableKey ? `${settings.stripePublishableKey.slice(0, 12)}...` : "pk_live_... or pk_test_..."}
+              value={stripePublishableKey}
+              onChange={(e) => setStripePublishableKey(e.target.value)}
             />
             <p className="text-xs text-muted-foreground">
-              Your key is stored securely and never exposed to the browser.
+              Starts with <code className="font-mono bg-muted px-1 rounded">pk_live_</code> or <code className="font-mono bg-muted px-1 rounded">pk_test_</code>. Safe to expose to the browser.
             </p>
           </div>
-          <Button size="sm" onClick={saveStripe} disabled={!stripeKey || updateSettings.isPending}>
-            Save Stripe Key
-          </Button>
+
+          {/* Secret Key */}
+          <div className="space-y-1.5">
+            <Label>Stripe Secret Key</Label>
+            <div className="relative">
+              <Input
+                type={showSecretKey ? "text" : "password"}
+                placeholder={settings?.stripeSecretKeySet ? "••••••••••••••••••••••••• (configured)" : "sk_live_... or sk_test_..."}
+                value={stripeSecretKey}
+                onChange={(e) => {
+                  setStripeSecretKey(e.target.value);
+                  setStripeTestResult(null);
+                }}
+                className="pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setShowSecretKey((v) => !v)}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                tabIndex={-1}
+              >
+                {showSecretKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Starts with <code className="font-mono bg-muted px-1 rounded">sk_live_</code> or <code className="font-mono bg-muted px-1 rounded">sk_test_</code>. Stored securely — never exposed to the browser.
+            </p>
+          </div>
+
+          {/* Test Connection result banner */}
+          {stripeTestResult === "success" && (
+            <div className="flex items-center gap-2 text-sm text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-md px-3 py-2">
+              <CheckCircle2 className="h-4 w-4 shrink-0" />
+              Stripe connection verified — keys are valid.
+            </div>
+          )}
+          {stripeTestResult === "error" && (
+            <div className="flex items-center gap-2 text-sm text-red-700 bg-red-50 border border-red-200 rounded-md px-3 py-2">
+              <AlertCircle className="h-4 w-4 shrink-0" />
+              Connection failed — check your secret key and try again.
+            </div>
+          )}
+
+          <div className="flex gap-2">
+            {/* Test Connection */}
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleTestConnection}
+              disabled={!stripeSecretKey.trim() || testStripeConnection.isPending}
+            >
+              {testStripeConnection.isPending ? (
+                <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
+              ) : (
+                <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" />
+              )}
+              Test Connection
+            </Button>
+
+            {/* Save */}
+            <Button
+              size="sm"
+              onClick={savePaymentSettings}
+              disabled={(!stripeSecretKey.trim() && !stripePublishableKey.trim()) || updateSettings.isPending}
+            >
+              Save Payment Settings
+            </Button>
+          </div>
         </CardContent>
       </Card>
 
-      {/* Google Review Automation */}
+      {/* ── Google Review Automation ─────────────────────────────────────────── */}
       <Card className="border shadow-sm">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
@@ -438,7 +535,7 @@ export default function Settings() {
         </CardContent>
       </Card>
 
-      {/* Google Calendar */}
+      {/* ── Google Calendar ──────────────────────────────────────────────────── */}
       <Card className="border shadow-sm">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
@@ -476,7 +573,7 @@ export default function Settings() {
         </CardContent>
       </Card>
 
-      {/* Current Config Display */}
+      {/* ── Current Config Display ───────────────────────────────────────────── */}
       {settings && (
         <Card className="border shadow-sm bg-muted/20">
           <CardHeader>
@@ -492,9 +589,17 @@ export default function Settings() {
               <span className="font-medium">{settings.companyEmail || "—"}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Stripe</span>
-              <span className={settings.stripeEnabled ? "text-emerald-600 font-medium" : "text-muted-foreground"}>
-                {settings.stripeEnabled ? "Enabled" : "Not configured"}
+              <span className="text-muted-foreground">Stripe Publishable Key</span>
+              <span className="font-medium">
+                {settings.stripePublishableKey
+                  ? `${settings.stripePublishableKey.slice(0, 12)}...`
+                  : "—"}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Stripe Secret Key</span>
+              <span className={settings.stripeSecretKeySet ? "text-emerald-600 font-medium" : "text-muted-foreground"}>
+                {settings.stripeSecretKeySet ? "Configured ✓" : "Not configured"}
               </span>
             </div>
             <div className="flex justify-between">

@@ -1,7 +1,26 @@
 import { z } from "zod";
 import { protectedProcedure, router } from "../_core/trpc";
-import { getLeadById, updateLead, createCommunicationLogEntry } from "../db";
+import { getLeadById, updateLead, createCommunicationLogEntry, getDb } from "../db";
 import { ENV } from "../_core/env";
+import { appSettings } from "../../drizzle/schema";
+
+/**
+ * Resolve the effective Stripe secret key.
+ * Priority: app_settings.stripeSecretKey (DB) → ENV.stripeSecretKey → undefined
+ */
+async function resolveStripeSecretKey(): Promise<string | undefined> {
+  try {
+    const db = await getDb();
+    if (db) {
+      const rows = await db.select().from(appSettings).limit(1);
+      const dbKey = rows[0]?.stripeSecretKey;
+      if (dbKey) return dbKey;
+    }
+  } catch {
+    // DB unavailable — fall through to ENV
+  }
+  return ENV.stripeSecretKey || undefined;
+}
 
 export const stripeRouter = router({
   createPaymentLink: protectedProcedure
@@ -16,7 +35,7 @@ export const stripeRouter = router({
       const lead = await getLeadById(input.leadId);
       if (!lead) throw new Error("Lead not found");
 
-      const stripeKey = ENV.stripeSecretKey || undefined;
+      const stripeKey = await resolveStripeSecretKey();
       if (!stripeKey) {
         // Return mock link when Stripe is not configured
         const mockUrl = `https://buy.stripe.com/test_mock_${input.leadId}_${Date.now()}`;
@@ -26,7 +45,7 @@ export const stripeRouter = router({
           type: "system",
           direction: "internal",
           subject: "Payment Link Generated (Mock)",
-          content: `Mock payment link created for $${input.amount}. Configure STRIPE_SECRET_KEY to enable real payments.`,
+          content: `Mock payment link created for $${input.amount}. Configure Stripe keys in Settings → Payment Settings to enable real payments.`,
           sentBy: ctx.user.id,
         });
         return { url: mockUrl, mock: true };

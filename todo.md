@@ -174,3 +174,12 @@
 - [x] Update Settings.tsx with Branding section (name, logo upload, color pickers)
 - [x] Write Vitest tests for branding procedures (6 tests)
 - [x] Save checkpoint
+
+## Phase 20: Stripe Payment Settings
+- [x] Add stripePublishableKey and stripeSecretKey columns to app_settings schema
+- [x] Generate and apply migration for stripe key columns
+- [x] Update settings router to expose/save stripe keys and add testStripeConnection procedure
+- [x] Update stripe service to read keys from app_settings first, fallback to ENV
+- [x] Update Settings.tsx with Payment Settings section (masked inputs, Test Connection, green badge)
+- [x] Write Vitest tests for testStripeConnection (8 tests)
+- [x] Save checkpoint
