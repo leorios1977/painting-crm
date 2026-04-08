@@ -232,3 +232,54 @@ export const appointments = mysqlTable("appointments", {
 
 export type Appointment = typeof appointments.$inferSelect;
 export type InsertAppointment = typeof appointments.$inferInsert;
+
+// ─── Invoices ──────────────────────────────────────────────────────────────────────────────
+export const invoices = mysqlTable("invoices", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Foreign key to leads.id */
+  leadId: int("leadId").notNull(),
+  /** Human-readable invoice number, e.g. INV-0042 */
+  invoiceNumber: varchar("invoiceNumber", { length: 50 }).notNull(),
+  /**
+   * JSON array of line items:
+   * [{ description: string, quantity: number, unitPrice: number }]
+   */
+  lineItems: json("lineItems").notNull(),
+  /** Subtotal before tax (sum of quantity * unitPrice) */
+  subtotal: decimal("subtotal", { precision: 10, scale: 2 }).notNull(),
+  /** Tax amount in dollars */
+  tax: decimal("tax", { precision: 10, scale: 2 }).default("0.00").notNull(),
+  /** Total = subtotal + tax */
+  total: decimal("total", { precision: 10, scale: 2 }).notNull(),
+  /** Invoice lifecycle status */
+  status: mysqlEnum("status", ["draft", "sent", "paid", "overdue"])
+    .default("draft")
+    .notNull(),
+  /** Due date for payment */
+  dueDate: timestamp("dueDate"),
+  /** Timestamp when payment was confirmed */
+  paidAt: timestamp("paidAt"),
+  /** Stripe Payment Link URL sent to the customer */
+  stripePaymentLink: text("stripePaymentLink"),
+  /** Stripe Payment Link ID for webhook matching */
+  stripePaymentLinkId: varchar("stripePaymentLinkId", { length: 100 }),
+  /** Stripe Checkout Session ID (set when payment is initiated) */
+  stripeSessionId: varchar("stripeSessionId", { length: 100 }),
+  /** Internal notes */
+  notes: text("notes"),
+  /** Whether a payment link SMS was sent to the customer */
+  smsSent: boolean("smsSent").default(false).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  createdBy: int("createdBy"),
+});
+
+export type Invoice = typeof invoices.$inferSelect;
+export type InsertInvoice = typeof invoices.$inferInsert;
+
+/** Typed line item stored in the lineItems JSON column */
+export interface InvoiceLineItem {
+  description: string;
+  quantity: number;
+  unitPrice: number;
+}

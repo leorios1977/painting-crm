@@ -111,3 +111,17 @@
 - [x] Auto-trigger confirmation SMS + email on booking
 - [x] Write Vitest tests for appointments router (8 tests)
 - [x] Save checkpoint
+
+## Phase 15: Invoicing System
+- [x] Add invoices table to drizzle/schema.ts
+- [x] Generate and apply migration for invoices table
+- [x] Create server/services/invoices.ts (generateInvoice, sendInvoice, markPaid)
+- [x] Create server/routers/invoices.ts tRPC router
+- [x] Register invoices router in server/routers.ts
+- [x] Create client/src/pages/Invoices.tsx with status badges and revenue summary cards
+- [x] Add Invoices route to App.tsx and sidebar nav
+- [x] Add Create Invoice line-item builder modal to LeadDetail.tsx
+- [x] Stripe payment link generation on send (real + mock fallback)
+- [x] SMS delivery of payment link on send
+- [x] Write Vitest tests for invoices router (6 tests)
+- [x] Save checkpoint

@@ -1,0 +1,21 @@
+CREATE TABLE `invoices` (
+	`id` int AUTO_INCREMENT NOT NULL,
+	`leadId` int NOT NULL,
+	`invoiceNumber` varchar(50) NOT NULL,
+	`lineItems` json NOT NULL,
+	`subtotal` decimal(10,2) NOT NULL,
+	`tax` decimal(10,2) NOT NULL DEFAULT '0.00',
+	`total` decimal(10,2) NOT NULL,
+	`status` enum('draft','sent','paid','overdue') NOT NULL DEFAULT 'draft',
+	`dueDate` timestamp,
+	`paidAt` timestamp,
+	`stripePaymentLink` text,
+	`stripePaymentLinkId` varchar(100),
+	`stripeSessionId` varchar(100),
+	`notes` text,
+	`smsSent` boolean NOT NULL DEFAULT false,
+	`createdAt` timestamp NOT NULL DEFAULT (now()),
+	`updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
+	`createdBy` int,
+	CONSTRAINT `invoices_id` PRIMARY KEY(`id`)
+);

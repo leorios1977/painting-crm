@@ -14,6 +14,7 @@ import Communications from "./pages/Communications";
 import Docs from "./pages/Docs";
 import Settings from "./pages/Settings";
 import Schedule from "./pages/Schedule";
+import Invoices from "./pages/Invoices";
 
 function Router() {
   return (
@@ -26,6 +27,7 @@ function Router() {
         <Route path="/email-automation" component={EmailAutomation} />
         <Route path="/schedule" component={Schedule} />
         <Route path="/communications" component={Communications} />
+        <Route path="/invoices" component={Invoices} />
         <Route path="/docs" component={Docs} />
         <Route path="/settings" component={Settings} />
         <Route path="/404" component={NotFound} />
