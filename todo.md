@@ -98,3 +98,16 @@
 - [x] Add SMS tab to LeadDetail.tsx
 - [x] Write Vitest tests for SMS router (6 tests passing)
 - [x] Save checkpoint
+
+## Phase 14: Scheduling System
+- [x] Add appointments table to drizzle/schema.ts
+- [x] Generate and apply migration for appointments table
+- [x] Create server/services/schedule.ts (createAppointment, updateAppointment, cancelAppointment)
+- [x] Create server/routers/appointments.ts tRPC router
+- [x] Register appointments router in server/routers.ts
+- [x] Create client/src/pages/Schedule.tsx weekly calendar view
+- [x] Add Schedule route to App.tsx and sidebar nav
+- [x] Add Book Appointment modal to LeadDetail.tsx
+- [x] Auto-trigger confirmation SMS + email on booking
+- [x] Write Vitest tests for appointments router (8 tests)
+- [x] Save checkpoint

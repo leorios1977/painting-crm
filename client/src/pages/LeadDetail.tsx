@@ -16,6 +16,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   ArrowLeft,
@@ -28,6 +35,7 @@ import {
   MessageSquare,
   Paperclip,
   Phone,
+  Plus,
   Save,
   Trash2,
   User,
@@ -45,6 +53,16 @@ export default function LeadDetail() {
   const [editing, setEditing] = useState(false);
   const [noteContent, setNoteContent] = useState("");
   const [noteType, setNoteType] = useState<"note" | "call" | "email">("note");
+
+  // ── Book Appointment modal state ──────────────────────────────────────────
+  const [bookingOpen, setBookingOpen] = useState(false);
+  const [apptDate, setApptDate] = useState("");
+  const [apptTimeSlot, setApptTimeSlot] = useState("");
+  const [apptCrew, setApptCrew] = useState("");
+  const [apptJobType, setApptJobType] = useState("");
+  const [apptNotes, setApptNotes] = useState("");
+  const [apptSendSms, setApptSendSms] = useState(true);
+  const [apptSendEmail, setApptSendEmail] = useState(true);
 
   const { data: lead, isLoading } = trpc.leads.byId.useQuery({ id });
   const { data: logs } = trpc.communications.list.useQuery({ leadId: id });
@@ -67,6 +85,26 @@ export default function LeadDetail() {
     },
     onError: (e) => toast.error(e.message),
   });
+
+  const bookAppointment = trpc.appointments.create.useMutation({
+    onSuccess: (result) => {
+      utils.appointments.byLead.invalidate({ leadId: id });
+      setBookingOpen(false);
+      setApptDate("");
+      setApptTimeSlot("");
+      setApptCrew("");
+      setApptJobType("");
+      setApptNotes("");
+      const msgs: string[] = ["Appointment booked!"];
+      if (result.smsSent) msgs.push("Confirmation SMS sent.");
+      if (result.emailSent) msgs.push("Confirmation email sent.");
+      if (result.smsError) msgs.push(`SMS note: ${result.smsError}`);
+      toast.success(msgs.join(" "));
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
+  const { data: leadAppointments = [] } = trpc.appointments.byLead.useQuery({ leadId: id });
 
   const createPaymentLink = trpc.stripe.createPaymentLink.useMutation({
     onSuccess: (data) => {
@@ -179,6 +217,19 @@ export default function LeadDetail() {
               ))}
             </SelectContent>
           </Select>
+
+          {/* Book Appointment */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              setApptJobType(lead.projectType || "");
+              setBookingOpen(true);
+            }}
+          >
+            <CalendarDays className="h-4 w-4 mr-2" />
+            Book Appointment
+          </Button>
 
           {/* Payment Link */}
           {lead.stripePaymentLinkUrl ? (
@@ -430,6 +481,120 @@ export default function LeadDetail() {
           </Tabs>
         </div>
       </div>
+
+      {/* ── Book Appointment Modal ──────────────────────────────────────────── */}
+      <Dialog open={bookingOpen} onOpenChange={setBookingOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Book Appointment</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="appt-date">Date *</Label>
+                <Input
+                  id="appt-date"
+                  type="date"
+                  value={apptDate}
+                  onChange={(e) => setApptDate(e.target.value)}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="appt-slot">Time Slot</Label>
+                <Select value={apptTimeSlot} onValueChange={setApptTimeSlot}>
+                  <SelectTrigger id="appt-slot">
+                    <SelectValue placeholder="Select time" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {[
+                      "7:00 AM – 11:00 AM",
+                      "8:00 AM – 12:00 PM",
+                      "9:00 AM – 1:00 PM",
+                      "10:00 AM – 2:00 PM",
+                      "12:00 PM – 4:00 PM",
+                      "1:00 PM – 5:00 PM",
+                      "All Day",
+                    ].map((slot) => (
+                      <SelectItem key={slot} value={slot}>{slot}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="appt-job">Job Type</Label>
+              <Input
+                id="appt-job"
+                placeholder="e.g. Exterior Paint, Deck Stain"
+                value={apptJobType}
+                onChange={(e) => setApptJobType(e.target.value)}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="appt-crew">Crew Assigned</Label>
+              <Input
+                id="appt-crew"
+                placeholder="e.g. Mike, Sarah"
+                value={apptCrew}
+                onChange={(e) => setApptCrew(e.target.value)}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="appt-notes">Notes</Label>
+              <Textarea
+                id="appt-notes"
+                placeholder="Any special instructions..."
+                rows={2}
+                value={apptNotes}
+                onChange={(e) => setApptNotes(e.target.value)}
+              />
+            </div>
+            <div className="flex gap-4 pt-1">
+              <label className="flex items-center gap-2 text-sm cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={apptSendSms}
+                  onChange={(e) => setApptSendSms(e.target.checked)}
+                  className="rounded"
+                />
+                Send confirmation SMS
+              </label>
+              <label className="flex items-center gap-2 text-sm cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={apptSendEmail}
+                  onChange={(e) => setApptSendEmail(e.target.checked)}
+                  className="rounded"
+                />
+                Send confirmation email
+              </label>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setBookingOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              disabled={!apptDate || bookAppointment.isPending}
+              onClick={() => {
+                if (!apptDate) return;
+                bookAppointment.mutate({
+                  leadId: id,
+                  scheduledDate: new Date(apptDate + "T12:00:00Z"),
+                  timeSlot: apptTimeSlot || undefined,
+                  jobType: apptJobType || undefined,
+                  crewAssigned: apptCrew || undefined,
+                  notes: apptNotes || undefined,
+                  sendConfirmationSms: apptSendSms,
+                  sendConfirmationEmail: apptSendEmail,
+                });
+              }}
+            >
+              {bookAppointment.isPending ? "Booking…" : "Book Appointment"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

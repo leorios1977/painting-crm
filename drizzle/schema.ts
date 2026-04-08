@@ -194,3 +194,41 @@ export const conversations = mysqlTable("conversations", {
 
 export type Conversation = typeof conversations.$inferSelect;
 export type InsertConversation = typeof conversations.$inferInsert;
+
+// ─── Appointments ───────────────────────────────────────────────────────────────────────────────
+export const appointments = mysqlTable("appointments", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Foreign key to leads.id */
+  leadId: int("leadId").notNull(),
+  /** Name(s) of crew member(s) assigned to this job */
+  crewAssigned: varchar("crewAssigned", { length: 300 }),
+  /** Type of job, e.g. Interior Paint, Exterior Paint, Deck Stain */
+  jobType: varchar("jobType", { length: 200 }),
+  /** Date of the appointment (stored as UTC timestamp) */
+  scheduledDate: timestamp("scheduledDate").notNull(),
+  /** Human-readable time slot, e.g. '8:00 AM – 12:00 PM' */
+  timeSlot: varchar("timeSlot", { length: 100 }),
+  /** Appointment status */
+  status: mysqlEnum("status", [
+    "scheduled",
+    "confirmed",
+    "in_progress",
+    "completed",
+    "cancelled",
+    "no_show",
+  ])
+    .default("scheduled")
+    .notNull(),
+  /** Internal notes about this appointment */
+  notes: text("notes"),
+  /** Whether a confirmation SMS was sent to the customer */
+  smsSent: boolean("smsSent").default(false).notNull(),
+  /** Whether a confirmation email was sent to the customer */
+  emailSent: boolean("emailSent").default(false).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  createdBy: int("createdBy"),
+});
+
+export type Appointment = typeof appointments.$inferSelect;
+export type InsertAppointment = typeof appointments.$inferInsert;

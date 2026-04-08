@@ -13,6 +13,7 @@ import EmailAutomation from "./pages/EmailAutomation";
 import Communications from "./pages/Communications";
 import Docs from "./pages/Docs";
 import Settings from "./pages/Settings";
+import Schedule from "./pages/Schedule";
 
 function Router() {
   return (
@@ -23,6 +24,7 @@ function Router() {
         <Route path="/leads" component={Leads} />
         <Route path="/leads/:id" component={LeadDetail} />
         <Route path="/email-automation" component={EmailAutomation} />
+        <Route path="/schedule" component={Schedule} />
         <Route path="/communications" component={Communications} />
         <Route path="/docs" component={Docs} />
         <Route path="/settings" component={Settings} />

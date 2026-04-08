@@ -29,6 +29,13 @@
       "when": 1775612144275,
       "tag": "0003_broken_moon_knight",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "5",
+      "when": 1775614638361,
+      "tag": "0004_confused_the_anarchist",
+      "breakpoints": true
     }
   ]
 }

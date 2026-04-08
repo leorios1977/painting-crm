@@ -9,6 +9,7 @@ import { dashboardRouter } from "./routers/dashboard";
 import { stripeRouter } from "./routers/stripe";
 import { settingsRouter } from "./routers/settings";
 import { smsRouter } from "./routers/sms";
+import { appointmentsRouter } from "./routers/appointments";
 import { seedDefaultTemplates } from "./db";
 
 // Seed default templates on startup
@@ -33,6 +34,7 @@ export const appRouter = router({
   stripe: stripeRouter,
   settings: settingsRouter,
   sms: smsRouter,
+  appointments: appointmentsRouter,
 });
 
 export type AppRouter = typeof appRouter;
