@@ -172,6 +172,10 @@ export const appSettings = mysqlTable("app_settings", {
   stripeSecretKey: text("stripeSecretKey"),
   googleCalendarId: varchar("googleCalendarId", { length: 300 }),
   googleServiceAccountKey: text("googleServiceAccountKey"),
+  /** Google Business review URL pasted by the owner */
+  googleReviewLink: text("googleReviewLink"),
+  /** When true, automatically send a review request SMS when a lead is moved to 'completed' */
+  autoReviewEnabled: boolean("autoReviewEnabled").default(false).notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
 

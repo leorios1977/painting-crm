@@ -7,16 +7,18 @@ import { eq } from "drizzle-orm";
 export const settingsRouter = router({
   get: protectedProcedure.query(async () => {
     const db = await getDb();
-    if (!db) return { companyName: null, companyEmail: null, reviewLink: null, stripeEnabled: false, calendarEnabled: false };
+    if (!db) return { companyName: null, companyEmail: null, reviewLink: null, stripeEnabled: false, calendarEnabled: false, googleReviewLink: null, autoReviewEnabled: false };
     const rows = await db.select().from(appSettings).limit(1);
     const s = rows[0];
-    if (!s) return { companyName: null, companyEmail: null, reviewLink: null, stripeEnabled: false, calendarEnabled: false };
+    if (!s) return { companyName: null, companyEmail: null, reviewLink: null, stripeEnabled: false, calendarEnabled: false, googleReviewLink: null, autoReviewEnabled: false };
     return {
       companyName: s.companyName,
       companyEmail: s.companyEmail,
       reviewLink: s.reviewLink,
       stripeEnabled: !!s.stripeSecretKey,
       calendarEnabled: !!s.googleCalendarId,
+      googleReviewLink: s.googleReviewLink ?? null,
+      autoReviewEnabled: s.autoReviewEnabled ?? false,
     };
   }),
 
@@ -27,6 +29,8 @@ export const settingsRouter = router({
       reviewLink: z.string().optional(),
       stripeSecretKey: z.string().optional(),
       googleCalendarId: z.string().optional(),
+      googleReviewLink: z.string().optional(),
+      autoReviewEnabled: z.boolean().optional(),
     }))
     .mutation(async ({ input }) => {
       const db = await getDb();
@@ -47,7 +51,9 @@ export const settingsRouter = router({
         if (input.reviewLink !== undefined) updateData.reviewLink = input.reviewLink;
         if (input.stripeSecretKey !== undefined) updateData.stripeSecretKey = input.stripeSecretKey;
         if (input.googleCalendarId !== undefined) updateData.googleCalendarId = input.googleCalendarId;
-        await db.update(appSettings).set(updateData).where(eq(appSettings.id, rows[0].id));
+        if (input.googleReviewLink !== undefined) updateData.googleReviewLink = input.googleReviewLink;
+        if (input.autoReviewEnabled !== undefined) (updateData as Record<string, unknown>).autoReviewEnabled = input.autoReviewEnabled;
+        await db.update(appSettings).set(updateData as Record<string, unknown>).where(eq(appSettings.id, rows[0].id));
       }
       return { success: true };
     }),

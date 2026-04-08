@@ -41,6 +41,7 @@ import {
   Receipt,
   Save,
   Send,
+  Star,
   Trash2,
   User,
   X,
@@ -206,6 +207,18 @@ export default function LeadDetail() {
     },
   });
 
+  // ── Google Review request ─────────────────────────────────────────────────
+  const sendReviewRequest = trpc.reviews.send.useMutation({
+    onSuccess: (result) => {
+      if (result.success) {
+        toast.success(result.message);
+      } else {
+        toast.error(result.error ?? result.message);
+      }
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
   if (isLoading) {
     return (
       <div className="space-y-4">
@@ -316,6 +329,17 @@ export default function LeadDetail() {
           >
             <Receipt className="h-4 w-4 mr-2" />
             Create Invoice
+          </Button>
+
+          {/* Request Review */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => sendReviewRequest.mutate({ leadId: id })}
+            disabled={sendReviewRequest.isPending}
+          >
+            <Star className="h-4 w-4 mr-2" />
+            {sendReviewRequest.isPending ? "Sending..." : "Request Review"}
           </Button>
 
           {/* Copy Portal Link */}

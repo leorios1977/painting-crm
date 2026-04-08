@@ -11,6 +11,9 @@ import {
   getEmailTemplateById,
   updateLead,
 } from "../db";
+import { scheduleReviewRequest } from "../services/reviews";
+import { getDb } from "../db";
+import { appSettings } from "../../drizzle/schema";
 
 const stageEnum = z.enum([
   "lead",
@@ -171,6 +174,27 @@ export const leadsRouter = router({
           automationRuleId: rule.id,
           sentBy: ctx.user.id,
         });
+      }
+
+      // ── Auto-trigger Google Review request when stage moves to 'completed' ──
+      if (input.stage === "completed") {
+        try {
+          const db = await getDb();
+          if (db) {
+            const settingsRows = await db
+              .select({ autoReviewEnabled: appSettings.autoReviewEnabled })
+              .from(appSettings)
+              .limit(1);
+            const autoEnabled = settingsRows[0]?.autoReviewEnabled ?? false;
+            if (autoEnabled) {
+              // Schedule review request 2 hours after job completion
+              scheduleReviewRequest(input.id, 2 * 60 * 60 * 1000, ctx.user.id);
+            }
+          }
+        } catch (reviewErr) {
+          // Non-fatal — log but don't block the stage update
+          console.warn("[Leads] Failed to schedule review request:", (reviewErr as Error).message);
+        }
       }
 
       return { success: true };

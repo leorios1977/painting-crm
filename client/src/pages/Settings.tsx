@@ -13,7 +13,11 @@ import {
   AlertCircle,
   Building2,
   Mail,
+  Star,
+  ToggleLeft,
+  ToggleRight,
 } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -32,6 +36,8 @@ export default function Settings() {
   const [companyName, setCompanyName] = useState("");
   const [companyEmail, setCompanyEmail] = useState("");
   const [reviewLink, setReviewLink] = useState("");
+  const [googleReviewLink, setGoogleReviewLink] = useState("");
+  const [autoReviewEnabled, setAutoReviewEnabled] = useState<boolean | null>(null);
 
   function saveStripe() {
     if (!stripeKey.trim()) return;
@@ -51,6 +57,18 @@ export default function Settings() {
       companyEmail: companyEmail || undefined,
       reviewLink: reviewLink || undefined,
     });
+  }
+
+  function saveGoogleReview() {
+    updateSettings.mutate({
+      googleReviewLink: googleReviewLink || undefined,
+    });
+    setGoogleReviewLink("");
+  }
+
+  function toggleAutoReview(enabled: boolean) {
+    setAutoReviewEnabled(enabled);
+    updateSettings.mutate({ autoReviewEnabled: enabled });
   }
 
   return (
@@ -158,6 +176,73 @@ export default function Settings() {
           <Button size="sm" onClick={saveStripe} disabled={!stripeKey || updateSettings.isPending}>
             Save Stripe Key
           </Button>
+        </CardContent>
+      </Card>
+
+      {/* Google Review Automation */}
+      <Card className="border shadow-sm">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Star className="h-4 w-4 text-amber-500" />
+            Google Review Automation
+            {settings?.googleReviewLink ? (
+              <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200 text-xs">
+                <CheckCircle2 className="h-3 w-3 mr-1" />
+                Link configured
+              </Badge>
+            ) : (
+              <Badge variant="secondary" className="text-xs">
+                <AlertCircle className="h-3 w-3 mr-1" />
+                Not configured
+              </Badge>
+            )}
+          </CardTitle>
+          <CardDescription>
+            Paste your Google Business review URL so customers can leave reviews with one click.
+            Enable auto-requests to send an SMS 2 hours after a job is marked Completed.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-1.5">
+            <Label>Google Review Link</Label>
+            <Input
+              placeholder={settings?.googleReviewLink || "https://g.page/r/..."}
+              value={googleReviewLink}
+              onChange={(e) => setGoogleReviewLink(e.target.value)}
+            />
+            <p className="text-xs text-muted-foreground">
+              Find this in Google Business Profile → Get more reviews → Share review form.
+            </p>
+          </div>
+          <Button
+            size="sm"
+            onClick={saveGoogleReview}
+            disabled={!googleReviewLink.trim() || updateSettings.isPending}
+          >
+            Save Review Link
+          </Button>
+
+          <Separator />
+
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label className="text-sm font-medium">Auto-request review when job is completed</Label>
+              <p className="text-xs text-muted-foreground">
+                Automatically sends a review request SMS 2 hours after a lead is moved to{" "}
+                <span className="font-medium text-foreground">Completed</span>.
+              </p>
+            </div>
+            <Switch
+              checked={autoReviewEnabled !== null ? autoReviewEnabled : (settings?.autoReviewEnabled ?? false)}
+              onCheckedChange={toggleAutoReview}
+              disabled={updateSettings.isPending || !settings?.googleReviewLink}
+            />
+          </div>
+          {!settings?.googleReviewLink && (
+            <p className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded px-3 py-2">
+              Save a Google Review Link above to enable the auto-request toggle.
+            </p>
+          )}
         </CardContent>
       </Card>
 

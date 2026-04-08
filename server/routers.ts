@@ -12,6 +12,7 @@ import { smsRouter } from "./routers/sms";
 import { appointmentsRouter } from "./routers/appointments";
 import { invoicesRouter } from "./routers/invoices";
 import { portalRouter } from "./routers/portal";
+import { reviewsRouter } from "./routers/reviews";
 import { seedDefaultTemplates } from "./db";
 
 // Seed default templates on startup
@@ -39,6 +40,7 @@ export const appRouter = router({
   appointments: appointmentsRouter,
   invoices: invoicesRouter,
   portal: portalRouter,
+  reviews: reviewsRouter,
 });
 
 export type AppRouter = typeof appRouter;
