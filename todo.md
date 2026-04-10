@@ -195,3 +195,11 @@
 - [x] Write Vitest tests for webhook handler (8 tests: signature validation, event routing, DB-unavailable graceful handling)
 - [x] 84 tests passing total, TypeScript clean
 - [x] Save checkpoint
+
+## Phase 22: Dashboard Live Data
+- [x] Update dashboard.ts: live revenue collected (sum of invoices.total where status='paid')
+- [x] Update dashboard.ts: live pipeline value (sum of leads.estimatedValue for all leads)
+- [x] Update dashboard.ts: live total leads count
+- [x] Update dashboard.ts: live upcoming jobs count (appointments in next 7 days, status != cancelled)
+- [x] Update Dashboard.tsx: wire all four stat cards to live tRPC data with loading states
+- [x] Run tests, TypeScript clean, save checkpoint

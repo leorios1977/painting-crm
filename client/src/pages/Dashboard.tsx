@@ -86,9 +86,11 @@ export default function Dashboard() {
   }
 
   const stageCounts = stats?.stageCounts || {};
-  const totalLeads = stats?.totalLeads || 0;
-  const totalRevenue = stats?.totalRevenue || 0;
-  const paidRevenue = stats?.paidRevenue || 0;
+  // Live KPI metrics from SQL aggregates
+  const totalLeads = stats?.totalLeads ?? 0;
+  const pipelineValue = stats?.pipelineValue ?? 0;
+  const revenueCollected = stats?.revenueCollected ?? 0;
+  const upcomingJobsCount = stats?.upcomingJobsCount ?? 0;
   const upcomingJobs = stats?.upcomingJobs || [];
   const recentActivity = stats?.recentActivity || [];
 
@@ -121,21 +123,21 @@ export default function Dashboard() {
         />
         <StatCard
           title="Pipeline Value"
-          value={formatCurrency(totalRevenue)}
+          value={formatCurrency(pipelineValue)}
           subtitle="Estimated across all leads"
           icon={BarChart3}
           color="violet"
         />
         <StatCard
           title="Revenue Collected"
-          value={formatCurrency(paidRevenue)}
+          value={formatCurrency(revenueCollected)}
           subtitle="Paid invoices"
           icon={DollarSign}
           color="green"
         />
         <StatCard
           title="Upcoming Jobs"
-          value={upcomingJobs.length}
+          value={upcomingJobsCount}
           subtitle="Next 7 days"
           icon={CalendarDays}
           color="amber"
