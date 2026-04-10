@@ -10,6 +10,8 @@ export const ENV = {
   forgeApiKey: process.env.BUILT_IN_FORGE_API_KEY ?? "",
   // Stripe — secret key is backend-only, never exposed to the frontend
   stripeSecretKey: process.env.STRIPE_SECRET_KEY ?? "",
+  // Stripe webhook signing secret — used to verify incoming webhook payloads
+  stripeWebhookSecret: process.env.STRIPE_WEBHOOK_SECRET ?? "",
   // Twilio — for future SMS integration
   twilioAccountSid: process.env.TWILIO_ACCOUNT_SID ?? "",
   twilioAuthToken: process.env.TWILIO_AUTH_TOKEN ?? "",

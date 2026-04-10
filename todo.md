@@ -183,3 +183,15 @@
 - [x] Update Settings.tsx with Payment Settings section (masked inputs, Test Connection, green badge)
 - [x] Write Vitest tests for testStripeConnection (8 tests)
 - [x] Save checkpoint
+
+## Phase 21: Stripe Payment Webhook
+- [x] Add stripeWebhookSecret to server/_core/env.ts (reads STRIPE_WEBHOOK_SECRET env var)
+- [x] Create server/routes/stripeWebhook.ts with HMAC-SHA256 signature verification
+- [x] Handle checkout.session.completed — find invoice by stripePaymentLinkId or session ID, mark paid, update lead stage to 'paid'
+- [x] Handle payment_intent.succeeded — find invoice by metadata.invoice_id or stripeSessionId, mark paid, update lead stage to 'paid'
+- [x] Log payment event to communication_log for each processed webhook
+- [x] Export registerStripeWebhook from routers.ts (only permitted file to modify)
+- [x] Register /api/webhooks/stripe in server/_core/index.ts BEFORE express.json() (raw body required for signature verification)
+- [x] Write Vitest tests for webhook handler (8 tests: signature validation, event routing, DB-unavailable graceful handling)
+- [x] 84 tests passing total, TypeScript clean
+- [x] Save checkpoint
