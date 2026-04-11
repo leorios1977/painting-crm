@@ -227,3 +227,16 @@
 - [x] Add Download PDF button to Invoices.tsx page (in detail sheet)
 - [x] Add Download PDF button to CustomerPortal.tsx (next to Pay Now button)
 - [x] Run tests, TypeScript clean, save checkpoint (84 tests passing)
+
+## Phase 25: Crew Management System
+- [x] Add crew_members table to schema (id, name, phone, email, role, status, created_at, updated_at)
+- [x] Generate and apply migration for crew_members table
+- [x] Create server/services/crew.ts with CRUD helpers (list, get, create, update, deactivate, reactivate)
+- [x] Create server/routers/crew.ts with list, get, create, update, deactivate, reactivate procedures
+- [x] Register crew router in routers.ts
+- [x] Create client/src/pages/Crew.tsx with list, add/edit modal, deactivate/reactivate actions
+- [x] Add Crew to DashboardLayout.tsx sidebar navigation (HardHat icon)
+- [x] Add /crew route to App.tsx
+- [x] Update LeadDetail.tsx booking modal crew dropdown to load from crew_members table (dynamic Select)
+- [x] Write Vitest tests for crew router (10 tests)
+- [x] 94 tests passing total, TypeScript clean, save checkpoint

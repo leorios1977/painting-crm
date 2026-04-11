@@ -17,6 +17,7 @@ import Settings from "./pages/Settings";
 import Schedule from "./pages/Schedule";
 import Invoices from "./pages/Invoices";
 import CustomerPortal from "./pages/CustomerPortal";
+import Crew from "./pages/Crew";
 
 function Router() {
   return (
@@ -33,6 +34,7 @@ function Router() {
         <Route path="/leads/:id" component={LeadDetail} />
         <Route path="/email-automation" component={EmailAutomation} />
         <Route path="/schedule" component={Schedule} />
+        <Route path="/crew" component={Crew} />
         <Route path="/communications" component={Communications} />
         <Route path="/invoices" component={Invoices} />
         <Route path="/docs" component={Docs} />

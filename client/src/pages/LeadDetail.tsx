@@ -53,6 +53,39 @@ import { useRef, useState } from "react";
 import { useLocation, useParams } from "wouter";
 import { toast } from "sonner";
 
+// ── CrewSelect helper component ─────────────────────────────────────────────
+function CrewSelect({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const { data: crewMembers = [] } = trpc.crew.list.useQuery({ status: "active" });
+  const activeMembers = crewMembers as { id: number; name: string; role: string | null }[];
+
+  if (activeMembers.length === 0) {
+    return (
+      <Input
+        id="appt-crew"
+        placeholder="No crew members — add them in Crew page"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+      />
+    );
+  }
+
+  return (
+    <Select value={value || "__none"} onValueChange={(v) => onChange(v === "__none" ? "" : v)}>
+      <SelectTrigger id="appt-crew">
+        <SelectValue placeholder="Select crew member…" />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="__none">— None —</SelectItem>
+        {activeMembers.map((m) => (
+          <SelectItem key={m.id} value={m.name}>
+            {m.name}{m.role ? ` (${m.role})` : ""}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+}
+
 export default function LeadDetail() {
   const params = useParams<{ id: string }>();
   const id = parseInt(params.id || "0");
@@ -947,12 +980,7 @@ export default function LeadDetail() {
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="appt-crew">Crew Assigned</Label>
-              <Input
-                id="appt-crew"
-                placeholder="e.g. Mike, Sarah"
-                value={apptCrew}
-                onChange={(e) => setApptCrew(e.target.value)}
-              />
+              <CrewSelect value={apptCrew} onChange={setApptCrew} />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="appt-notes">Notes</Label>

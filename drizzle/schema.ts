@@ -306,6 +306,25 @@ export interface InvoiceLineItem {
   unitPrice: number;
 }
 
+// ─── Crew Members ────────────────────────────────────────────────────────────
+export const crewMembers = mysqlTable("crew_members", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Full name of the crew member */
+  name: varchar("name", { length: 200 }).notNull(),
+  /** Contact phone number */
+  phone: varchar("phone", { length: 30 }),
+  /** Contact email */
+  email: varchar("email", { length: 200 }),
+  /** Job role, e.g. Lead Painter, Apprentice, Foreman */
+  role: varchar("role", { length: 100 }),
+  /** Active or inactive status */
+  status: mysqlEnum("status", ["active", "inactive"]).default("active").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type CrewMember = typeof crewMembers.$inferSelect;
+export type InsertCrewMember = typeof crewMembers.$inferInsert;
+
 // ─── Job Photos ───────────────────────────────────────────────────────────────
 export const jobPhotos = mysqlTable("job_photos", {
   id: int("id").autoincrement().primaryKey(),
