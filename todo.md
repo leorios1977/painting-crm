@@ -249,3 +249,8 @@
 - [x] View Portal button in LeadDetail.tsx (opens portal URL in new tab)
 - [x] Secondary color applied to Sign In CTA button via BrandedCTAButton in DashboardLayout.tsx
 - [x] 94 tests passing, TypeScript clean, checkpoint saved
+
+## Phase 27: Revenue Trend Chart
+- [x] Update dashboard.ts: add revenueTrend query (last 12 weeks, grouped by week, paid invoices)
+- [x] Update Dashboard.tsx: Revenue Trend section with recharts LineChart, loading skeleton, brand primary color line
+- [x] 94 tests passing, TypeScript clean, checkpoint saved

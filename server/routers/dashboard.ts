@@ -26,6 +26,75 @@ import { z } from "zod";
 
 export const dashboardRouter = router({
   /**
+   * Returns weekly revenue collected for the last 12 weeks.
+   * Groups paid invoices by ISO week (Monday-anchored) using paidAt timestamp.
+   * Returns an array of { weekLabel: 'Apr 7', revenue: 1234.56 } objects,
+   * oldest week first, always 12 entries (0 for weeks with no revenue).
+   */
+  revenueTrend: protectedProcedure.query(async () => {
+    const db = await getDb();
+    if (!db) return [];
+
+    // Build the 12-week window: from start of week 11 weeks ago to now
+    const now = new Date();
+    // Anchor to Monday of the current week
+    const dayOfWeek = (now.getDay() + 6) % 7; // 0=Mon, 6=Sun
+    const thisMonday = new Date(now);
+    thisMonday.setHours(0, 0, 0, 0);
+    thisMonday.setDate(now.getDate() - dayOfWeek);
+
+    const windowStart = new Date(thisMonday);
+    windowStart.setDate(thisMonday.getDate() - 11 * 7); // 11 weeks back
+
+    // Fetch all paid invoices in the 12-week window
+    const rows = await db
+      .select({
+        paidAt: invoices.paidAt,
+        total: invoices.total,
+      })
+      .from(invoices)
+      .where(
+        and(
+          eq(invoices.status, "paid"),
+          gte(invoices.paidAt, windowStart)
+        )
+      );
+
+    // Build a map of weekKey -> revenue
+    const weekMap: Record<string, number> = {};
+    for (const row of rows) {
+      if (!row.paidAt) continue;
+      const d = new Date(row.paidAt);
+      // Anchor to Monday of that invoice's week
+      const dow = (d.getDay() + 6) % 7;
+      const monday = new Date(d);
+      monday.setHours(0, 0, 0, 0);
+      monday.setDate(d.getDate() - dow);
+      const key = monday.toISOString().slice(0, 10); // YYYY-MM-DD
+      weekMap[key] = (weekMap[key] ?? 0) + parseFloat(String(row.total ?? 0));
+    }
+
+    // Generate all 12 week slots
+    const result: { weekLabel: string; revenue: number; weekStart: string }[] = [];
+    for (let i = 0; i < 12; i++) {
+      const weekStart = new Date(windowStart);
+      weekStart.setDate(windowStart.getDate() + i * 7);
+      const key = weekStart.toISOString().slice(0, 10);
+      const label = weekStart.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+      });
+      result.push({
+        weekLabel: label,
+        revenue: Math.round((weekMap[key] ?? 0) * 100) / 100,
+        weekStart: key,
+      });
+    }
+
+    return result;
+  }),
+
+  /**
    * Returns all dashboard data in a single query batch.
    * Accepts optional dateRange to filter KPI metrics.
    */

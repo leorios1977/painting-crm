@@ -20,6 +20,16 @@ import {
 import { useLocation } from "wouter";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useState } from "react";
+import { useBranding } from "@/contexts/BrandingContext";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
 
 type DateRange = "this_month" | "last_30" | "all_time";
 
@@ -88,7 +98,10 @@ function StatCard({
 export default function Dashboard() {
   const [dateRange, setDateRange] = useState<DateRange>("all_time");
   const { data: stats, isLoading } = trpc.dashboard.stats.useQuery({ dateRange });
+  const { data: trendData, isLoading: trendLoading } = trpc.dashboard.revenueTrend.useQuery();
   const [, setLocation] = useLocation();
+  const { branding } = useBranding();
+  const lineColor = branding.primaryColor || "#3b82f6";
 
   if (isLoading) {
     return (
@@ -198,6 +211,64 @@ export default function Dashboard() {
           trendUp={conversionRate >= 20}
         />
       </div>
+
+      {/* Revenue Trend Chart */}
+      <Card className="border shadow-sm">
+        <CardHeader className="flex flex-row items-center justify-between pb-2">
+          <div>
+            <CardTitle className="text-base font-semibold">Revenue Trend</CardTitle>
+            <p className="text-xs text-muted-foreground mt-0.5">Weekly revenue collected over the last 12 weeks</p>
+          </div>
+          <TrendingUp className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent className="pt-2">
+          {trendLoading ? (
+            <Skeleton className="h-48 w-full rounded-lg" />
+          ) : (
+            <ResponsiveContainer width="100%" height={200}>
+              <LineChart
+                data={trendData ?? []}
+                margin={{ top: 8, right: 16, left: 0, bottom: 0 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                <XAxis
+                  dataKey="weekLabel"
+                  tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+                  tickLine={false}
+                  axisLine={false}
+                  interval={1}
+                />
+                <YAxis
+                  tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+                  tickLine={false}
+                  axisLine={false}
+                  tickFormatter={(v) => `$${v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v}`}
+                  width={48}
+                />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: "hsl(var(--card))",
+                    border: "1px solid hsl(var(--border))",
+                    borderRadius: "8px",
+                    fontSize: 12,
+                    boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+                  }}
+                  formatter={(value: number) => [formatCurrency(value), "Revenue"]}
+                  labelStyle={{ fontWeight: 600, marginBottom: 2 }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="revenue"
+                  stroke={lineColor}
+                  strokeWidth={2.5}
+                  dot={{ r: 3, fill: lineColor, strokeWidth: 0 }}
+                  activeDot={{ r: 5, fill: lineColor, strokeWidth: 2, stroke: "hsl(var(--background))" }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Pipeline Overview + Upcoming Jobs */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
