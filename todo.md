@@ -254,3 +254,15 @@
 - [x] Update dashboard.ts: add revenueTrend query (last 12 weeks, grouped by week, paid invoices)
 - [x] Update Dashboard.tsx: Revenue Trend section with recharts LineChart, loading skeleton, brand primary color line
 - [x] 94 tests passing, TypeScript clean, checkpoint saved
+
+## Phase 28: Google Analytics & Social Media Settings
+- [x] Add googleAnalyticsId, socialMediaEnabled, 7 platform URL fields, and 7 platform enable booleans to app_settings schema
+- [x] Generate and apply migration (0013_slim_gressill.sql)
+- [x] Update settings.ts getBranding to expose googleAnalyticsId
+- [x] Update settings.ts get procedure to return all new GA and social media fields
+- [x] Update settings.ts update procedure to save all new fields
+- [x] Update Settings.tsx: Analytics section (GA Measurement ID input, helper text, active badge, remove button)
+- [x] Update Settings.tsx: Social Media section (master toggle, 7 platform rows with icon/URL/toggle, Save button)
+- [x] Update DashboardLayout.tsx: inject gtag.js script tag when googleAnalyticsId is set (useEffect, idempotent)
+- [x] Create SocialMediaBar.tsx: reusable component for public footer and customer portal
+- [x] 94 tests passing, TypeScript clean, checkpoint saved

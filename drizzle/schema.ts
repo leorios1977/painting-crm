@@ -189,6 +189,26 @@ export const appSettings = mysqlTable("app_settings", {
   secondaryColor: varchar("secondaryColor", { length: 20 }),
   /** Stripe Publishable Key (pk_live_... or pk_test_...) stored in DB, overrides ENV */
   stripePublishableKey: text("stripePublishableKey"),
+  // ─── Analytics ──────────────────────────────────────────────────────────────
+  /** Google Analytics 4 Measurement ID, e.g. G-XXXXXXXXXX */
+  googleAnalyticsId: varchar("googleAnalyticsId", { length: 50 }),
+  // ─── Social Media ────────────────────────────────────────────────────────────
+  /** Master toggle — show social media bar on website/portal */
+  socialMediaEnabled: boolean("socialMediaEnabled").default(true).notNull(),
+  facebookUrl: text("facebookUrl"),
+  facebookEnabled: boolean("facebookEnabled").default(true).notNull(),
+  instagramUrl: text("instagramUrl"),
+  instagramEnabled: boolean("instagramEnabled").default(true).notNull(),
+  whatsappNumber: varchar("whatsappNumber", { length: 30 }),
+  whatsappEnabled: boolean("whatsappEnabled").default(true).notNull(),
+  twitterUrl: text("twitterUrl"),
+  twitterEnabled: boolean("twitterEnabled").default(true).notNull(),
+  youtubeUrl: text("youtubeUrl"),
+  youtubeEnabled: boolean("youtubeEnabled").default(true).notNull(),
+  tiktokUrl: text("tiktokUrl"),
+  tiktokEnabled: boolean("tiktokEnabled").default(true).notNull(),
+  linkedinUrl: text("linkedinUrl"),
+  linkedinEnabled: boolean("linkedinEnabled").default(true).notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
 

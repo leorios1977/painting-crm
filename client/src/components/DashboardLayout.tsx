@@ -82,6 +82,24 @@ export default function DashboardLayout({
     return saved ? parseInt(saved, 10) : DEFAULT_WIDTH;
   });
   const { loading, user } = useAuth();
+  const { branding } = useBranding();
+  const gaId = (branding as unknown as { googleAnalyticsId?: string | null }).googleAnalyticsId;
+
+  // Inject Google Analytics gtag.js when a Measurement ID is configured
+  useEffect(() => {
+    if (!gaId) return;
+    const scriptId = "ga-gtag-script";
+    if (document.getElementById(scriptId)) return; // already injected
+    const s1 = document.createElement("script");
+    s1.id = scriptId;
+    s1.async = true;
+    s1.src = `https://www.googletagmanager.com/gtag/js?id=${gaId}`;
+    document.head.appendChild(s1);
+    const s2 = document.createElement("script");
+    s2.id = "ga-gtag-config";
+    s2.text = `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${gaId}');`;
+    document.head.appendChild(s2);
+  }, [gaId]);
 
   useEffect(() => {
     localStorage.setItem(SIDEBAR_WIDTH_KEY, sidebarWidth.toString());

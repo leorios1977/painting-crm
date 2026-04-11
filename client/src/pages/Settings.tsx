@@ -18,6 +18,15 @@ import {
   Loader2,
   Eye,
   EyeOff,
+  BarChart3,
+  Share2,
+  Facebook,
+  Instagram,
+  Twitter,
+  Youtube,
+  Linkedin,
+  MessageCircle,
+  Music,
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { useState, useRef } from "react";
@@ -176,6 +185,47 @@ export default function Settings() {
   function toggleAutoReview(enabled: boolean) {
     setAutoReviewEnabled(enabled);
     updateSettings.mutate({ autoReviewEnabled: enabled });
+  }
+
+  // Analytics state
+  const [googleAnalyticsId, setGoogleAnalyticsId] = useState("");
+
+  function saveAnalytics() {
+    updateSettings.mutate({ googleAnalyticsId: googleAnalyticsId.trim() || null });
+    setGoogleAnalyticsId("");
+  }
+
+  // Social Media state
+  const [socialMediaEnabled, setSocialMediaEnabled] = useState<boolean | null>(null);
+  const [facebookUrl, setFacebookUrl] = useState("");
+  const [instagramUrl, setInstagramUrl] = useState("");
+  const [whatsappNumber, setWhatsappNumber] = useState("");
+  const [twitterUrl, setTwitterUrl] = useState("");
+  const [youtubeUrl, setYoutubeUrl] = useState("");
+  const [tiktokUrl, setTiktokUrl] = useState("");
+  const [linkedinUrl, setLinkedinUrl] = useState("");
+
+  function saveSocialMedia() {
+    updateSettings.mutate({
+      facebookUrl: facebookUrl.trim() || undefined,
+      instagramUrl: instagramUrl.trim() || undefined,
+      whatsappNumber: whatsappNumber.trim() || undefined,
+      twitterUrl: twitterUrl.trim() || undefined,
+      youtubeUrl: youtubeUrl.trim() || undefined,
+      tiktokUrl: tiktokUrl.trim() || undefined,
+      linkedinUrl: linkedinUrl.trim() || undefined,
+    });
+    setFacebookUrl(""); setInstagramUrl(""); setWhatsappNumber("");
+    setTwitterUrl(""); setYoutubeUrl(""); setTiktokUrl(""); setLinkedinUrl("");
+  }
+
+  function togglePlatform(platform: string, enabled: boolean) {
+    updateSettings.mutate({ [platform]: enabled } as Parameters<typeof updateSettings.mutate>[0]);
+  }
+
+  function toggleSocialMedia(enabled: boolean) {
+    setSocialMediaEnabled(enabled);
+    updateSettings.mutate({ socialMediaEnabled: enabled });
   }
 
   return (
@@ -569,6 +619,142 @@ export default function Settings() {
           </div>
           <Button size="sm" onClick={saveCalendar} disabled={!calendarId || updateSettings.isPending}>
             Save Calendar ID
+          </Button>
+        </CardContent>
+      </Card>
+
+      {/* ── Google Analytics ─────────────────────────────────────────────────── */}
+      <Card className="border shadow-sm">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <BarChart3 className="h-4 w-4 text-primary" />
+            Google Analytics
+            {settings?.googleAnalyticsId ? (
+              <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200 text-xs">
+                <CheckCircle2 className="h-3 w-3 mr-1" />
+                Active
+              </Badge>
+            ) : (
+              <Badge variant="secondary" className="text-xs">Not configured</Badge>
+            )}
+          </CardTitle>
+          <CardDescription>
+            Track website visitors and customer portal usage with Google Analytics 4.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="space-y-1.5">
+            <Label>Google Analytics Measurement ID</Label>
+            <Input
+              placeholder={settings?.googleAnalyticsId || "G-XXXXXXXXXX"}
+              value={googleAnalyticsId}
+              onChange={(e) => setGoogleAnalyticsId(e.target.value)}
+              className="font-mono"
+            />
+            <p className="text-xs text-muted-foreground">
+              Find this in{" "}
+              <a href="https://analytics.google.com" target="_blank" rel="noopener noreferrer" className="underline text-primary">
+                Google Analytics
+              </a>{" "}
+              → Admin → Data Streams → your stream → Measurement ID (starts with G-).
+            </p>
+          </div>
+          {settings?.googleAnalyticsId && (
+            <div className="flex items-center gap-2 text-sm text-emerald-700 bg-emerald-50 border border-emerald-200 rounded px-3 py-2">
+              <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
+              <span>Tracking active: <span className="font-mono font-medium">{settings.googleAnalyticsId}</span></span>
+            </div>
+          )}
+          <Button
+            size="sm"
+            onClick={saveAnalytics}
+            disabled={!googleAnalyticsId.trim() || updateSettings.isPending}
+          >
+            Save Measurement ID
+          </Button>
+          {settings?.googleAnalyticsId && (
+            <Button
+              size="sm"
+              variant="outline"
+              className="ml-2 text-destructive hover:text-destructive"
+              onClick={() => updateSettings.mutate({ googleAnalyticsId: null })}
+              disabled={updateSettings.isPending}
+            >
+              Remove
+            </Button>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* ── Social Media ─────────────────────────────────────────────────────── */}
+      <Card className="border shadow-sm">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Share2 className="h-4 w-4 text-primary" />
+            Social Media
+          </CardTitle>
+          <CardDescription>
+            Add social media links that appear in the website footer and customer portal.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Master toggle */}
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label className="text-sm font-medium">Show Social Media on Website</Label>
+              <p className="text-xs text-muted-foreground">Display social links in the footer and customer portal.</p>
+            </div>
+            <Switch
+              checked={socialMediaEnabled !== null ? socialMediaEnabled : (settings?.socialMediaEnabled ?? true)}
+              onCheckedChange={toggleSocialMedia}
+              disabled={updateSettings.isPending}
+            />
+          </div>
+
+          <Separator />
+
+          {/* Platform rows */}
+          {([
+            { key: "facebook", label: "Facebook", icon: <Facebook className="h-4 w-4" />, placeholder: "https://facebook.com/yourpage", urlState: facebookUrl, setUrl: setFacebookUrl, enabledKey: "facebookEnabled" },
+            { key: "instagram", label: "Instagram", icon: <Instagram className="h-4 w-4" />, placeholder: "https://instagram.com/yourhandle", urlState: instagramUrl, setUrl: setInstagramUrl, enabledKey: "instagramEnabled" },
+            { key: "whatsapp", label: "WhatsApp", icon: <MessageCircle className="h-4 w-4" />, placeholder: "+1 555 000 0000", urlState: whatsappNumber, setUrl: setWhatsappNumber, enabledKey: "whatsappEnabled" },
+            { key: "twitter", label: "X / Twitter", icon: <Twitter className="h-4 w-4" />, placeholder: "https://x.com/yourhandle", urlState: twitterUrl, setUrl: setTwitterUrl, enabledKey: "twitterEnabled" },
+            { key: "youtube", label: "YouTube", icon: <Youtube className="h-4 w-4" />, placeholder: "https://youtube.com/@yourchannel", urlState: youtubeUrl, setUrl: setYoutubeUrl, enabledKey: "youtubeEnabled" },
+            { key: "tiktok", label: "TikTok", icon: <Music className="h-4 w-4" />, placeholder: "https://tiktok.com/@yourhandle", urlState: tiktokUrl, setUrl: setTiktokUrl, enabledKey: "tiktokEnabled" },
+            { key: "linkedin", label: "LinkedIn", icon: <Linkedin className="h-4 w-4" />, placeholder: "https://linkedin.com/company/yourco", urlState: linkedinUrl, setUrl: setLinkedinUrl, enabledKey: "linkedinEnabled" },
+          ] as const).map(({ key, label, icon, placeholder, urlState, setUrl, enabledKey }) => {
+            const currentUrl = (settings as Record<string, unknown>)?.[`${key === "whatsapp" ? "whatsapp" : key}${key === "whatsapp" ? "Number" : "Url"}`] as string | null;
+            const isEnabled = (settings as Record<string, unknown>)?.[enabledKey] as boolean ?? true;
+            return (
+              <div key={key} className="flex items-center gap-3">
+                <div className="text-muted-foreground shrink-0">{icon}</div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium w-24 shrink-0">{label}</span>
+                    <Input
+                      placeholder={currentUrl || placeholder}
+                      value={urlState}
+                      onChange={(e) => setUrl(e.target.value)}
+                      className="text-sm h-8"
+                    />
+                  </div>
+                </div>
+                <Switch
+                  checked={isEnabled}
+                  onCheckedChange={(v) => togglePlatform(enabledKey, v)}
+                  disabled={updateSettings.isPending}
+                />
+              </div>
+            );
+          })}
+
+          <Button
+            size="sm"
+            onClick={saveSocialMedia}
+            disabled={updateSettings.isPending}
+            className="mt-2"
+          >
+            Save Social Media Links
           </Button>
         </CardContent>
       </Card>

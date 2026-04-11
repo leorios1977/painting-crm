@@ -19,15 +19,16 @@ export const settingsRouter = router({
   // ─── Public: get branding only (used by DashboardLayout before auth) ─────────
   getBranding: publicProcedure.query(async () => {
     const db = await getDb();
-    if (!db) return DEFAULT_BRANDING;
+    if (!db) return { ...DEFAULT_BRANDING, googleAnalyticsId: null as string | null };
     const rows = await db.select().from(appSettings).limit(1);
     const s = rows[0];
-    if (!s) return DEFAULT_BRANDING;
+    if (!s) return { ...DEFAULT_BRANDING, googleAnalyticsId: null as string | null };
     return {
       businessName: s.businessName ?? DEFAULT_BRANDING.businessName,
       logoUrl: s.logoUrl ?? null,
       primaryColor: s.primaryColor ?? DEFAULT_BRANDING.primaryColor,
       secondaryColor: s.secondaryColor ?? DEFAULT_BRANDING.secondaryColor,
+      googleAnalyticsId: s.googleAnalyticsId ?? null,
     };
   }),
 
@@ -42,6 +43,17 @@ export const settingsRouter = router({
       // Stripe keys — return masked versions only
       stripePublishableKey: null as string | null,
       stripeSecretKeySet: false,
+      // Analytics
+      googleAnalyticsId: null as string | null,
+      // Social Media
+      socialMediaEnabled: true,
+      facebookUrl: null as string | null, facebookEnabled: true,
+      instagramUrl: null as string | null, instagramEnabled: true,
+      whatsappNumber: null as string | null, whatsappEnabled: true,
+      twitterUrl: null as string | null, twitterEnabled: true,
+      youtubeUrl: null as string | null, youtubeEnabled: true,
+      tiktokUrl: null as string | null, tiktokEnabled: true,
+      linkedinUrl: null as string | null, linkedinEnabled: true,
     };
     if (!db) return empty;
     const rows = await db.select().from(appSettings).limit(1);
@@ -67,6 +79,17 @@ export const settingsRouter = router({
       stripePublishableKey: s.stripePublishableKey ?? null,
       // Only tell the frontend whether a secret key is configured, never expose the value
       stripeSecretKeySet: !!effectiveSecretKey,
+      // Analytics
+      googleAnalyticsId: s.googleAnalyticsId ?? null,
+      // Social Media
+      socialMediaEnabled: s.socialMediaEnabled ?? true,
+      facebookUrl: s.facebookUrl ?? null, facebookEnabled: s.facebookEnabled ?? true,
+      instagramUrl: s.instagramUrl ?? null, instagramEnabled: s.instagramEnabled ?? true,
+      whatsappNumber: s.whatsappNumber ?? null, whatsappEnabled: s.whatsappEnabled ?? true,
+      twitterUrl: s.twitterUrl ?? null, twitterEnabled: s.twitterEnabled ?? true,
+      youtubeUrl: s.youtubeUrl ?? null, youtubeEnabled: s.youtubeEnabled ?? true,
+      tiktokUrl: s.tiktokUrl ?? null, tiktokEnabled: s.tiktokEnabled ?? true,
+      linkedinUrl: s.linkedinUrl ?? null, linkedinEnabled: s.linkedinEnabled ?? true,
     };
   }),
 
@@ -85,6 +108,24 @@ export const settingsRouter = router({
       businessName: z.string().max(200).optional(),
       primaryColor: z.string().max(20).optional(),
       secondaryColor: z.string().max(20).optional(),
+      // Analytics
+      googleAnalyticsId: z.string().max(50).optional().nullable(),
+      // Social Media
+      socialMediaEnabled: z.boolean().optional(),
+      facebookUrl: z.string().optional().nullable(),
+      facebookEnabled: z.boolean().optional(),
+      instagramUrl: z.string().optional().nullable(),
+      instagramEnabled: z.boolean().optional(),
+      whatsappNumber: z.string().max(30).optional().nullable(),
+      whatsappEnabled: z.boolean().optional(),
+      twitterUrl: z.string().optional().nullable(),
+      twitterEnabled: z.boolean().optional(),
+      youtubeUrl: z.string().optional().nullable(),
+      youtubeEnabled: z.boolean().optional(),
+      tiktokUrl: z.string().optional().nullable(),
+      tiktokEnabled: z.boolean().optional(),
+      linkedinUrl: z.string().optional().nullable(),
+      linkedinEnabled: z.boolean().optional(),
     }))
     .mutation(async ({ input }) => {
       const db = await getDb();
@@ -101,6 +142,7 @@ export const settingsRouter = router({
           businessName: input.businessName || null,
           primaryColor: input.primaryColor || null,
           secondaryColor: input.secondaryColor || null,
+          googleAnalyticsId: input.googleAnalyticsId || null,
         });
       } else {
         const updateData: Record<string, unknown> = {};
@@ -115,6 +157,24 @@ export const settingsRouter = router({
         if (input.businessName !== undefined) updateData.businessName = input.businessName;
         if (input.primaryColor !== undefined) updateData.primaryColor = input.primaryColor;
         if (input.secondaryColor !== undefined) updateData.secondaryColor = input.secondaryColor;
+        // Analytics
+        if (input.googleAnalyticsId !== undefined) updateData.googleAnalyticsId = input.googleAnalyticsId || null;
+        // Social Media
+        if (input.socialMediaEnabled !== undefined) updateData.socialMediaEnabled = input.socialMediaEnabled;
+        if (input.facebookUrl !== undefined) updateData.facebookUrl = input.facebookUrl || null;
+        if (input.facebookEnabled !== undefined) updateData.facebookEnabled = input.facebookEnabled;
+        if (input.instagramUrl !== undefined) updateData.instagramUrl = input.instagramUrl || null;
+        if (input.instagramEnabled !== undefined) updateData.instagramEnabled = input.instagramEnabled;
+        if (input.whatsappNumber !== undefined) updateData.whatsappNumber = input.whatsappNumber || null;
+        if (input.whatsappEnabled !== undefined) updateData.whatsappEnabled = input.whatsappEnabled;
+        if (input.twitterUrl !== undefined) updateData.twitterUrl = input.twitterUrl || null;
+        if (input.twitterEnabled !== undefined) updateData.twitterEnabled = input.twitterEnabled;
+        if (input.youtubeUrl !== undefined) updateData.youtubeUrl = input.youtubeUrl || null;
+        if (input.youtubeEnabled !== undefined) updateData.youtubeEnabled = input.youtubeEnabled;
+        if (input.tiktokUrl !== undefined) updateData.tiktokUrl = input.tiktokUrl || null;
+        if (input.tiktokEnabled !== undefined) updateData.tiktokEnabled = input.tiktokEnabled;
+        if (input.linkedinUrl !== undefined) updateData.linkedinUrl = input.linkedinUrl || null;
+        if (input.linkedinEnabled !== undefined) updateData.linkedinEnabled = input.linkedinEnabled;
         await db.update(appSettings).set(updateData).where(eq(appSettings.id, rows[0].id));
       }
       return { success: true };
