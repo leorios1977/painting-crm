@@ -94,6 +94,20 @@ export const smsRouter = router({
   }),
 
   /**
+   * Marks ALL conversations across all leads as read.
+   * Called when the Communications page mounts to clear the sidebar badge.
+   */
+  markAllRead: protectedProcedure.mutation(async () => {
+    const db = await getDb();
+    if (!db) return { success: false };
+    await db
+      .update(conversations)
+      .set({ read: true })
+      .where(eq(conversations.read, false));
+    return { success: true };
+  }),
+
+  /**
    * Returns whether Twilio credentials are present in the environment.
    * Used by the frontend to show a configuration warning when not set up.
    */

@@ -240,3 +240,12 @@
 - [x] Update LeadDetail.tsx booking modal crew dropdown to load from crew_members table (dynamic Select)
 - [x] Write Vitest tests for crew router (10 tests)
 - [x] 94 tests passing total, TypeScript clean, save checkpoint
+
+## Phase 26: Polish Features
+- [x] Dashboard date-range filter toggle (This Month / Last 30 Days / All Time) above stat cards
+- [x] Conversion rate KPI card (5th card: paid leads / total leads * 100, with trend arrow)
+- [x] Communications page: call sms.markAllRead on mount to clear sidebar unread badge
+- [x] Crew SMS notification on appointment booking (crew member phone, job details)
+- [x] View Portal button in LeadDetail.tsx (opens portal URL in new tab)
+- [x] Secondary color applied to Sign In CTA button via BrandedCTAButton in DashboardLayout.tsx
+- [x] 94 tests passing, TypeScript clean, checkpoint saved

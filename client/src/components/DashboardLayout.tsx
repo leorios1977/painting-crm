@@ -29,6 +29,31 @@ import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
 import { Button } from "./ui/button";
 
+/**
+ * BrandedCTAButton — a primary Button that uses the secondary brand color
+ * from BrandingContext as its background, overriding the default primary color.
+ * Falls back to the default Button style when branding is not loaded.
+ */
+function BrandedCTAButton({
+  children,
+  style,
+  ...props
+}: React.ComponentProps<typeof Button>) {
+  const { branding } = useBranding();
+  const brandStyle = branding.secondaryColor
+    ? {
+        backgroundColor: branding.secondaryColor,
+        borderColor: branding.secondaryColor,
+        ...style,
+      }
+    : style;
+  return (
+    <Button style={brandStyle} {...props}>
+      {children}
+    </Button>
+  );
+}
+
 const menuItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/" },
   { icon: BarChart3, label: "Pipeline", path: "/pipeline" },
@@ -78,7 +103,7 @@ export default function DashboardLayout({
               Access to this dashboard requires authentication. Continue to launch the login flow.
             </p>
           </div>
-          <Button
+          <BrandedCTAButton
             onClick={() => {
               window.location.href = getLoginUrl();
             }}
@@ -86,7 +111,7 @@ export default function DashboardLayout({
             className="w-full shadow-lg hover:shadow-xl transition-all"
           >
             Sign in
-          </Button>
+          </BrandedCTAButton>
         </div>
       </div>
     );

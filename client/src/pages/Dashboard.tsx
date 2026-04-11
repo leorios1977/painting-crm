@@ -11,12 +11,23 @@ import {
   Mail,
   MessageSquare,
   TrendingUp,
+  TrendingDown,
   Users,
   ArrowRight,
   Clock,
+  Target,
 } from "lucide-react";
 import { useLocation } from "wouter";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useState } from "react";
+
+type DateRange = "this_month" | "last_30" | "all_time";
+
+const DATE_RANGE_OPTIONS: { value: DateRange; label: string }[] = [
+  { value: "this_month", label: "This Month" },
+  { value: "last_30", label: "Last 30 Days" },
+  { value: "all_time", label: "All Time" },
+];
 
 function StatCard({
   title,
@@ -24,6 +35,7 @@ function StatCard({
   subtitle,
   icon: Icon,
   trend,
+  trendUp,
   color = "blue",
 }: {
   title: string;
@@ -31,13 +43,15 @@ function StatCard({
   subtitle?: string;
   icon: React.ElementType;
   trend?: string;
-  color?: "blue" | "green" | "amber" | "violet";
+  trendUp?: boolean;
+  color?: "blue" | "green" | "amber" | "violet" | "rose";
 }) {
   const colorMap = {
     blue: "bg-blue-50 text-blue-600",
     green: "bg-emerald-50 text-emerald-600",
     amber: "bg-amber-50 text-amber-600",
     violet: "bg-violet-50 text-violet-600",
+    rose: "bg-rose-50 text-rose-600",
   };
   return (
     <Card className="border shadow-sm hover:shadow-md transition-shadow">
@@ -51,8 +65,14 @@ function StatCard({
             )}
             {trend && (
               <div className="flex items-center gap-1 mt-2">
-                <TrendingUp className="h-3 w-3 text-emerald-500" />
-                <span className="text-xs text-emerald-600 font-medium">{trend}</span>
+                {trendUp !== false ? (
+                  <TrendingUp className="h-3 w-3 text-emerald-500" />
+                ) : (
+                  <TrendingDown className="h-3 w-3 text-rose-500" />
+                )}
+                <span className={`text-xs font-medium ${trendUp !== false ? "text-emerald-600" : "text-rose-600"}`}>
+                  {trend}
+                </span>
               </div>
             )}
           </div>
@@ -66,14 +86,19 @@ function StatCard({
 }
 
 export default function Dashboard() {
-  const { data: stats, isLoading } = trpc.dashboard.stats.useQuery();
+  const [dateRange, setDateRange] = useState<DateRange>("all_time");
+  const { data: stats, isLoading } = trpc.dashboard.stats.useQuery({ dateRange });
   const [, setLocation] = useLocation();
 
   if (isLoading) {
     return (
       <div className="space-y-6">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {[...Array(4)].map((_, i) => (
+        <div className="flex items-center justify-between">
+          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-9 w-64" />
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+          {[...Array(5)].map((_, i) => (
             <Skeleton key={i} className="h-32 rounded-xl" />
           ))}
         </div>
@@ -86,45 +111,66 @@ export default function Dashboard() {
   }
 
   const stageCounts = stats?.stageCounts || {};
-  // Live KPI metrics from SQL aggregates
   const totalLeads = stats?.totalLeads ?? 0;
   const pipelineValue = stats?.pipelineValue ?? 0;
   const revenueCollected = stats?.revenueCollected ?? 0;
   const upcomingJobsCount = stats?.upcomingJobsCount ?? 0;
+  const conversionRate = stats?.conversionRate ?? 0;
+  const paidLeads = stats?.paidLeads ?? 0;
   const upcomingJobs = stats?.upcomingJobs || [];
   const recentActivity = stats?.recentActivity || [];
 
   const stages: Stage[] = ["lead", "quoted", "scheduled", "in_progress", "completed", "paid"];
 
+  const rangeLabel = DATE_RANGE_OPTIONS.find((o) => o.value === dateRange)?.label ?? "All Time";
+
   return (
     <div className="space-y-6 pb-8">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
           <p className="text-muted-foreground text-sm mt-0.5">
             Overview of your painting business pipeline
           </p>
         </div>
-        <Button onClick={() => setLocation("/leads")} size="sm">
-          <Users className="h-4 w-4 mr-2" />
-          Add Lead
-        </Button>
+        <div className="flex items-center gap-2">
+          {/* Date-range filter toggle */}
+          <div className="flex items-center bg-muted rounded-lg p-1 gap-1">
+            {DATE_RANGE_OPTIONS.map((opt) => (
+              <button
+                key={opt.value}
+                onClick={() => setDateRange(opt.value)}
+                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+                  dateRange === opt.value
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+          <Button onClick={() => setLocation("/leads")} size="sm">
+            <Users className="h-4 w-4 mr-2" />
+            Add Lead
+          </Button>
+        </div>
       </div>
 
-      {/* Stats Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Stats Row — 5 cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <StatCard
           title="Total Leads"
           value={totalLeads}
-          subtitle="All pipeline stages"
+          subtitle={rangeLabel}
           icon={Users}
           color="blue"
         />
         <StatCard
           title="Pipeline Value"
           value={formatCurrency(pipelineValue)}
-          subtitle="Estimated across all leads"
+          subtitle={rangeLabel}
           icon={BarChart3}
           color="violet"
         />
@@ -141,6 +187,15 @@ export default function Dashboard() {
           subtitle="Next 7 days"
           icon={CalendarDays}
           color="amber"
+        />
+        <StatCard
+          title="Conversion Rate"
+          value={`${conversionRate}%`}
+          subtitle={`${paidLeads} of ${totalLeads} leads paid`}
+          icon={Target}
+          color="rose"
+          trend={conversionRate > 0 ? `${conversionRate}% close rate` : undefined}
+          trendUp={conversionRate >= 20}
         />
       </div>
 
@@ -206,7 +261,7 @@ export default function Dashboard() {
                   <div
                     key={job.id}
                     className="flex items-start gap-3 p-2 rounded-lg hover:bg-muted/50 cursor-pointer transition-colors"
-                    onClick={() => setLocation(`/leads/${job.id}`)}
+                    onClick={() => setLocation(`/leads/${job.leadId}`)}
                   >
                     <div className="h-8 w-8 rounded-lg bg-blue-50 flex items-center justify-center shrink-0">
                       <CalendarDays className="h-4 w-4 text-blue-600" />

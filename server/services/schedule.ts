@@ -11,7 +11,7 @@
  */
 
 import { getDb } from "../db";
-import { appointments, leads, communicationLog } from "../../drizzle/schema";
+import { appointments, leads, communicationLog, crewMembers } from "../../drizzle/schema";
 import { eq } from "drizzle-orm";
 import { sendSMS } from "./sms";
 import type { Appointment, InsertAppointment } from "../../drizzle/schema";
@@ -193,6 +193,30 @@ export async function createAppointment(
     } catch (err) {
       emailError = (err as Error).message;
       console.error("[Schedule] Email confirmation failed:", emailError);
+    }
+  }
+
+  // ── Send crew notification SMS ──────────────────────────────────────────────
+  if (input.crewAssigned) {
+    try {
+      // Look up the crew member by name to get their phone number
+      const crewRows = await db
+        .select()
+        .from(crewMembers)
+        .where(eq(crewMembers.name, input.crewAssigned))
+        .limit(1);
+      const crewMember = crewRows[0];
+      if (crewMember?.phone) {
+        const customerName = `${lead.firstName} ${lead.lastName}`.trim();
+        const address = lead.projectAddress || "address on file";
+        const when = formatAppointmentDate(input.scheduledDate, input.timeSlot);
+        const crewSmsBody = `New job assigned: ${customerName} at ${address} on ${when}. Reply CONFIRM to acknowledge.`;
+        await sendSMS(crewSmsBody, crewMember.phone, input.leadId);
+        console.log(`[Schedule] Crew SMS sent to ${crewMember.name} (${crewMember.phone})`);
+      }
+    } catch (crewSmsErr) {
+      // Non-fatal: log but don't fail the booking
+      console.warn("[Schedule] Crew SMS notification failed:", (crewSmsErr as Error).message);
     }
   }
 

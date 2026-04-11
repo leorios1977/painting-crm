@@ -14,7 +14,7 @@ import {
   Clock,
   User,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 
 const TYPE_ICONS: Record<string, React.ElementType> = {
@@ -37,6 +37,18 @@ export default function Communications() {
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [, setLocation] = useLocation();
+  const utils = trpc.useUtils();
+
+  // Mark all SMS conversations as read when this page mounts so the sidebar badge clears
+  const markAllRead = trpc.sms.markAllRead.useMutation({
+    onSuccess: () => {
+      utils.sms.getUnreadCount.invalidate();
+    },
+  });
+  useEffect(() => {
+    markAllRead.mutate();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const { data: logs, isLoading } = trpc.communications.list.useQuery(
     {

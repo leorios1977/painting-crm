@@ -106,14 +106,23 @@ export default function LeadDetail() {
 
   // ── Portal state ──────────────────────────────────────────────────────────
   const [portalCopied, setPortalCopied] = useState(false);
+  const [lastPortalUrl, setLastPortalUrl] = useState<string | null>(null);
 
   const generatePortalToken = trpc.portal.generateToken.useMutation({
     onSuccess: (data) => {
+      setLastPortalUrl(data.url);
       navigator.clipboard.writeText(data.url).then(() => {
         setPortalCopied(true);
         toast.success("Portal link copied to clipboard!");
         setTimeout(() => setPortalCopied(false), 3000);
       });
+    },
+    onError: (e) => toast.error(`Portal error: ${e.message}`),
+  });
+
+  const generatePortalTokenForView = trpc.portal.generateToken.useMutation({
+    onSuccess: (data) => {
+      window.open(data.url, "_blank", "noopener,noreferrer");
     },
     onError: (e) => toast.error(`Portal error: ${e.message}`),
   });
@@ -456,6 +465,22 @@ export default function LeadDetail() {
           >
             <Link2 className="h-4 w-4 mr-2" />
             {portalCopied ? "Copied!" : "Copy Portal Link"}
+          </Button>
+
+          {/* View Portal — opens in a new tab */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() =>
+              generatePortalTokenForView.mutate({
+                leadId: id,
+                origin: window.location.origin,
+              })
+            }
+            disabled={generatePortalTokenForView.isPending}
+          >
+            <ExternalLink className="h-4 w-4 mr-2" />
+            View Portal
           </Button>
         </div>
       </div>
