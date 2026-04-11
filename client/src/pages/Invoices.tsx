@@ -49,9 +49,13 @@ import {
   Clock,
   AlertCircle,
   Receipt,
+  Download,
 } from "lucide-react";
 import { Link } from "wouter";
 import type { InvoiceLineItem } from "../../../drizzle/schema";
+import { PDFDownloadLink } from "@react-pdf/renderer";
+import { InvoicePDF } from "@/components/InvoicePDF";
+import { useBranding } from "@/contexts/BrandingContext";
 
 // ─── Status badge config ──────────────────────────────────────────────────────
 
@@ -101,6 +105,7 @@ export default function Invoices() {
   const [deleteId, setDeleteId] = useState<number | null>(null);
 
   const utils = trpc.useUtils();
+  const { branding } = useBranding();
 
   const { data: invoices = [], isLoading } = trpc.invoices.list.useQuery(
     statusFilter !== "all"
@@ -518,6 +523,17 @@ export default function Invoices() {
                     Delete
                   </Button>
                 )}
+                <PDFDownloadLink
+                  document={<InvoicePDF invoice={selectedInvoice} branding={branding} />}
+                  fileName={`${selectedInvoice.invoiceNumber}.pdf`}
+                >
+                  {({ loading }) => (
+                    <Button variant="outline" disabled={loading}>
+                      <Download className="w-4 h-4 mr-2" />
+                      {loading ? "Generating…" : "Download PDF"}
+                    </Button>
+                  )}
+                </PDFDownloadLink>
               </div>
 
               <div className="text-xs text-muted-foreground pt-2">

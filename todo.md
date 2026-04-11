@@ -212,3 +212,18 @@
 - [x] Add getUnreadCount procedure to fetch unread count
 - [x] Update DashboardLayout.tsx: display red badge with unread count next to Communication Log nav item
 - [x] Write tests, verify all 84 tests pass, TypeScript clean, save checkpoint
+
+## Phase 24: PDF Invoice Generation
+- [ ] Install @react-pdf/renderer frontend dependency
+- [ ] Create InvoicePDF.tsx component with professional invoice layout
+- [ ] Add Download PDF button to Invoices.tsx page
+- [ ] Add Download PDF button to CustomerPortal.tsx
+- [ ] Create backend route /api/invoices/:id/pdf in routers.ts
+- [ ] Run tests, TypeScript clean, save checkpoint
+
+## Phase 24: PDF Invoice Generation
+- [x] Install @react-pdf/renderer frontend dependency
+- [x] Create InvoicePDF.tsx component with professional invoice layout (company name, customer details, line items, totals, due date)
+- [x] Add Download PDF button to Invoices.tsx page (in detail sheet)
+- [x] Add Download PDF button to CustomerPortal.tsx (next to Pay Now button)
+- [x] Run tests, TypeScript clean, save checkpoint (84 tests passing)

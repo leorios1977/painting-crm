@@ -32,7 +32,11 @@ import {
   Phone,
   User,
   Wrench,
+  Download,
 } from "lucide-react";
+import { PDFDownloadLink } from "@react-pdf/renderer";
+import { InvoicePDF } from "@/components/InvoicePDF";
+import { useBranding } from "@/contexts/BrandingContext";
 
 // ─── Stage progress config ────────────────────────────────────────────────────
 
@@ -122,17 +126,14 @@ function ProgressTracker({ stage }: { stage: string }) {
 
 function InvoiceSection({
   invoice,
+  branding,
 }: {
-  invoice: {
-    invoiceNumber: string;
-    lineItems: unknown;
-    subtotal: string;
-    tax: string;
-    total: string;
-    status: string;
-    dueDate: Date | null;
-    paidAt: Date | null;
-    stripePaymentLink: string | null;
+  invoice: any;
+  branding: {
+    businessName: string;
+    logoUrl?: string | null;
+    primaryColor?: string;
+    companyEmail?: string;
   };
 }) {
   const lineItems = (invoice.lineItems as { description: string; quantity: number; unitPrice: number }[]) ?? [];
@@ -213,17 +214,31 @@ function InvoiceSection({
           </div>
         ) : null}
 
-        {/* Stripe payment button */}
-        {invoice.status !== "paid" && invoice.stripePaymentLink && (
-          <Button
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-            onClick={() => window.open(invoice.stripePaymentLink!, "_blank")}
+        <div className="flex gap-2">
+          {/* Download PDF Button */}
+          <PDFDownloadLink
+            document={<InvoicePDF invoice={invoice} branding={branding} />}
+            fileName={`${invoice.invoiceNumber}.pdf`}
           >
-            <CreditCard className="w-4 h-4 mr-2" />
-            Pay Now
-            <ExternalLink className="w-3 h-3 ml-2" />
-          </Button>
-        )}
+            {({ loading }) => (
+              <Button variant="outline" disabled={loading} className="flex-1">
+                <Download className="w-4 h-4 mr-2" />
+                {loading ? "Generating…" : "PDF"}
+              </Button>
+            )}
+          </PDFDownloadLink>
+          {/* Stripe payment button */}
+          {invoice.status !== "paid" && invoice.stripePaymentLink && (
+            <Button
+              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+              onClick={() => window.open(invoice.stripePaymentLink!, "_blank")}
+            >
+              <CreditCard className="w-4 h-4 mr-2" />
+              Pay Now
+              <ExternalLink className="w-3 h-3 ml-2" />
+            </Button>
+          )}
+        </div>
       </CardContent>
     </Card>
   );
@@ -295,11 +310,11 @@ function PhotoGallery({ photos }: { photos: { url: string; caption: string; type
 export default function CustomerPortal() {
   const params = useParams<{ token: string }>();
   const token = params.token ?? "";
-
   const { data, isLoading, error } = trpc.portal.getData.useQuery(
     { token },
     { enabled: !!token, retry: false }
   );
+  const { branding } = useBranding();
 
   // Load job_photos from the new photos router (public endpoint)
   const { data: jobPhotos } = trpc.photos.byLeadPublic.useQuery(
@@ -465,7 +480,7 @@ export default function CustomerPortal() {
         )}
 
         {/* Invoice */}
-        {invoice && <InvoiceSection invoice={invoice} />}
+        {invoice && <InvoiceSection invoice={invoice} branding={branding} />}
 
         {/* Photo gallery — combines legacy portal photos with new job_photos */}
         {(() => {
