@@ -1,0 +1,1 @@
+ALTER TABLE `conversations` ADD `read` boolean DEFAULT false NOT NULL;

@@ -78,6 +78,13 @@
       "when": 1775685472175,
       "tag": "0010_eminent_spiral",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "5",
+      "when": 1775884027210,
+      "tag": "0011_sparkling_dark_beast",
+      "breakpoints": true
     }
   ]
 }

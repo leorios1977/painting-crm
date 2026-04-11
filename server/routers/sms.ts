@@ -2,16 +2,18 @@
  * sms router — tRPC procedures for the SMS conversation thread
  *
  * Procedures:
- *   sms.list    — list all conversations for a lead (newest first)
- *   sms.send    — send an outbound SMS via Twilio and persist to DB
- *   sms.status  — returns whether Twilio credentials are configured
+ *   sms.list           — list all conversations for a lead (newest first)
+ *   sms.send           — send an outbound SMS via Twilio and persist to DB
+ *   sms.markAsRead     — mark all messages for a lead as read
+ *   sms.getUnreadCount — get count of unread conversations across all leads
+ *   sms.status         — returns whether Twilio credentials are configured
  */
 
 import { z } from "zod";
 import { protectedProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
 import { conversations } from "../../drizzle/schema";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, sql } from "drizzle-orm";
 import { sendSMS } from "../services/sms";
 import { ENV } from "../_core/env";
 
@@ -60,6 +62,36 @@ export const smsRouter = router({
       }
       return { ...result, persisted: true };
     }),
+
+  /**
+   * Marks all conversations for a given lead as read.
+   * Called when the SMS tab is opened for a lead.
+   */
+  markAsRead: protectedProcedure
+    .input(z.object({ leadId: z.number() }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) return { success: false };
+      await db
+        .update(conversations)
+        .set({ read: true })
+        .where(eq(conversations.leadId, input.leadId));
+      return { success: true };
+    }),
+
+  /**
+   * Returns the count of unread conversations across all leads.
+   * Used to display the badge count in the sidebar.
+   */
+  getUnreadCount: protectedProcedure.query(async () => {
+    const db = await getDb();
+    if (!db) return 0;
+    const [result] = await db
+      .select({ count: sql<number>`COUNT(*)` })
+      .from(conversations)
+      .where(eq(conversations.read, false));
+    return Number(result?.count ?? 0);
+  }),
 
   /**
    * Returns whether Twilio credentials are present in the environment.

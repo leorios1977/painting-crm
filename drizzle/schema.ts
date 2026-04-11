@@ -207,6 +207,8 @@ export const conversations = mysqlTable("conversations", {
   twilioSid: varchar("twilioSid", { length: 64 }),
   /** Twilio delivery status: queued, sent, delivered, failed, received, etc. */
   status: varchar("status", { length: 30 }).default("queued").notNull(),
+  /** Whether this message has been read by the user */
+  read: boolean("read").default(false).notNull(),
   /** Optional tenantId for multi-tenant support */
   tenantId: varchar("tenantId", { length: 64 }),
   createdAt: timestamp("createdAt").defaultNow().notNull(),

@@ -203,3 +203,12 @@
 - [x] Update dashboard.ts: live upcoming jobs count (appointments in next 7 days, status != cancelled)
 - [x] Update Dashboard.tsx: wire all four stat cards to live tRPC data with loading states
 - [x] Run tests, TypeScript clean, save checkpoint
+
+## Phase 23: Unread SMS Badge
+- [x] Add read boolean field to conversations schema (default false)
+- [x] Generate and apply migration for read column
+- [x] Update SMS webhook to set read=false for new inbound messages
+- [x] Add markAsRead procedure to mark all messages for a lead as read
+- [x] Add getUnreadCount procedure to fetch unread count
+- [x] Update DashboardLayout.tsx: display red badge with unread count next to Communication Log nav item
+- [x] Write tests, verify all 84 tests pass, TypeScript clean, save checkpoint

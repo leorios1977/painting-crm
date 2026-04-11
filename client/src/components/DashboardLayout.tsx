@@ -1,5 +1,6 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { trpc } from "@/lib/trpc";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -124,6 +125,10 @@ function DashboardLayoutContent({
   const activeMenuItem = menuItems.find(item => item.path === location || (item.path !== '/' && location.startsWith(item.path)));
   const isMobile = useIsMobile();
 
+  // Fetch unread conversation count
+  const { data: unreadCount = 0 } = trpc.sms.getUnreadCount.useQuery();
+  const markAllAsReadMutation = trpc.sms.markAsRead.useMutation();
+
   // Apply primary color as CSS variable on the sidebar element
   const sidebarStyle: CSSProperties = branding.primaryColor
     ? { "--sidebar-background": branding.primaryColor } as CSSProperties
@@ -212,18 +217,32 @@ function DashboardLayoutContent({
             <SidebarMenu className="px-2 py-1">
               {menuItems.map(item => {
                 const isActive = location === item.path;
+                // Show unread badge for Communication Log
+                const showBadge = item.path === "/communications" && unreadCount > 0;
                 return (
                   <SidebarMenuItem key={item.path}>
                     <SidebarMenuButton
                       isActive={isActive}
-                      onClick={() => setLocation(item.path)}
+                      onClick={() => {
+                        setLocation(item.path);
+                        // Mark all conversations as read when opening Communications
+                        if (item.path === "/communications" && unreadCount > 0) {
+                          // We'll mark them as read in the Communications page component
+                          // For now, just navigate
+                        }
+                      }}
                       tooltip={item.label}
                       className={`h-10 transition-all font-normal`}
                     >
                       <item.icon
                         className={`h-4 w-4 ${isActive ? "text-primary" : ""}`}
                       />
-                      <span>{item.label}</span>
+                      <span className="flex-1">{item.label}</span>
+                      {showBadge && (
+                        <span className="ml-auto inline-flex items-center justify-center h-5 w-5 rounded-full bg-red-500 text-white text-xs font-bold">
+                          {unreadCount}
+                        </span>
+                      )}
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 );

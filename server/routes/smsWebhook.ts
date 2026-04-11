@@ -109,7 +109,7 @@ export function registerSmsWebhook(app: Express): void {
         console.warn(`[SMS Webhook] No lead found for phone number: ${from}`);
       }
 
-      // Persist the inbound message
+      // Persist the inbound message (mark as unread)
       await db.insert(conversations).values({
         leadId,
         direction: "inbound",
@@ -118,6 +118,7 @@ export function registerSmsWebhook(app: Express): void {
         toNumber: to,
         twilioSid: messageSid || null,
         status: "received",
+        read: false,
         tenantId: null,
       });
 
