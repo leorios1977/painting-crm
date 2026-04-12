@@ -1,4 +1,10 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
+import { useEditor, EditorContent } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
+import Underline from "@tiptap/extension-underline";
+import Link from "@tiptap/extension-link";
+import Image from "@tiptap/extension-image";
+import Placeholder from "@tiptap/extension-placeholder";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,11 +26,158 @@ import {
   X,
   Image as ImageIcon,
   MapPin,
-  Search as SearchIcon,
   Globe,
+  Bold,
+  Italic,
+  Underline as UnderlineIcon,
+  Heading1,
+  Heading2,
+  Heading3,
+  List,
+  ListOrdered,
+  Quote,
+  Link as LinkIcon,
+  ImagePlus,
 } from "lucide-react";
 import { useLocation, useParams } from "wouter";
 import { toast } from "sonner";
+
+// ─── TipTap Toolbar ───────────────────────────────────────────────────────────
+
+function ToolbarButton({
+  active,
+  onClick,
+  title,
+  children,
+}: {
+  active?: boolean;
+  onClick: () => void;
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      title={title}
+      onClick={onClick}
+      className={`p-1.5 rounded transition-colors hover:bg-muted ${
+        active ? "bg-muted text-foreground" : "text-muted-foreground"
+      }`}
+    >
+      {children}
+    </button>
+  );
+}
+
+function EditorToolbar({ editor }: { editor: ReturnType<typeof useEditor> }) {
+  if (!editor) return null;
+
+  function handleLink() {
+    const prev = editor!.getAttributes("link").href as string | undefined;
+    const url = window.prompt("Enter URL", prev ?? "https://");
+    if (url === null) return; // cancelled
+    if (url === "") {
+      editor!.chain().focus().unsetLink().run();
+    } else {
+      editor!.chain().focus().setLink({ href: url }).run();
+    }
+  }
+
+  function handleImage() {
+    const url = window.prompt("Enter image URL");
+    if (!url) return;
+    editor!.chain().focus().setImage({ src: url }).run();
+  }
+
+  return (
+    <div className="flex flex-wrap items-center gap-0.5 border-b px-2 py-1.5 bg-muted/30">
+      <ToolbarButton
+        title="Bold"
+        active={editor.isActive("bold")}
+        onClick={() => editor.chain().focus().toggleBold().run()}
+      >
+        <Bold className="h-4 w-4" />
+      </ToolbarButton>
+      <ToolbarButton
+        title="Italic"
+        active={editor.isActive("italic")}
+        onClick={() => editor.chain().focus().toggleItalic().run()}
+      >
+        <Italic className="h-4 w-4" />
+      </ToolbarButton>
+      <ToolbarButton
+        title="Underline"
+        active={editor.isActive("underline")}
+        onClick={() => editor.chain().focus().toggleUnderline().run()}
+      >
+        <UnderlineIcon className="h-4 w-4" />
+      </ToolbarButton>
+
+      <div className="w-px h-5 bg-border mx-1" />
+
+      <ToolbarButton
+        title="Heading 1"
+        active={editor.isActive("heading", { level: 1 })}
+        onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
+      >
+        <Heading1 className="h-4 w-4" />
+      </ToolbarButton>
+      <ToolbarButton
+        title="Heading 2"
+        active={editor.isActive("heading", { level: 2 })}
+        onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+      >
+        <Heading2 className="h-4 w-4" />
+      </ToolbarButton>
+      <ToolbarButton
+        title="Heading 3"
+        active={editor.isActive("heading", { level: 3 })}
+        onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
+      >
+        <Heading3 className="h-4 w-4" />
+      </ToolbarButton>
+
+      <div className="w-px h-5 bg-border mx-1" />
+
+      <ToolbarButton
+        title="Bullet List"
+        active={editor.isActive("bulletList")}
+        onClick={() => editor.chain().focus().toggleBulletList().run()}
+      >
+        <List className="h-4 w-4" />
+      </ToolbarButton>
+      <ToolbarButton
+        title="Numbered List"
+        active={editor.isActive("orderedList")}
+        onClick={() => editor.chain().focus().toggleOrderedList().run()}
+      >
+        <ListOrdered className="h-4 w-4" />
+      </ToolbarButton>
+      <ToolbarButton
+        title="Blockquote"
+        active={editor.isActive("blockquote")}
+        onClick={() => editor.chain().focus().toggleBlockquote().run()}
+      >
+        <Quote className="h-4 w-4" />
+      </ToolbarButton>
+
+      <div className="w-px h-5 bg-border mx-1" />
+
+      <ToolbarButton
+        title="Insert Link"
+        active={editor.isActive("link")}
+        onClick={handleLink}
+      >
+        <LinkIcon className="h-4 w-4" />
+      </ToolbarButton>
+      <ToolbarButton title="Insert Image" onClick={handleImage}>
+        <ImagePlus className="h-4 w-4" />
+      </ToolbarButton>
+    </div>
+  );
+}
+
+// ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function BlogEditor() {
   const params = useParams<{ id: string }>();
@@ -34,7 +187,6 @@ export default function BlogEditor() {
 
   // Form state
   const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
   const [excerpt, setExcerpt] = useState("");
   const [seoTitle, setSeoTitle] = useState("");
   const [seoKeywords, setSeoKeywords] = useState("");
@@ -51,6 +203,23 @@ export default function BlogEditor() {
   const featuredInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
 
+  // TipTap editor
+  const editor = useEditor({
+    extensions: [
+      StarterKit,
+      Underline,
+      Link.configure({ openOnClick: false }),
+      Image,
+      Placeholder.configure({ placeholder: "Write your article content here..." }),
+    ],
+    content: "",
+    editorProps: {
+      attributes: {
+        class: "tiptap-editor prose prose-sm max-w-none focus:outline-none min-h-[360px] p-4",
+      },
+    },
+  });
+
   // Load existing post
   const { data: existingPost } = trpc.blog.getById.useQuery(
     { id: editId! },
@@ -64,7 +233,6 @@ export default function BlogEditor() {
   useEffect(() => {
     if (existingPost) {
       setTitle(existingPost.title);
-      setContent(existingPost.content ?? "");
       setExcerpt(existingPost.excerpt ?? "");
       setSeoTitle(existingPost.seoTitle ?? "");
       setSeoKeywords(existingPost.seoKeywords ?? "");
@@ -74,8 +242,11 @@ export default function BlogEditor() {
       setProjectLatitude(existingPost.projectLatitude ?? "");
       setProjectLongitude(existingPost.projectLongitude ?? "");
       setStatus(existingPost.status);
+      if (editor && existingPost.content) {
+        editor.commands.setContent(existingPost.content);
+      }
     }
-  }, [existingPost]);
+  }, [existingPost, editor]);
 
   const createMutation = trpc.blog.create.useMutation({
     onSuccess: (data) => {
@@ -128,6 +299,7 @@ export default function BlogEditor() {
     }
     setSaving(true);
     try {
+      const content = editor ? editor.getHTML() : "";
       const payload = {
         title,
         content,
@@ -263,21 +435,16 @@ export default function BlogEditor() {
             </CardContent>
           </Card>
 
-          {/* Content */}
+          {/* Content — TipTap RTE */}
           <Card>
-            <CardHeader className="pb-3">
+            <CardHeader className="pb-0">
               <CardTitle className="text-base">Content</CardTitle>
             </CardHeader>
-            <CardContent>
-              <Textarea
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                placeholder="Write your article content here... (HTML supported)"
-                className="min-h-[400px] font-mono text-sm"
-              />
-              <p className="text-xs text-muted-foreground mt-2">
-                HTML formatting is supported. Use &lt;h2&gt;, &lt;p&gt;, &lt;ul&gt;, &lt;img&gt; tags for rich content.
-              </p>
+            <CardContent className="p-0">
+              <div className="border rounded-b-lg overflow-hidden">
+                <EditorToolbar editor={editor} />
+                <EditorContent editor={editor} />
+              </div>
             </CardContent>
           </Card>
 

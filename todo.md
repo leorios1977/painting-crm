@@ -307,3 +307,9 @@
 - [x] Add SocialMediaBar to BlogList.tsx footer
 - [x] Add SocialMediaBar to BlogPost.tsx footer
 - [x] 120 tests passing, TypeScript clean, checkpoint saved
+
+## Phase 32: TipTap Rich Text Editor for Blog
+- [ ] Replace plain textarea with TipTap editor in BlogEditor.tsx
+- [ ] Add formatting toolbar (bold, italic, underline, H1/H2/H3, bullets, numbers, blockquote, link, image)
+- [ ] Save HTML output to content field
+- [ ] Run tests, TypeScript clean, save checkpoint
