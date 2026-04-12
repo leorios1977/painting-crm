@@ -173,6 +173,8 @@ function DashboardLayoutContent({
   // Fetch unread conversation count
   const { data: unreadCount = 0 } = trpc.sms.getUnreadCount.useQuery();
   const markAllAsReadMutation = trpc.sms.markAsRead.useMutation();
+  // Fetch overdue invoice count for sidebar badge
+  const { data: overdueCount = 0 } = trpc.invoices.getOverdueCount.useQuery();
 
   // Apply primary color as CSS variable on the sidebar element
   const sidebarStyle: CSSProperties = branding.primaryColor
@@ -263,18 +265,17 @@ function DashboardLayoutContent({
               {menuItems.map(item => {
                 const isActive = location === item.path;
                 // Show unread badge for Communication Log
-                const showBadge = item.path === "/communications" && unreadCount > 0;
+                const showSmsBadge = item.path === "/communications" && unreadCount > 0;
+                // Show overdue badge for Invoices
+                const showOverdueBadge = item.path === "/invoices" && overdueCount > 0;
+                const badgeCount = showSmsBadge ? unreadCount : showOverdueBadge ? overdueCount : 0;
+                const showBadge = showSmsBadge || showOverdueBadge;
                 return (
                   <SidebarMenuItem key={item.path}>
                     <SidebarMenuButton
                       isActive={isActive}
                       onClick={() => {
                         setLocation(item.path);
-                        // Mark all conversations as read when opening Communications
-                        if (item.path === "/communications" && unreadCount > 0) {
-                          // We'll mark them as read in the Communications page component
-                          // For now, just navigate
-                        }
                       }}
                       tooltip={item.label}
                       className={`h-10 transition-all font-normal`}
@@ -284,8 +285,8 @@ function DashboardLayoutContent({
                       />
                       <span className="flex-1">{item.label}</span>
                       {showBadge && (
-                        <span className="ml-auto inline-flex items-center justify-center h-5 w-5 rounded-full bg-red-500 text-white text-xs font-bold">
-                          {unreadCount}
+                        <span className="ml-auto inline-flex items-center justify-center h-5 min-w-5 px-1 rounded-full bg-red-500 text-white text-xs font-bold">
+                          {badgeCount}
                         </span>
                       )}
                     </SidebarMenuButton>

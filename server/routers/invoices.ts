@@ -15,13 +15,79 @@
 import { z } from "zod";
 import { protectedProcedure, publicProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
-import { invoices, leads } from "../../drizzle/schema";
-import { eq, desc, and } from "drizzle-orm";
+import { invoices, leads, appSettings } from "../../drizzle/schema";
+import { eq, desc, and, lt, count } from "drizzle-orm";
 import {
   generateInvoice,
   sendInvoice,
   markInvoicePaid,
 } from "../services/invoices";
+import { sendSMS } from "../services/sms";
+
+/**
+ * markOverdueInvoices — server-side function called by the daily cron job.
+ * Queries all invoices where status='sent' and dueDate < now,
+ * updates them to 'overdue', and sends an SMS reminder to the customer.
+ */
+export async function markOverdueInvoices(): Promise<{ marked: number; smsSent: number }> {
+  const db = await getDb();
+  if (!db) return { marked: 0, smsSent: 0 };
+
+  const now = new Date();
+
+  // Find all sent invoices past their due date
+  const overdueRows = await db
+    .select()
+    .from(invoices)
+    .where(
+      and(
+        eq(invoices.status, "sent"),
+        lt(invoices.dueDate, now)
+      )
+    );
+
+  if (overdueRows.length === 0) return { marked: 0, smsSent: 0 };
+
+  // Fetch business name from settings
+  const settingsRows = await db.select().from(appSettings).limit(1);
+  const businessName = settingsRows[0]?.businessName ?? "Your painting contractor";
+
+  let smsSent = 0;
+
+  for (const invoice of overdueRows) {
+    // Update status to overdue
+    await db
+      .update(invoices)
+      .set({ status: "overdue" })
+      .where(eq(invoices.id, invoice.id));
+
+    // Fetch the lead for customer name and phone
+    const leadRows = await db
+      .select()
+      .from(leads)
+      .where(eq(leads.id, invoice.leadId))
+      .limit(1);
+    const lead = leadRows[0];
+    if (!lead?.phone) continue;
+
+    const customerName = `${lead.firstName} ${lead.lastName}`.trim();
+    const totalFormatted = `$${parseFloat(invoice.total ?? "0").toFixed(2)}`;
+    const payLink = invoice.stripePaymentLink ?? "";
+
+    const smsBody = payLink
+      ? `Hi ${customerName}, this is a reminder that your invoice of ${totalFormatted} from ${businessName} is past due. Please pay here: ${payLink}`
+      : `Hi ${customerName}, this is a reminder that your invoice of ${totalFormatted} from ${businessName} is past due. Please contact us to arrange payment.`;
+
+    try {
+      await sendSMS(smsBody, lead.phone, invoice.leadId);
+      smsSent++;
+    } catch {
+      // Non-fatal — continue processing other invoices
+    }
+  }
+
+  return { marked: overdueRows.length, smsSent };
+}
 
 // ─── Shared schemas ───────────────────────────────────────────────────────────
 
@@ -249,6 +315,18 @@ export const invoicesRouter = router({
         .where(eq(invoices.id, input.id))
         .limit(1);
       return updated[0] ?? invoice;
+    }),
+
+  /** Get count of overdue invoices for the sidebar badge */
+  getOverdueCount: protectedProcedure
+    .query(async () => {
+      const db = await getDb();
+      if (!db) return 0;
+      const rows = await db
+        .select({ cnt: count() })
+        .from(invoices)
+        .where(eq(invoices.status, "overdue"));
+      return rows[0]?.cnt ?? 0;
     }),
 
   /** Delete a draft invoice */

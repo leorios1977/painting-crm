@@ -283,3 +283,21 @@
 - [x] Add /blog and /blog/:slug public routes to App.tsx
 - [x] Write Vitest tests for blog router (18 tests including slugify)
 - [x] 112 tests passing, TypeScript clean, checkpoint saved
+
+## Phase 30: Overdue Invoice Alerts
+- [ ] Add markOverdueInvoices() to server/routers/invoices.ts (query sent invoices past due_date, update to overdue, send SMS)
+- [ ] Add daily 9 AM cron job in routers.ts that calls markOverdueInvoices()
+- [ ] Add getOverdueCount procedure to invoices.ts router
+- [ ] Update Invoices.tsx: red Overdue badge for status='overdue' invoices
+- [ ] Update DashboardLayout.tsx: overdue count badge on Invoices sidebar nav item
+- [ ] Write Vitest tests for overdue procedures
+- [ ] Run tests, TypeScript clean, save checkpoint
+
+## Phase 30: Overdue Invoice Alerts
+- [x] Add markOverdueInvoices() exported function to invoices.ts (queries sent invoices past dueDate, updates to overdue, sends SMS reminder)
+- [x] Add getOverdueCount protected procedure to invoicesRouter
+- [x] Register daily 9 AM cron job in routers.ts (runs on startup + schedules 9 AM daily)
+- [x] Invoices.tsx already had Overdue red badge from previous session
+- [x] Update DashboardLayout.tsx: add overdueCount query + red badge on Invoices sidebar nav item
+- [x] Write Vitest tests for markOverdueInvoices and getOverdueCount (8 tests)
+- [x] 120 tests passing, TypeScript clean, checkpoint saved
