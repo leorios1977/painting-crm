@@ -1,10 +1,12 @@
 /**
- * Schedule.tsx — Weekly calendar view for appointments
+ * Schedule.tsx — Weekly calendar view + By Crew workload view
  *
  * Features:
- *   - 7-column week grid (Sun–Sat) with time slots
- *   - Appointments color-coded by status
- *   - Week navigation (prev/next/today)
+ *   - Two tabs: "Weekly Calendar" and "By Crew"
+ *   - Weekly Calendar: 7-column week grid (Sun–Sat) with time slots
+ *   - By Crew: one column per active crew member, appointments listed per member
+ *   - Shared week navigation (prev/next/today) and date-range selector
+ *   - Amber highlight on crew members with > 3 jobs in the selected week
  *   - Click appointment to view details in a side panel
  *   - Update status or cancel directly from the panel
  */
@@ -41,6 +43,8 @@ import {
   CheckCircle,
   XCircle,
   AlertCircle,
+  HardHat,
+  Users,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -152,13 +156,21 @@ function isSameDay(a: Date, b: Date): boolean {
   );
 }
 
+function formatShortDate(date: Date): string {
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    timeZone: "UTC",
+  });
+}
+
 const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const MONTH_NAMES = [
   "January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December",
 ];
 
-// ─── Appointment Card ─────────────────────────────────────────────────────────
+// ─── Appointment Card (calendar view) ─────────────────────────────────────────
 
 function AppointmentCard({
   appt,
@@ -195,6 +207,73 @@ function AppointmentCard({
           <Clock className="w-2.5 h-2.5" />
           {appt.timeSlot}
         </p>
+      )}
+    </button>
+  );
+}
+
+// ─── Crew Appointment Row (crew view) ─────────────────────────────────────────
+
+function CrewAppointmentRow({
+  appt,
+  onClick,
+}: {
+  appt: AppointmentWithLead;
+  onClick: () => void;
+}) {
+  const cfg = STATUS_CONFIG[appt.status] ?? STATUS_CONFIG.scheduled;
+  const name = appt.lead
+    ? `${appt.lead.firstName} ${appt.lead.lastName}`
+    : "Unknown Lead";
+  const date = new Date(appt.scheduledDate);
+  const dateStr = date.toLocaleDateString("en-US", {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+    timeZone: "UTC",
+  });
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "w-full text-left rounded-lg px-3 py-2.5 border text-xs mb-2 transition-all hover:shadow-sm hover:scale-[1.01] active:scale-[0.99]",
+        cfg.bg,
+        cfg.border,
+        cfg.color
+      )}
+    >
+      {/* Customer name + status dot */}
+      <div className="flex items-center gap-1.5 mb-1">
+        <span className={cn("w-1.5 h-1.5 rounded-full shrink-0", cfg.dot)} />
+        <span className="font-semibold truncate">{name}</span>
+      </div>
+      {/* Date + time */}
+      <div className="flex items-center gap-1 text-[11px] opacity-80 mb-0.5">
+        <CalendarDays className="w-2.5 h-2.5 shrink-0" />
+        <span>{dateStr}</span>
+        {appt.timeSlot && (
+          <>
+            <span className="opacity-50">·</span>
+            <Clock className="w-2.5 h-2.5 shrink-0" />
+            <span>{appt.timeSlot}</span>
+          </>
+        )}
+      </div>
+      {/* Job type */}
+      {appt.jobType && (
+        <div className="flex items-center gap-1 text-[11px] opacity-75">
+          <AlertCircle className="w-2.5 h-2.5 shrink-0" />
+          <span className="truncate">{appt.jobType}</span>
+        </div>
+      )}
+      {/* Address */}
+      {appt.lead?.projectAddress && (
+        <div className="flex items-start gap-1 text-[11px] opacity-65 mt-0.5">
+          <MapPin className="w-2.5 h-2.5 shrink-0 mt-px" />
+          <span className="truncate">{appt.lead.projectAddress}</span>
+        </div>
       )}
     </button>
   );
@@ -379,9 +458,171 @@ function AppointmentDetailPanel({
   );
 }
 
+// ─── By Crew View ─────────────────────────────────────────────────────────────
+
+function ByCrewView({
+  weekStart,
+  weekEnd,
+  onSelectAppt,
+}: {
+  weekStart: Date;
+  weekEnd: Date;
+  onSelectAppt: (appt: AppointmentWithLead) => void;
+}) {
+  // Fetch all active crew members
+  const { data: crewMembers = [], isLoading: crewLoading } = trpc.crew.list.useQuery({
+    status: "active",
+  });
+
+  // Fetch appointments for the selected week (wider range — no crew filter needed)
+  const { data: appointments = [], isLoading: apptLoading } = trpc.appointments.list.useQuery({
+    from: weekStart,
+    to: weekEnd,
+  });
+
+  const isLoading = crewLoading || apptLoading;
+
+  // Build a map: crewName (lowercase) → appointments[]
+  const apptsByCrewName = useMemo(() => {
+    const map = new Map<string, AppointmentWithLead[]>();
+    for (const appt of appointments as AppointmentWithLead[]) {
+      if (appt.status === "cancelled") continue;
+      const key = (appt.crewAssigned ?? "").toLowerCase().trim();
+      if (!map.has(key)) map.set(key, []);
+      map.get(key)!.push(appt);
+    }
+    return map;
+  }, [appointments]);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64 text-muted-foreground">
+        <Loader2 className="w-5 h-5 animate-spin mr-2" />
+        Loading crew schedule…
+      </div>
+    );
+  }
+
+  if (crewMembers.length === 0) {
+    return (
+      <div className="text-center py-16 text-muted-foreground border-2 border-dashed rounded-xl">
+        <HardHat className="w-10 h-10 mx-auto mb-3 opacity-30" />
+        <p className="text-sm font-medium">No active crew members</p>
+        <p className="text-xs mt-1">Add crew members from the Crew page.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="overflow-x-auto">
+      <div
+        className="grid gap-4"
+        style={{ gridTemplateColumns: `repeat(${crewMembers.length}, minmax(220px, 1fr))` }}
+      >
+        {crewMembers.map((member) => {
+          const nameKey = member.name.toLowerCase().trim();
+          const memberAppts = apptsByCrewName.get(nameKey) ?? [];
+          const jobCount = memberAppts.length;
+          const isHighWorkload = jobCount > 3;
+
+          return (
+            <div
+              key={member.id}
+              className={cn(
+                "rounded-xl border bg-card shadow-sm flex flex-col overflow-hidden",
+                isHighWorkload && "border-amber-300"
+              )}
+            >
+              {/* Column header */}
+              <div
+                className={cn(
+                  "px-4 py-3 border-b",
+                  isHighWorkload
+                    ? "bg-amber-50 border-amber-200"
+                    : "bg-muted/30"
+                )}
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <div
+                      className={cn(
+                        "h-7 w-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0",
+                        isHighWorkload
+                          ? "bg-amber-400 text-white"
+                          : "bg-primary/10 text-primary"
+                      )}
+                    >
+                      {member.name.charAt(0).toUpperCase()}
+                    </div>
+                    <div className="min-w-0">
+                      <p className={cn(
+                        "text-sm font-semibold truncate",
+                        isHighWorkload ? "text-amber-800" : "text-foreground"
+                      )}>
+                        {member.name}
+                      </p>
+                      {member.role && (
+                        <p className="text-[11px] text-muted-foreground truncate">{member.role}</p>
+                      )}
+                    </div>
+                  </div>
+                  <span
+                    className={cn(
+                      "shrink-0 inline-flex items-center justify-center h-5 min-w-5 px-1.5 rounded-full text-xs font-bold",
+                      isHighWorkload
+                        ? "bg-amber-400 text-white"
+                        : "bg-muted text-muted-foreground"
+                    )}
+                    title={isHighWorkload ? "High workload (>3 jobs this week)" : undefined}
+                  >
+                    {jobCount}
+                  </span>
+                </div>
+                {isHighWorkload && (
+                  <p className="text-[11px] text-amber-700 mt-1.5 font-medium">
+                    ⚠ High workload this week
+                  </p>
+                )}
+              </div>
+
+              {/* Appointments list */}
+              <div className="flex-1 p-3">
+                {memberAppts.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-8 text-muted-foreground/50">
+                    <CalendarDays className="w-7 h-7 mb-2 opacity-40" />
+                    <p className="text-xs">No assignments</p>
+                  </div>
+                ) : (
+                  // Sort by scheduledDate ascending
+                  [...memberAppts]
+                    .sort(
+                      (a, b) =>
+                        new Date(a.scheduledDate).getTime() -
+                        new Date(b.scheduledDate).getTime()
+                    )
+                    .map((appt) => (
+                      <CrewAppointmentRow
+                        key={appt.id}
+                        appt={appt}
+                        onClick={() => onSelectAppt(appt)}
+                      />
+                    ))
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 // ─── Main page ────────────────────────────────────────────────────────────────
 
+type Tab = "calendar" | "crew";
+
 export default function Schedule() {
+  const [activeTab, setActiveTab] = useState<Tab>("calendar");
   const [weekStart, setWeekStart] = useState(() => getWeekStart(new Date()));
   const [selectedAppt, setSelectedAppt] = useState<AppointmentWithLead | null>(null);
   const utils = trpc.useUtils();
@@ -414,11 +655,21 @@ export default function Schedule() {
   }, [appointments]);
 
   const today = new Date();
-  const monthLabel = `${MONTH_NAMES[weekStart.getMonth()]} ${weekStart.getFullYear()}`;
+  const weekLabel = `${MONTH_NAMES[weekStart.getMonth()]} ${weekStart.getFullYear()}`;
+  const weekRangeLabel = `${formatShortDate(weekStart)} – ${formatShortDate(weekEnd)}`;
 
-  function prevWeek() { setWeekStart((w) => addDays(w, -7)); }
-  function nextWeek() { setWeekStart((w) => addDays(w, 7)); }
-  function goToday() { setWeekStart(getWeekStart(new Date())); }
+  function prevWeek() {
+    setWeekStart((w) => addDays(w, -7));
+    setSelectedAppt(null);
+  }
+  function nextWeek() {
+    setWeekStart((w) => addDays(w, 7));
+    setSelectedAppt(null);
+  }
+  function goToday() {
+    setWeekStart(getWeekStart(new Date()));
+    setSelectedAppt(null);
+  }
 
   return (
     <div className="space-y-5 pb-8">
@@ -426,16 +677,20 @@ export default function Schedule() {
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Schedule</h1>
-          <p className="text-muted-foreground text-sm">Weekly appointment calendar</p>
+          <p className="text-muted-foreground text-sm">
+            {activeTab === "calendar" ? "Weekly appointment calendar" : "Crew workload by week"}
+          </p>
         </div>
-        <div className="flex items-center gap-2">
+
+        {/* Week navigation */}
+        <div className="flex items-center gap-2 flex-wrap">
           <Button variant="outline" size="sm" onClick={goToday}>Today</Button>
           <div className="flex items-center border rounded-lg overflow-hidden">
             <Button variant="ghost" size="icon" className="h-8 w-8 rounded-none" onClick={prevWeek}>
               <ChevronLeft className="h-4 w-4" />
             </Button>
-            <span className="px-3 text-sm font-medium min-w-[160px] text-center">
-              {monthLabel}
+            <span className="px-3 text-sm font-medium min-w-[180px] text-center">
+              {activeTab === "calendar" ? weekLabel : weekRangeLabel}
             </span>
             <Button variant="ghost" size="icon" className="h-8 w-8 rounded-none" onClick={nextWeek}>
               <ChevronRight className="h-4 w-4" />
@@ -444,113 +699,180 @@ export default function Schedule() {
         </div>
       </div>
 
-      {/* Status legend */}
-      <div className="flex flex-wrap gap-3">
-        {Object.entries(STATUS_CONFIG).map(([key, cfg]) => (
-          <span key={key} className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <span className={cn("w-2 h-2 rounded-full", cfg.dot)} />
-            {cfg.label}
-          </span>
-        ))}
+      {/* Tab switcher */}
+      <div className="flex items-center gap-1 border-b">
+        <button
+          onClick={() => setActiveTab("calendar")}
+          className={cn(
+            "flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors -mb-px",
+            activeTab === "calendar"
+              ? "border-primary text-primary"
+              : "border-transparent text-muted-foreground hover:text-foreground"
+          )}
+        >
+          <CalendarDays className="h-4 w-4" />
+          Weekly Calendar
+        </button>
+        <button
+          onClick={() => setActiveTab("crew")}
+          className={cn(
+            "flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors -mb-px",
+            activeTab === "crew"
+              ? "border-primary text-primary"
+              : "border-transparent text-muted-foreground hover:text-foreground"
+          )}
+        >
+          <Users className="h-4 w-4" />
+          By Crew
+        </button>
       </div>
 
-      <div className="flex gap-5">
-        {/* Calendar grid */}
-        <div className="flex-1 min-w-0">
-          {isLoading ? (
-            <div className="flex items-center justify-center h-64 text-muted-foreground">
-              <Loader2 className="w-5 h-5 animate-spin mr-2" />
-              Loading schedule…
-            </div>
-          ) : (
-            <div className="border rounded-xl overflow-hidden bg-background shadow-sm">
-              {/* Day headers */}
-              <div className="grid grid-cols-7 border-b bg-muted/30">
-                {weekDays.map((day) => {
-                  const isToday = isSameDay(day, today);
-                  return (
-                    <div
-                      key={day.toISOString()}
-                      className={cn(
-                        "py-3 px-2 text-center border-r last:border-r-0",
-                        isToday && "bg-primary/5"
-                      )}
-                    >
-                      <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
-                        {DAY_NAMES[day.getDay()]}
-                      </p>
-                      <p
-                        className={cn(
-                          "text-lg font-bold mt-0.5",
-                          isToday
-                            ? "text-primary"
-                            : "text-foreground"
-                        )}
-                      >
-                        {day.getDate()}
-                      </p>
-                    </div>
-                  );
-                })}
-              </div>
+      {/* ── Weekly Calendar Tab ── */}
+      {activeTab === "calendar" && (
+        <>
+          {/* Status legend */}
+          <div className="flex flex-wrap gap-3">
+            {Object.entries(STATUS_CONFIG).map(([key, cfg]) => (
+              <span key={key} className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <span className={cn("w-2 h-2 rounded-full", cfg.dot)} />
+                {cfg.label}
+              </span>
+            ))}
+          </div>
 
-              {/* Appointment cells */}
-              <div className="grid grid-cols-7 min-h-[420px]">
-                {weekDays.map((day) => {
-                  const key = `${day.getFullYear()}-${day.getMonth()}-${day.getDate()}`;
-                  const dayAppts = apptsByDay.get(key) ?? [];
-                  const isToday = isSameDay(day, today);
-
-                  return (
-                    <div
-                      key={day.toISOString()}
-                      className={cn(
-                        "p-2 border-r last:border-r-0 min-h-[120px] align-top",
-                        isToday && "bg-primary/[0.02]"
-                      )}
-                    >
-                      {dayAppts.map((appt) => (
-                        <AppointmentCard
-                          key={appt.id}
-                          appt={appt}
-                          onClick={() => setSelectedAppt(appt)}
-                        />
-                      ))}
-                      {dayAppts.length === 0 && (
-                        <div className="h-full flex items-center justify-center">
-                          <span className="text-[11px] text-muted-foreground/40">—</span>
+          <div className="flex gap-5">
+            {/* Calendar grid */}
+            <div className="flex-1 min-w-0">
+              {isLoading ? (
+                <div className="flex items-center justify-center h-64 text-muted-foreground">
+                  <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                  Loading schedule…
+                </div>
+              ) : (
+                <div className="border rounded-xl overflow-hidden bg-background shadow-sm">
+                  {/* Day headers */}
+                  <div className="grid grid-cols-7 border-b bg-muted/30">
+                    {weekDays.map((day) => {
+                      const isToday = isSameDay(day, today);
+                      return (
+                        <div
+                          key={day.toISOString()}
+                          className={cn(
+                            "py-3 px-2 text-center border-r last:border-r-0",
+                            isToday && "bg-primary/5"
+                          )}
+                        >
+                          <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
+                            {DAY_NAMES[day.getDay()]}
+                          </p>
+                          <p
+                            className={cn(
+                              "text-lg font-bold mt-0.5",
+                              isToday ? "text-primary" : "text-foreground"
+                            )}
+                          >
+                            {day.getDate()}
+                          </p>
                         </div>
-                      )}
-                    </div>
-                  );
-                })}
+                      );
+                    })}
+                  </div>
+
+                  {/* Appointment cells */}
+                  <div className="grid grid-cols-7 min-h-[420px]">
+                    {weekDays.map((day) => {
+                      const key = `${day.getFullYear()}-${day.getMonth()}-${day.getDate()}`;
+                      const dayAppts = apptsByDay.get(key) ?? [];
+                      const isToday = isSameDay(day, today);
+
+                      return (
+                        <div
+                          key={day.toISOString()}
+                          className={cn(
+                            "p-2 border-r last:border-r-0 min-h-[120px] align-top",
+                            isToday && "bg-primary/[0.02]"
+                          )}
+                        >
+                          {dayAppts.map((appt) => (
+                            <AppointmentCard
+                              key={appt.id}
+                              appt={appt}
+                              onClick={() => setSelectedAppt(appt)}
+                            />
+                          ))}
+                          {dayAppts.length === 0 && (
+                            <div className="h-full flex items-center justify-center">
+                              <span className="text-[11px] text-muted-foreground/40">—</span>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Detail panel */}
+            {selectedAppt && (
+              <div className="w-72 shrink-0">
+                <AppointmentDetailPanel
+                  appt={selectedAppt}
+                  onClose={() => setSelectedAppt(null)}
+                  onUpdated={() => {
+                    refetch();
+                    setSelectedAppt(null);
+                  }}
+                />
               </div>
+            )}
+          </div>
+
+          {/* Empty state */}
+          {!isLoading && appointments.length === 0 && (
+            <div className="text-center py-12 text-muted-foreground">
+              <CalendarDays className="w-10 h-10 mx-auto mb-3 opacity-30" />
+              <p className="text-sm font-medium">No appointments this week</p>
+              <p className="text-xs mt-1">Book appointments from a lead's detail page.</p>
             </div>
           )}
-        </div>
+        </>
+      )}
 
-        {/* Detail panel */}
-        {selectedAppt && (
-          <div className="w-72 shrink-0">
-            <AppointmentDetailPanel
-              appt={selectedAppt}
-              onClose={() => setSelectedAppt(null)}
-              onUpdated={() => {
-                refetch();
-                setSelectedAppt(null);
-              }}
-            />
+      {/* ── By Crew Tab ── */}
+      {activeTab === "crew" && (
+        <>
+          {/* Amber legend */}
+          <div className="flex items-center gap-4 text-xs text-muted-foreground">
+            <span className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-full bg-amber-400 shrink-0" />
+              Amber = high workload (&gt;3 jobs this week)
+            </span>
           </div>
-        )}
-      </div>
 
-      {/* Empty state */}
-      {!isLoading && appointments.length === 0 && (
-        <div className="text-center py-12 text-muted-foreground">
-          <CalendarDays className="w-10 h-10 mx-auto mb-3 opacity-30" />
-          <p className="text-sm font-medium">No appointments this week</p>
-          <p className="text-xs mt-1">Book appointments from a lead's detail page.</p>
-        </div>
+          <div className="flex gap-5">
+            <div className="flex-1 min-w-0">
+              <ByCrewView
+                weekStart={weekStart}
+                weekEnd={weekEnd}
+                onSelectAppt={setSelectedAppt}
+              />
+            </div>
+
+            {/* Detail panel shared with calendar tab */}
+            {selectedAppt && (
+              <div className="w-72 shrink-0">
+                <AppointmentDetailPanel
+                  appt={selectedAppt}
+                  onClose={() => setSelectedAppt(null)}
+                  onUpdated={() => {
+                    setSelectedAppt(null);
+                  }}
+                />
+              </div>
+            )}
+          </div>
+        </>
       )}
     </div>
   );
