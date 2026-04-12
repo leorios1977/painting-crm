@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, MapPin, ArrowLeft, ArrowRight, Phone } from "lucide-react";
 import { Link, useParams } from "wouter";
+import { SocialMediaBar } from "@/components/SocialMediaBar";
 
 function SEOHead({
   title,
@@ -314,6 +315,13 @@ export default function BlogPost() {
           </div>
         </div>
       </section>
+
+      {/* Social media bar */}
+      <div className="border-t border-border">
+        <div className="container max-w-4xl py-8">
+          <SocialMediaBar />
+        </div>
+      </div>
     </div>
   );
 }

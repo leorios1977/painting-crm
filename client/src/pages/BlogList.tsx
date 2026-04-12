@@ -3,6 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, ArrowRight } from "lucide-react";
 import { Link } from "wouter";
+import { SocialMediaBar } from "@/components/SocialMediaBar";
 
 export default function BlogList() {
   const { data: posts, isLoading } = trpc.blog.listPublished.useQuery();
@@ -53,20 +54,16 @@ export default function BlogList() {
                       />
                     </div>
                   ) : (
-                    <div className="h-48 bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
-                      <span className="text-4xl font-bold text-primary/20">
-                        {post.title.charAt(0)}
-                      </span>
-                    </div>
+                    <div className="h-48 bg-muted" />
                   )}
-                  <CardContent className="pt-4 flex-1 flex flex-col">
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
+                  <CardContent className="pt-4 flex flex-col flex-1">
+                    <div className="text-xs text-muted-foreground mb-2 flex items-center gap-1">
                       <Calendar className="h-3 w-3" />
                       {post.publishedAt
                         ? new Date(post.publishedAt).toLocaleDateString("en-US", {
-                            month: "long",
-                            day: "numeric",
                             year: "numeric",
+                            month: "short",
+                            day: "numeric",
                           })
                         : "Recently"}
                     </div>
@@ -87,6 +84,13 @@ export default function BlogList() {
             ))}
           </div>
         )}
+      </div>
+
+      {/* Social media bar */}
+      <div className="border-t border-border">
+        <div className="container max-w-6xl py-8">
+          <SocialMediaBar />
+        </div>
       </div>
     </div>
   );

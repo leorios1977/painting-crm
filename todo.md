@@ -301,3 +301,9 @@
 - [x] Update DashboardLayout.tsx: add overdueCount query + red badge on Invoices sidebar nav item
 - [x] Write Vitest tests for markOverdueInvoices and getOverdueCount (8 tests)
 - [x] 120 tests passing, TypeScript clean, checkpoint saved
+
+## Phase 31: Add SocialMediaBar to Public Pages
+- [x] Add SocialMediaBar to CustomerPortal.tsx footer
+- [x] Add SocialMediaBar to BlogList.tsx footer
+- [x] Add SocialMediaBar to BlogPost.tsx footer
+- [x] 120 tests passing, TypeScript clean, checkpoint saved

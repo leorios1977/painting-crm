@@ -37,6 +37,7 @@ import {
 import { PDFDownloadLink } from "@react-pdf/renderer";
 import { InvoicePDF } from "@/components/InvoicePDF";
 import { useBranding } from "@/contexts/BrandingContext";
+import { SocialMediaBar } from "@/components/SocialMediaBar";
 
 // ─── Stage progress config ────────────────────────────────────────────────────
 
@@ -516,6 +517,9 @@ export default function CustomerPortal() {
         )}
 
         <Separator />
+
+        {/* Social media bar */}
+        <SocialMediaBar />
 
         {/* Footer */}
         <div className="text-center text-xs text-slate-400 pb-6 space-y-1">
