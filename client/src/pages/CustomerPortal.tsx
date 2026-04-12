@@ -8,7 +8,8 @@
  *   - Progress tracker (Scheduled → In Progress → Complete)
  *   - Appointment date/time card
  *   - Invoice with line items and Stripe payment button
- *   - Before/After/Progress photo gallery
+ *   - Before/After interactive drag slider (with carousel for multiple pairs)
+ *   - Grid fallback for progress-only or single-type photos
  */
 
 import { trpc } from "@/lib/trpc";
@@ -33,11 +34,16 @@ import {
   User,
   Wrench,
   Download,
+  ChevronLeft,
+  ChevronRight,
+  GripVertical,
 } from "lucide-react";
 import { PDFDownloadLink } from "@react-pdf/renderer";
 import { InvoicePDF } from "@/components/InvoicePDF";
 import { useBranding } from "@/contexts/BrandingContext";
 import { SocialMediaBar } from "@/components/SocialMediaBar";
+import { useRef, useState, useCallback, useEffect } from "react";
+import { cn } from "@/lib/utils";
 
 // ─── Stage progress config ────────────────────────────────────────────────────
 
@@ -245,20 +251,192 @@ function InvoiceSection({
   );
 }
 
-function PhotoGallery({ photos }: { photos: { url: string; caption: string; type: "before" | "after" | "progress" }[] }) {
+// ─── Before/After Drag Slider ─────────────────────────────────────────────────
+
+function BeforeAfterSlider({
+  beforeUrl,
+  afterUrl,
+  beforeCaption,
+  afterCaption,
+}: {
+  beforeUrl: string;
+  afterUrl: string;
+  beforeCaption?: string;
+  afterCaption?: string;
+}) {
+  const [position, setPosition] = useState(50); // percentage 0-100
+  const containerRef = useRef<HTMLDivElement>(null);
+  const isDragging = useRef(false);
+
+  const clamp = (v: number, min: number, max: number) => Math.min(max, Math.max(min, v));
+
+  const updatePosition = useCallback((clientX: number) => {
+    const el = containerRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const pct = clamp(((clientX - rect.left) / rect.width) * 100, 2, 98);
+    setPosition(pct);
+  }, []);
+
+  // Mouse events
+  const onMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    isDragging.current = true;
+  };
+  useEffect(() => {
+    const onMove = (e: MouseEvent) => {
+      if (!isDragging.current) return;
+      updatePosition(e.clientX);
+    };
+    const onUp = () => { isDragging.current = false; };
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+    return () => {
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+    };
+  }, [updatePosition]);
+
+  // Touch events
+  const onTouchStart = (e: React.TouchEvent) => {
+    isDragging.current = true;
+    updatePosition(e.touches[0].clientX);
+  };
+  useEffect(() => {
+    const onMove = (e: TouchEvent) => {
+      if (!isDragging.current) return;
+      updatePosition(e.touches[0].clientX);
+    };
+    const onEnd = () => { isDragging.current = false; };
+    window.addEventListener("touchmove", onMove, { passive: true });
+    window.addEventListener("touchend", onEnd);
+    return () => {
+      window.removeEventListener("touchmove", onMove);
+      window.removeEventListener("touchend", onEnd);
+    };
+  }, [updatePosition]);
+
+  // Also allow dragging anywhere on the container
+  const onContainerMouseDown = (e: React.MouseEvent) => {
+    isDragging.current = true;
+    updatePosition(e.clientX);
+  };
+  const onContainerTouchStart = (e: React.TouchEvent) => {
+    isDragging.current = true;
+    updatePosition(e.touches[0].clientX);
+  };
+
+  const FALLBACK_SRC =
+    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect width='100' height='100' fill='%23e2e8f0'/%3E%3Ctext x='50' y='55' text-anchor='middle' fill='%2394a3b8' font-size='12'%3EPhoto%3C/text%3E%3C/svg%3E";
+
+  return (
+    <div
+      ref={containerRef}
+      className="relative w-full rounded-xl overflow-hidden select-none cursor-col-resize"
+      style={{ aspectRatio: "16/9", touchAction: "none" }}
+      onMouseDown={onContainerMouseDown}
+      onTouchStart={onContainerTouchStart}
+    >
+      {/* After image — full width base layer */}
+      <img
+        src={afterUrl}
+        alt={afterCaption || "After"}
+        draggable={false}
+        className="absolute inset-0 w-full h-full object-cover"
+        onError={(e) => { (e.target as HTMLImageElement).src = FALLBACK_SRC; }}
+      />
+
+      {/* Before image — clipped to left portion */}
+      <div
+        className="absolute inset-0 overflow-hidden"
+        style={{ width: `${position}%` }}
+      >
+        <img
+          src={beforeUrl}
+          alt={beforeCaption || "Before"}
+          draggable={false}
+          className="absolute inset-0 w-full h-full object-cover"
+          style={{ width: `${100 / (position / 100)}%`, maxWidth: "none" }}
+          onError={(e) => { (e.target as HTMLImageElement).src = FALLBACK_SRC; }}
+        />
+      </div>
+
+      {/* Divider line */}
+      <div
+        className="absolute top-0 bottom-0 w-0.5 bg-white shadow-[0_0_8px_rgba(0,0,0,0.4)]"
+        style={{ left: `calc(${position}% - 1px)` }}
+      />
+
+      {/* Drag handle */}
+      <div
+        className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 z-10 w-9 h-9 rounded-full bg-white shadow-lg flex items-center justify-center cursor-col-resize"
+        style={{ left: `${position}%` }}
+        onMouseDown={onMouseDown}
+        onTouchStart={onTouchStart}
+      >
+        <GripVertical className="w-4 h-4 text-slate-600" />
+      </div>
+
+      {/* Labels */}
+      <div className="absolute top-3 left-3 pointer-events-none">
+        <span className="bg-black/50 text-white text-xs font-semibold px-2.5 py-1 rounded-full backdrop-blur-sm">
+          Before
+        </span>
+      </div>
+      <div className="absolute top-3 right-3 pointer-events-none">
+        <span className="bg-black/50 text-white text-xs font-semibold px-2.5 py-1 rounded-full backdrop-blur-sm">
+          After
+        </span>
+      </div>
+
+      {/* Hint text — fades out after first interaction */}
+      <div className="absolute bottom-3 left-1/2 -translate-x-1/2 pointer-events-none">
+        <span className="bg-black/40 text-white text-[11px] px-2.5 py-1 rounded-full backdrop-blur-sm whitespace-nowrap">
+          Drag to compare
+        </span>
+      </div>
+    </div>
+  );
+}
+
+// ─── Photo Gallery ────────────────────────────────────────────────────────────
+
+type Photo = { url: string; caption: string; type: "before" | "after" | "progress" };
+
+function PhotoGallery({ photos }: { photos: Photo[] }) {
+  const [activeIndex, setActiveIndex] = useState(0);
+
   if (photos.length === 0) return null;
 
   const before = photos.filter((p) => p.type === "before");
   const after = photos.filter((p) => p.type === "after");
   const progress = photos.filter((p) => p.type === "progress");
 
-  const Section = ({
+  // Build matched before/after pairs
+  const pairCount = Math.min(before.length, after.length);
+  const pairs = Array.from({ length: pairCount }, (_, i) => ({
+    before: before[i],
+    after: after[i],
+  }));
+
+  const hasPairs = pairs.length > 0;
+  const clampedIndex = Math.min(activeIndex, pairs.length - 1);
+
+  function prevPair() {
+    setActiveIndex((i) => Math.max(0, i - 1));
+  }
+  function nextPair() {
+    setActiveIndex((i) => Math.min(pairs.length - 1, i + 1));
+  }
+
+  // Grid fallback for single-type photos
+  const GridSection = ({
     title,
     items,
     color,
   }: {
     title: string;
-    items: typeof photos;
+    items: Photo[];
     color: string;
   }) => {
     if (items.length === 0) return null;
@@ -298,9 +476,126 @@ function PhotoGallery({ photos }: { photos: { url: string; caption: string; type
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <Section title="Before" items={before} color="text-orange-600" />
-        <Section title="In Progress" items={progress} color="text-blue-600" />
-        <Section title="After" items={after} color="text-green-600" />
+        {/* ── Before/After slider section ── */}
+        {hasPairs && (
+          <div className="space-y-3">
+            {/* Main slider */}
+            <BeforeAfterSlider
+              key={clampedIndex}
+              beforeUrl={pairs[clampedIndex].before.url}
+              afterUrl={pairs[clampedIndex].after.url}
+              beforeCaption={pairs[clampedIndex].before.caption}
+              afterCaption={pairs[clampedIndex].after.caption}
+            />
+
+            {/* Carousel navigation — only when multiple pairs */}
+            {pairs.length > 1 && (
+              <div className="space-y-2">
+                {/* Prev / Next controls */}
+                <div className="flex items-center justify-between">
+                  <button
+                    onClick={prevPair}
+                    disabled={clampedIndex === 0}
+                    className={cn(
+                      "flex items-center gap-1 text-xs font-medium px-3 py-1.5 rounded-lg border transition-colors",
+                      clampedIndex === 0
+                        ? "opacity-40 cursor-not-allowed border-slate-200 text-slate-400"
+                        : "border-slate-300 text-slate-600 hover:bg-slate-50"
+                    )}
+                  >
+                    <ChevronLeft className="w-3.5 h-3.5" />
+                    Previous
+                  </button>
+                  <span className="text-xs text-slate-500">
+                    {clampedIndex + 1} / {pairs.length}
+                  </span>
+                  <button
+                    onClick={nextPair}
+                    disabled={clampedIndex === pairs.length - 1}
+                    className={cn(
+                      "flex items-center gap-1 text-xs font-medium px-3 py-1.5 rounded-lg border transition-colors",
+                      clampedIndex === pairs.length - 1
+                        ? "opacity-40 cursor-not-allowed border-slate-200 text-slate-400"
+                        : "border-slate-300 text-slate-600 hover:bg-slate-50"
+                    )}
+                  >
+                    Next
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+
+                {/* Thumbnail strip */}
+                <div className="flex gap-2 overflow-x-auto pb-1">
+                  {pairs.map((pair, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setActiveIndex(i)}
+                      className={cn(
+                        "shrink-0 relative rounded-md overflow-hidden border-2 transition-all",
+                        i === clampedIndex
+                          ? "border-blue-500 shadow-md scale-105"
+                          : "border-transparent opacity-60 hover:opacity-90"
+                      )}
+                      style={{ width: 72, height: 48 }}
+                    >
+                      {/* Split thumbnail: left=before, right=after */}
+                      <div className="absolute inset-0 flex">
+                        <img
+                          src={pair.before.url}
+                          alt="Before thumbnail"
+                          className="w-1/2 h-full object-cover"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src =
+                              "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='48'%3E%3Crect width='36' height='48' fill='%23e2e8f0'/%3E%3C/svg%3E";
+                          }}
+                        />
+                        <img
+                          src={pair.after.url}
+                          alt="After thumbnail"
+                          className="w-1/2 h-full object-cover"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src =
+                              "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='48'%3E%3Crect width='36' height='48' fill='%23e2e8f0'/%3E%3C/svg%3E";
+                          }}
+                        />
+                      </div>
+                      {/* Divider line on thumbnail */}
+                      <div className="absolute inset-y-0 left-1/2 w-px bg-white/80" />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Unmatched before photos (if more before than after) */}
+            {before.length > after.length && (
+              <GridSection
+                title="Additional Before Photos"
+                items={before.slice(after.length)}
+                color="text-orange-600"
+              />
+            )}
+            {/* Unmatched after photos (if more after than before) */}
+            {after.length > before.length && (
+              <GridSection
+                title="Additional After Photos"
+                items={after.slice(before.length)}
+                color="text-green-600"
+              />
+            )}
+          </div>
+        )}
+
+        {/* ── Grid fallback when no pairs (only before OR only after) ── */}
+        {!hasPairs && (
+          <>
+            <GridSection title="Before" items={before} color="text-orange-600" />
+            <GridSection title="After" items={after} color="text-green-600" />
+          </>
+        )}
+
+        {/* Progress photos always shown as grid */}
+        <GridSection title="In Progress" items={progress} color="text-blue-600" />
       </CardContent>
     </Card>
   );
@@ -486,7 +781,7 @@ export default function CustomerPortal() {
         {/* Photo gallery — combines legacy portal photos with new job_photos */}
         {(() => {
           // Merge legacy portalPhotos (stored on lead) with new job_photos
-          const legacyPhotos = (lead.portalPhotos ?? []) as { url: string; caption: string; type: "before" | "after" | "progress" }[];
+          const legacyPhotos = (lead.portalPhotos ?? []) as Photo[];
           const newBefore = (jobPhotos?.before ?? []).map((p) => ({
             url: p.photoUrl,
             caption: p.caption ?? "",
