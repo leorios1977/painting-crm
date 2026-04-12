@@ -22,6 +22,7 @@ import Blog from "./pages/Blog";
 import BlogEditor from "./pages/BlogEditor";
 import BlogList from "./pages/BlogList";
 import BlogPost from "./pages/BlogPost";
+import AIAssistant from "./pages/AIAssistant";
 
 function Router() {
   return (
@@ -46,6 +47,7 @@ function Router() {
         <Route path="/blog-manage/edit/:id" component={BlogEditor} />
         <Route path="/communications" component={Communications} />
         <Route path="/invoices" component={Invoices} />
+        <Route path="/ai-assistant" component={AIAssistant} />
         <Route path="/docs" component={Docs} />
         <Route path="/settings" component={Settings} />
         <Route path="/404" component={NotFound} />

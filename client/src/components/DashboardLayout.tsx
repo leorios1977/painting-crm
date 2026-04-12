@@ -23,7 +23,7 @@ import {
 import { getLoginUrl } from "@/const";
 import { useIsMobile } from "@/hooks/useMobile";
 import { useBranding } from "@/contexts/BrandingContext";
-import { BarChart3, BookOpen, CalendarDays, FileText, HardHat, LayoutDashboard, LogOut, Mail, MessageSquare, PanelLeft, Receipt, Settings, Users } from "lucide-react";
+import { BarChart3, BookOpen, CalendarDays, FileText, HardHat, LayoutDashboard, LogOut, Mail, MessageSquare, PanelLeft, Receipt, Settings, Sparkles, Users } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
@@ -64,6 +64,7 @@ const menuItems = [
   { icon: MessageSquare, label: "Communication Log", path: "/communications" },
   { icon: Receipt, label: "Invoices", path: "/invoices" },
   { icon: FileText, label: "Blog / Articles", path: "/blog-manage" },
+  { icon: Sparkles, label: "AI Assistant", path: "/ai-assistant" },
   { icon: BookOpen, label: "Documentation", path: "/docs" },
   { icon: Settings, label: "Settings", path: "/settings" },
 ];
