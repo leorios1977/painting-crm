@@ -15,6 +15,7 @@ import { portalRouter } from "./routers/portal";
 import { reviewsRouter } from "./routers/reviews";
 import { photosRouter } from "./routers/photos";
 import { crewRouter } from "./routers/crew";
+import { blogRouter } from "./routers/blog";
 import { seedDefaultTemplates } from "./db";
 import { registerStripeWebhook } from "./routes/stripeWebhook";
 
@@ -50,6 +51,7 @@ export const appRouter = router({
   reviews: reviewsRouter,
   photos: photosRouter,
   crew: crewRouter,
+  blog: blogRouter,
 });
 
 export type AppRouter = typeof appRouter;

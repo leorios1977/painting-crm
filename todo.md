@@ -266,3 +266,20 @@
 - [x] Update DashboardLayout.tsx: inject gtag.js script tag when googleAnalyticsId is set (useEffect, idempotent)
 - [x] Create SocialMediaBar.tsx: reusable component for public footer and customer portal
 - [x] 94 tests passing, TypeScript clean, checkpoint saved
+
+## Phase 29: Blog & Project Article System
+- [x] Create blog_posts table (id, tenant_id, title, slug, content, excerpt, seo fields, featured image, project location, status, timestamps)
+- [x] Create blog_images table (id, post_id, image_url, caption, display_order)
+- [x] Generate and apply migration (0014_productive_marvex.sql)
+- [x] Create server/services/blog.ts with CRUD functions (slugify, create, update, delete, list, getBySlug)
+- [x] Create server/routers/blog.ts with 12 procedures (listPublished, getBySlug, getRelated, getImages, listAll, getById, create, update, delete, uploadFeaturedImage, uploadImage, deleteImage)
+- [x] Register blogRouter in routers.ts
+- [x] Create Blog.tsx CRM management page (posts table, status badges, edit/delete actions)
+- [x] Create BlogEditor.tsx full-page editor (title, content textarea, excerpt, SEO fields with char counter, image uploads, project location, status selector)
+- [x] Create BlogList.tsx public blog listing (card grid, featured image, excerpt, date, Read More)
+- [x] Create BlogPost.tsx public article page (SEO meta injection, photo gallery, Google Maps embed, related posts, CTA section)
+- [x] Add Blog / Articles to DashboardLayout.tsx sidebar (FileText icon)
+- [x] Add /blog-manage, /blog-manage/new, /blog-manage/edit/:id routes to App.tsx
+- [x] Add /blog and /blog/:slug public routes to App.tsx
+- [x] Write Vitest tests for blog router (18 tests including slugify)
+- [x] 112 tests passing, TypeScript clean, checkpoint saved

@@ -18,12 +18,18 @@ import Schedule from "./pages/Schedule";
 import Invoices from "./pages/Invoices";
 import CustomerPortal from "./pages/CustomerPortal";
 import Crew from "./pages/Crew";
+import Blog from "./pages/Blog";
+import BlogEditor from "./pages/BlogEditor";
+import BlogList from "./pages/BlogList";
+import BlogPost from "./pages/BlogPost";
 
 function Router() {
   return (
     <Switch>
-      {/* Public portal route — no auth, no sidebar */}
+      {/* Public routes — no auth, no sidebar */}
       <Route path="/portal/:token" component={CustomerPortal} />
+      <Route path="/blog" component={BlogList} />
+      <Route path="/blog/:slug" component={BlogPost} />
       {/* Admin dashboard routes */}
       <Route>
         <DashboardLayout>
@@ -35,6 +41,9 @@ function Router() {
         <Route path="/email-automation" component={EmailAutomation} />
         <Route path="/schedule" component={Schedule} />
         <Route path="/crew" component={Crew} />
+        <Route path="/blog-manage" component={Blog} />
+        <Route path="/blog-manage/new" component={BlogEditor} />
+        <Route path="/blog-manage/edit/:id" component={BlogEditor} />
         <Route path="/communications" component={Communications} />
         <Route path="/invoices" component={Invoices} />
         <Route path="/docs" component={Docs} />

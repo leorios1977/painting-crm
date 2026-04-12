@@ -365,3 +365,37 @@ export const jobPhotos = mysqlTable("job_photos", {
 
 export type JobPhoto = typeof jobPhotos.$inferSelect;
 export type InsertJobPhoto = typeof jobPhotos.$inferInsert;
+
+// ─── Blog Posts ──────────────────────────────────────────────────────────────
+export const blogPosts = mysqlTable("blog_posts", {
+  id: int("id").autoincrement().primaryKey(),
+  tenantId: int("tenantId"),
+  title: varchar("title", { length: 500 }).notNull(),
+  slug: varchar("slug", { length: 600 }).notNull().unique(),
+  content: text("content"),
+  excerpt: varchar("excerpt", { length: 500 }),
+  seoTitle: varchar("seoTitle", { length: 200 }),
+  seoKeywords: varchar("seoKeywords", { length: 500 }),
+  seoDescription: varchar("seoDescription", { length: 200 }),
+  featuredImageUrl: text("featuredImageUrl"),
+  projectAddress: text("projectAddress"),
+  projectLatitude: decimal("projectLatitude", { precision: 10, scale: 7 }),
+  projectLongitude: decimal("projectLongitude", { precision: 10, scale: 7 }),
+  status: mysqlEnum("status", ["draft", "published", "archived"]).default("draft").notNull(),
+  publishedAt: timestamp("publishedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type BlogPost = typeof blogPosts.$inferSelect;
+export type InsertBlogPost = typeof blogPosts.$inferInsert;
+
+// ─── Blog Images ─────────────────────────────────────────────────────────────
+export const blogImages = mysqlTable("blog_images", {
+  id: int("id").autoincrement().primaryKey(),
+  postId: int("postId").notNull(),
+  imageUrl: text("imageUrl").notNull(),
+  caption: varchar("caption", { length: 500 }),
+  displayOrder: int("displayOrder").default(0).notNull(),
+});
+export type BlogImage = typeof blogImages.$inferSelect;
+export type InsertBlogImage = typeof blogImages.$inferInsert;

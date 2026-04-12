@@ -1,0 +1,165 @@
+import { z } from "zod";
+import { router, publicProcedure, protectedProcedure } from "../_core/trpc";
+import { TRPCError } from "@trpc/server";
+import {
+  listAllPosts,
+  listPublishedPosts,
+  getPostBySlug,
+  getPostById,
+  createPost,
+  updatePost,
+  deletePost,
+  getPostImages,
+  addPostImage,
+  deletePostImage,
+  getRelatedPosts,
+} from "../services/blog";
+import { storagePut } from "../storage";
+
+export const blogRouter = router({
+  /** Admin: list all posts (all statuses) */
+  listAll: protectedProcedure.query(async () => {
+    return listAllPosts();
+  }),
+
+  /** Public: list published posts */
+  listPublished: publicProcedure.query(async () => {
+    return listPublishedPosts();
+  }),
+
+  /** Public: get a single post by slug */
+  getBySlug: publicProcedure
+    .input(z.object({ slug: z.string() }))
+    .query(async ({ input }) => {
+      const post = await getPostBySlug(input.slug);
+      if (!post) throw new TRPCError({ code: "NOT_FOUND", message: "Post not found" });
+      return post;
+    }),
+
+  /** Admin: get a single post by ID */
+  getById: protectedProcedure
+    .input(z.object({ id: z.number() }))
+    .query(async ({ input }) => {
+      const post = await getPostById(input.id);
+      if (!post) throw new TRPCError({ code: "NOT_FOUND", message: "Post not found" });
+      return post;
+    }),
+
+  /** Admin: create a new post */
+  create: protectedProcedure
+    .input(
+      z.object({
+        title: z.string().min(1),
+        content: z.string().optional(),
+        excerpt: z.string().optional(),
+        seoTitle: z.string().optional(),
+        seoKeywords: z.string().optional(),
+        seoDescription: z.string().optional(),
+        featuredImageUrl: z.string().optional(),
+        projectAddress: z.string().optional(),
+        projectLatitude: z.string().optional(),
+        projectLongitude: z.string().optional(),
+        status: z.enum(["draft", "published", "archived"]).optional(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      return createPost(input);
+    }),
+
+  /** Admin: update an existing post */
+  update: protectedProcedure
+    .input(
+      z.object({
+        id: z.number(),
+        title: z.string().optional(),
+        content: z.string().optional(),
+        excerpt: z.string().optional(),
+        seoTitle: z.string().optional(),
+        seoKeywords: z.string().optional(),
+        seoDescription: z.string().optional(),
+        featuredImageUrl: z.string().optional(),
+        projectAddress: z.string().optional(),
+        projectLatitude: z.string().optional(),
+        projectLongitude: z.string().optional(),
+        status: z.enum(["draft", "published", "archived"]).optional(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const { id, ...data } = input;
+      await updatePost(id, data);
+      return { success: true };
+    }),
+
+  /** Admin: delete a post */
+  delete: protectedProcedure
+    .input(z.object({ id: z.number() }))
+    .mutation(async ({ input }) => {
+      await deletePost(input.id);
+      return { success: true };
+    }),
+
+  /** Get images for a post (public) */
+  getImages: publicProcedure
+    .input(z.object({ postId: z.number() }))
+    .query(async ({ input }) => {
+      return getPostImages(input.postId);
+    }),
+
+  /** Admin: upload an image for a post */
+  uploadImage: protectedProcedure
+    .input(
+      z.object({
+        postId: z.number(),
+        imageBase64: z.string(),
+        filename: z.string(),
+        mimeType: z.string().default("image/jpeg"),
+        caption: z.string().optional(),
+        displayOrder: z.number().optional(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const buffer = Buffer.from(input.imageBase64, "base64");
+      const suffix = Math.random().toString(36).substring(2, 10);
+      const key = `blog/${input.postId}/${suffix}-${input.filename}`;
+      const { url } = await storagePut(key, buffer, input.mimeType);
+      const result = await addPostImage({
+        postId: input.postId,
+        imageUrl: url,
+        caption: input.caption,
+        displayOrder: input.displayOrder,
+      });
+      return { id: result.id, imageUrl: url };
+    }),
+
+  /** Admin: delete a blog image */
+  deleteImage: protectedProcedure
+    .input(z.object({ imageId: z.number() }))
+    .mutation(async ({ input }) => {
+      await deletePostImage(input.imageId);
+      return { success: true };
+    }),
+
+  /** Public: get related posts */
+  getRelated: publicProcedure
+    .input(z.object({ postId: z.number() }))
+    .query(async ({ input }) => {
+      return getRelatedPosts(input.postId);
+    }),
+
+  /** Admin: upload featured image */
+  uploadFeaturedImage: protectedProcedure
+    .input(
+      z.object({
+        imageBase64: z.string(),
+        filename: z.string(),
+        mimeType: z.string().default("image/jpeg"),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const buffer = Buffer.from(input.imageBase64, "base64");
+      const suffix = Math.random().toString(36).substring(2, 10);
+      const key = `blog/featured/${suffix}-${input.filename}`;
+      const { url } = await storagePut(key, buffer, input.mimeType);
+      return { url };
+    }),
+});
