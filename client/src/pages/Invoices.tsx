@@ -56,6 +56,7 @@ import type { InvoiceLineItem } from "../../../drizzle/schema";
 import { PDFDownloadLink } from "@react-pdf/renderer";
 import { InvoicePDF } from "@/components/InvoicePDF";
 import { useBranding } from "@/contexts/BrandingContext";
+import { useIndustry } from "@/contexts/IndustryContext";
 
 // ─── Status badge config ──────────────────────────────────────────────────────
 
@@ -106,6 +107,7 @@ export default function Invoices() {
 
   const utils = trpc.useUtils();
   const { branding } = useBranding();
+  const { revenueLabel } = useIndustry();
 
   const { data: invoices = [], isLoading } = trpc.invoices.list.useQuery(
     statusFilter !== "all"
@@ -183,7 +185,7 @@ export default function Invoices() {
                 <DollarSign className="w-4 h-4 text-green-600" />
               </div>
               <div>
-                <p className="text-xs text-muted-foreground">Revenue Collected</p>
+                <p className="text-xs text-muted-foreground">{revenueLabel}</p>
                 <p className="text-xl font-bold text-green-600">
                   ${totalRevenue.toLocaleString("en-US", { minimumFractionDigits: 2 })}
                 </p>

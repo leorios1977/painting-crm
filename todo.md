@@ -309,7 +309,41 @@
 - [x] 120 tests passing, TypeScript clean, checkpoint saved
 
 ## Phase 32: TipTap Rich Text Editor for Blog
-- [ ] Replace plain textarea with TipTap editor in BlogEditor.tsx
-- [ ] Add formatting toolbar (bold, italic, underline, H1/H2/H3, bullets, numbers, blockquote, link, image)
-- [ ] Save HTML output to content field
-- [ ] Run tests, TypeScript clean, save checkpoint
+- [x] Replace plain textarea with TipTap editor in BlogEditor.tsx
+- [x] Add formatting toolbar (bold, italic, underline, H1/H2/H3, bullets, numbers, blockquote, link, image)
+- [x] Save HTML output to content field
+- [x] Run tests, TypeScript clean, save checkpoint
+
+## Phase 33: AI Business Assistant
+- [x] Create AIAssistant.tsx with full-page chat UI
+- [x] Add /api/ai/chat backend route to routers.ts
+- [x] Add AI Assistant to sidebar navigation with Sparkles icon
+- [x] Add /ai-assistant route to App.tsx
+- [x] 120 tests passing, TypeScript clean, checkpoint saved
+
+## Phase 34: Crew Workload View
+- [x] Add By Crew tab to Schedule.tsx
+- [x] Show crew members as columns with appointments listed
+- [x] Highlight crew with >3 jobs in amber
+- [x] Add date-range selector for week filtering
+- [x] 120 tests passing, TypeScript clean, checkpoint saved
+
+## Phase 35: Before/After Drag Slider
+- [x] Replace grid with custom drag slider in CustomerPortal.tsx
+- [x] Add carousel for multiple before/after pairs
+- [x] Add grid fallback for single photo type
+- [x] 120 tests passing, TypeScript clean, checkpoint saved
+
+## Phase 36: Industry-Agnostic Config Refactoring
+- [x] Create src/config/industryConfig.ts with painting default + hvac/dental/legal/cleaning placeholders
+- [x] Create src/contexts/IndustryContext.tsx with useIndustry hook
+- [x] Wire IndustryContext.Provider into App.tsx with painting config
+- [x] Update DashboardLayout.tsx to read labels from IndustryContext
+- [x] Update Pipeline.tsx stage labels from IndustryContext
+- [x] Update Lead form field labels from IndustryContext
+- [x] Update Dashboard.tsx KPI labels from IndustryContext
+- [x] Update LeadDetail.tsx, Schedule.tsx, Crew.tsx with team/job terminology
+- [x] Update Invoices.tsx with revenueLabel
+- [x] Update CustomerPortal.tsx with portalStages from context
+- [x] Update AIAssistant.tsx with industry-specific text
+- [x] All 120 tests passing, TypeScript clean, checkpoint saved

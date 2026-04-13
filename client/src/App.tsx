@@ -5,6 +5,8 @@ import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { BrandingProvider } from "./contexts/BrandingContext";
+import { IndustryProvider } from "./contexts/IndustryContext";
+import { paintingConfig } from "./config/industryConfig";
 import DashboardLayout from "./components/DashboardLayout";
 import Dashboard from "./pages/Dashboard";
 import Pipeline from "./pages/Pipeline";
@@ -62,6 +64,7 @@ function Router() {
 function App() {
   return (
     <ErrorBoundary>
+      <IndustryProvider config={paintingConfig}>
       <ThemeProvider defaultTheme="light">
         <BrandingProvider>
           <TooltipProvider>
@@ -70,6 +73,7 @@ function App() {
           </TooltipProvider>
         </BrandingProvider>
       </ThemeProvider>
+      </IndustryProvider>
     </ErrorBoundary>
   );
 }

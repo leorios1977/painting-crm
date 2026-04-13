@@ -13,6 +13,7 @@
 
 import { useState, useMemo } from "react";
 import { trpc } from "@/lib/trpc";
+import { useIndustry } from "@/contexts/IndustryContext";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -469,6 +470,7 @@ function ByCrewView({
   weekEnd: Date;
   onSelectAppt: (appt: AppointmentWithLead) => void;
 }) {
+  const { teamTerminologyPlural, teamGroupName } = useIndustry();
   // Fetch all active crew members
   const { data: crewMembers = [], isLoading: crewLoading } = trpc.crew.list.useQuery({
     status: "active",
@@ -507,8 +509,8 @@ function ByCrewView({
     return (
       <div className="text-center py-16 text-muted-foreground border-2 border-dashed rounded-xl">
         <HardHat className="w-10 h-10 mx-auto mb-3 opacity-30" />
-        <p className="text-sm font-medium">No active crew members</p>
-        <p className="text-xs mt-1">Add crew members from the Crew page.</p>
+        <p className="text-sm font-medium">{`No active ${teamTerminologyPlural.toLowerCase()}`}</p>
+        <p className="text-xs mt-1">{`Add ${teamTerminologyPlural.toLowerCase()} from the ${teamGroupName} page.`}</p>
       </div>
     );
   }
@@ -622,6 +624,7 @@ function ByCrewView({
 type Tab = "calendar" | "crew";
 
 export default function Schedule() {
+  const { teamGroupName } = useIndustry();
   const [activeTab, setActiveTab] = useState<Tab>("calendar");
   const [weekStart, setWeekStart] = useState(() => getWeekStart(new Date()));
   const [selectedAppt, setSelectedAppt] = useState<AppointmentWithLead | null>(null);
@@ -678,7 +681,7 @@ export default function Schedule() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Schedule</h1>
           <p className="text-muted-foreground text-sm">
-            {activeTab === "calendar" ? "Weekly appointment calendar" : "Crew workload by week"}
+            {activeTab === "calendar" ? "Weekly appointment calendar" : `${teamGroupName} workload by week`}
           </p>
         </div>
 

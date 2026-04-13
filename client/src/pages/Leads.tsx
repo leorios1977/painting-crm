@@ -1,5 +1,6 @@
 import { trpc } from "@/lib/trpc";
-import { formatCurrency, formatDate, LEAD_SOURCES, PROJECT_TYPES, STAGES, type Stage } from "@/lib/stages";
+import { formatCurrency, formatDate, type Stage, useIndustryStages } from "@/lib/stages";
+import { useIndustry } from "@/contexts/IndustryContext";
 import { StageBadge } from "@/components/StageBadge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -54,6 +55,8 @@ export default function Leads() {
   const [createOpen, setCreateOpen] = useState(false);
   const [, setLocation] = useLocation();
   const utils = trpc.useUtils();
+  const { stages: STAGES, projectTypes: PROJECT_TYPES, leadSources: LEAD_SOURCES, projectTypeLabel } = useIndustryStages();
+  const { customerTerminology, leadFormFields } = useIndustry();
 
   const { data: leads, isLoading } = trpc.leads.list.useQuery(
     { search: search || undefined, stage: stageFilter !== "all" ? (stageFilter as Stage) : undefined },
@@ -121,7 +124,7 @@ export default function Leads() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <Label>Project Type</Label>
+                  <Label>{projectTypeLabel}</Label>
                   <Select onValueChange={(v) => setValue("projectType", v)}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select type" />
@@ -230,7 +233,7 @@ export default function Leads() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b bg-muted/30">
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Customer</th>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground">{customerTerminology}</th>
                 <th className="text-left px-4 py-3 font-medium text-muted-foreground hidden md:table-cell">Project</th>
                 <th className="text-left px-4 py-3 font-medium text-muted-foreground hidden lg:table-cell">Value</th>
                 <th className="text-left px-4 py-3 font-medium text-muted-foreground">Stage</th>

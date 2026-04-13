@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Sparkles, Send, RotateCcw, Copy, Check } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/_core/hooks/useAuth";
+import { useIndustry } from "@/contexts/IndustryContext";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -19,9 +20,9 @@ interface Message {
   timestamp: Date;
 }
 
-// ─── Suggested prompts ────────────────────────────────────────────────────────
+// ─// ─── Suggested prompts (will be overridden by industry config) ────────────────────────────────────────────────────
 
-const SUGGESTED_PROMPTS = [
+const DEFAULT_SUGGESTED_PROMPTS = [
   {
     label: "Follow-up SMS for cold lead",
     prompt: "Draft a follow-up SMS for a lead who has not responded in 3 days",
@@ -102,6 +103,8 @@ function CopyButton({ text }: { text: string }) {
 
 export default function AIAssistant() {
   const { user } = useAuth();
+  const { industryName, aiSuggestedPrompts } = useIndustry();
+  const SUGGESTED_PROMPTS = aiSuggestedPrompts;
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -179,7 +182,7 @@ export default function AIAssistant() {
           <div>
             <h1 className="text-xl font-bold tracking-tight">AI Business Assistant</h1>
             <p className="text-xs text-muted-foreground">
-              Expert advice for your painting business
+              {`Expert advice for your ${industryName?.toLowerCase() || 'business'}`}
             </p>
           </div>
         </div>
@@ -202,11 +205,11 @@ export default function AIAssistant() {
               </div>
               <h2 className="text-lg font-semibold">How can I help your business today?</h2>
               <p className="text-sm text-muted-foreground max-w-sm">
-                Ask me anything about running your painting company — from pricing and emails to social media and customer service.
+                {`Ask me anything about running your ${industryName?.toLowerCase() || 'business'} company — from pricing and emails to social media and customer service.`}
               </p>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full max-w-2xl">
-              {SUGGESTED_PROMPTS.map((sp) => (
+              {SUGGESTED_PROMPTS.map((sp: any) => (
                 <button
                   key={sp.label}
                   onClick={() => sendMessage(sp.prompt)}
@@ -291,7 +294,7 @@ export default function AIAssistant() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Ask anything about your painting business… (Enter to send, Shift+Enter for new line)"
+            placeholder={`Ask anything about your ${industryName?.toLowerCase() || 'business'} business… (Enter to send, Shift+Enter for new line)`}
             className="resize-none min-h-[52px] max-h-[160px] text-sm"
             rows={2}
             disabled={isLoading}

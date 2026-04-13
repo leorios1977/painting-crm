@@ -1,5 +1,5 @@
 import { trpc } from "@/lib/trpc";
-import { STAGES, formatCurrency, type Stage } from "@/lib/stages";
+import { formatCurrency, type Stage, useIndustryStages } from "@/lib/stages";
 import { StageBadge } from "@/components/StageBadge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -154,6 +154,7 @@ export default function Pipeline() {
   });
   const [, setLocation] = useLocation();
   const [activeId, setActiveId] = useState<number | null>(null);
+  const { stages: STAGES } = useIndustryStages();
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
@@ -199,7 +200,7 @@ export default function Pipeline() {
           onDragEnd={handleDragEnd}
         >
           <div className="flex gap-3" style={{ minWidth: "max-content" }}>
-            {STAGES.map(({ key, label }) => (
+            {STAGES.map(({ key, label }: { key: Stage; label: string }) => (
               <KanbanColumn
                 key={key}
                 stage={key}

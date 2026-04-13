@@ -1,0 +1,31 @@
+Industry Config Audit — Files to modify
+========================================
+
+1. NEW: client/src/config/industryConfig.ts — config definitions
+2. NEW: client/src/contexts/IndustryContext.tsx — React context + hook
+3. client/src/App.tsx — wrap with IndustryContext.Provider
+4. client/src/lib/stages.ts — STAGES, STAGE_LABELS, PROJECT_TYPES, LEAD_SOURCES
+5. client/src/components/DashboardLayout.tsx — sidebar nav labels ("Crew", "Leads" etc), app title
+6. client/src/pages/Dashboard.tsx — KPI titles (Total Leads, Pipeline Value, Revenue Collected, Upcoming Jobs, Conversion Rate), section titles
+7. client/src/pages/Pipeline.tsx — reads from stages.ts (will update via stages.ts)
+8. client/src/pages/Leads.tsx — form labels (Project Type, Project Address, Lead Source, Estimated Value)
+9. client/src/pages/LeadDetail.tsx — "Job Type", "Crew Assigned", "Crew page" placeholder
+10. client/src/pages/Schedule.tsx — "Crew workload", "crew members", "No assignments"
+11. client/src/pages/Crew.tsx — "Crew Member", "Add Crew Member", etc
+12. client/src/pages/Invoices.tsx — "Revenue Collected", "Customer" column header
+13. client/src/pages/CustomerPortal.tsx — "Job Scheduled", "Job Complete"
+14. client/src/pages/Docs.tsx — documentation text references
+15. client/src/pages/Settings.tsx — "PaintPro CRM", "Your Painting Co."
+16. client/src/pages/BlogList.tsx — "painting projects"
+17. client/src/pages/BlogPost.tsx — "painting project"
+18. client/src/pages/AIAssistant.tsx — "painting company" system prompt + suggested prompts
+
+Key terminology mappings:
+- Job → jobTerminology (Job, Case, Appointment, Visit, Service Call)
+- Customer → customerTerminology (Customer, Patient, Client, Resident)
+- Crew / Crew Member → teamTerminology (Crew, Technician, Attorney, Doctor, Staff)
+- Revenue Collected → revenueLabel
+- Pipeline stages → pipelineStages
+- Lead form fields → leadFormFields
+- Dashboard KPIs → dashboardKPILabels
+- Email templates → defaultEmailTemplates

@@ -41,13 +41,30 @@ import {
 import { PDFDownloadLink } from "@react-pdf/renderer";
 import { InvoicePDF } from "@/components/InvoicePDF";
 import { useBranding } from "@/contexts/BrandingContext";
+import { useIndustry } from "@/contexts/IndustryContext";
 import { SocialMediaBar } from "@/components/SocialMediaBar";
 import { useRef, useState, useCallback, useEffect } from "react";
 import { cn } from "@/lib/utils";
 
 // ─── Stage progress config ────────────────────────────────────────────────────
 
-const PROGRESS_STAGES = [
+function getProgressStages(portalStages: { key: string; label: string }[]) {
+  const iconMap: Record<string, any> = {
+    lead: User,
+    quoted: Paintbrush,
+    scheduled: CalendarDays,
+    in_progress: Wrench,
+    completed: CheckCircle2,
+    paid: CreditCard,
+  };
+  return portalStages.map(s => ({
+    key: s.key,
+    label: s.label,
+    icon: iconMap[s.key] || User,
+  }));
+}
+
+const DEFAULT_PROGRESS_STAGES = [
   { key: "lead", label: "Inquiry Received", icon: User },
   { key: "quoted", label: "Quote Sent", icon: Paintbrush },
   { key: "scheduled", label: "Job Scheduled", icon: CalendarDays },
@@ -65,6 +82,8 @@ function getStageIndex(stage: string) {
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
 function ProgressTracker({ stage }: { stage: string }) {
+  const { portalStages } = useIndustry();
+  const PROGRESS_STAGES = getProgressStages(portalStages);
   const currentIdx = getStageIndex(stage);
 
   return (
@@ -604,6 +623,7 @@ function PhotoGallery({ photos }: { photos: Photo[] }) {
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function CustomerPortal() {
+  const { portalStages } = useIndustry();
   const params = useParams<{ token: string }>();
   const token = params.token ?? "";
   const { data, isLoading, error } = trpc.portal.getData.useQuery(
@@ -611,6 +631,7 @@ export default function CustomerPortal() {
     { enabled: !!token, retry: false }
   );
   const { branding } = useBranding();
+  const PROGRESS_STAGES = getProgressStages(portalStages);
 
   // Load job_photos from the new photos router (public endpoint)
   const { data: jobPhotos } = trpc.photos.byLeadPublic.useQuery(
@@ -652,7 +673,7 @@ export default function CustomerPortal() {
 
   // ── Stage label ──
   const stageLabel =
-    PROGRESS_STAGES.find((s) => s.key === lead.stage)?.label ?? lead.stage;
+    PROGRESS_STAGES.find((s: any) => s.key === lead.stage)?.label ?? lead.stage;
 
   return (
     <div className="min-h-screen bg-slate-50">

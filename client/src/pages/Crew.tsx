@@ -10,6 +10,7 @@
  */
 import { useState } from "react";
 import { trpc } from "@/lib/trpc";
+import { useIndustry } from "@/contexts/IndustryContext";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -92,6 +93,7 @@ function CrewFormModal({
   onSaved: () => void;
 }) {
   const isEdit = !!member;
+  const { teamTerminology } = useIndustry();
   const [form, setForm] = useState<CrewFormData>(
     member
       ? {
@@ -110,7 +112,7 @@ function CrewFormModal({
     onSuccess: () => {
       utils.crew.list.invalidate();
       onSaved();
-      toast.success("Crew member added");
+      toast.success(`${teamTerminology} added`);
     },
     onError: (e) => toast.error(e.message),
   });
@@ -119,7 +121,7 @@ function CrewFormModal({
     onSuccess: () => {
       utils.crew.list.invalidate();
       onSaved();
-      toast.success("Crew member updated");
+      toast.success(`${teamTerminology} updated`);
     },
     onError: (e) => toast.error(e.message),
   });
@@ -150,7 +152,7 @@ function CrewFormModal({
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>{isEdit ? "Edit Crew Member" : "Add Crew Member"}</DialogTitle>
+          <DialogTitle>{isEdit ? `Edit ${teamTerminology}` : `Add ${teamTerminology}`}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 pt-2">
           <div className="space-y-2">
@@ -239,6 +241,7 @@ export default function Crew() {
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("active");
   const [modalOpen, setModalOpen] = useState(false);
   const [editMember, setEditMember] = useState<CrewMember | null>(null);
+  const { teamGroupName, teamTerminology, teamTerminologyPlural } = useIndustry();
 
   const utils = trpc.useUtils();
 
@@ -247,7 +250,7 @@ export default function Crew() {
   const deactivateMutation = trpc.crew.deactivate.useMutation({
     onSuccess: () => {
       utils.crew.list.invalidate();
-      toast.success("Crew member deactivated");
+      toast.success(`${teamTerminology} deactivated`);
     },
     onError: (e) => toast.error(e.message),
   });
@@ -255,7 +258,7 @@ export default function Crew() {
   const reactivateMutation = trpc.crew.reactivate.useMutation({
     onSuccess: () => {
       utils.crew.list.invalidate();
-      toast.success("Crew member reactivated");
+      toast.success(`${teamTerminology} reactivated`);
     },
     onError: (e) => toast.error(e.message),
   });
@@ -282,14 +285,14 @@ export default function Crew() {
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Crew</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{teamGroupName}</h1>
           <p className="text-muted-foreground text-sm">
-            Manage your painting crew members and their assignments
+            {`Manage your ${teamTerminologyPlural.toLowerCase()} and their assignments`}
           </p>
         </div>
         <Button onClick={openAdd}>
           <UserPlus className="w-4 h-4 mr-2" />
-          Add Crew Member
+          {`Add ${teamTerminology}`}
         </Button>
       </div>
 
@@ -303,7 +306,7 @@ export default function Crew() {
               </div>
               <div>
                 <p className="text-2xl font-bold">{activeCount}</p>
-                <p className="text-xs text-muted-foreground">Active Members</p>
+                <p className="text-xs text-muted-foreground">{`Active ${teamTerminologyPlural}`}</p>
               </div>
             </div>
           </CardContent>
@@ -328,7 +331,7 @@ export default function Crew() {
       {/* Filter + Table */}
       <Card>
         <CardHeader className="pb-3 flex flex-row items-center justify-between">
-          <CardTitle className="text-base">Crew Members</CardTitle>
+          <CardTitle className="text-base">{teamTerminologyPlural}</CardTitle>
           <Select
             value={statusFilter}
             onValueChange={(v) => setStatusFilter(v as "all" | "active" | "inactive")}
@@ -352,11 +355,11 @@ export default function Crew() {
           ) : (members as CrewMember[]).length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
               <Users className="w-10 h-10 mx-auto mb-3 opacity-30" />
-              <p className="text-sm font-medium">No crew members found</p>
+              <p className="text-sm font-medium">{`No ${teamTerminologyPlural.toLowerCase()} found`}</p>
               <p className="text-xs mt-1">
                 {statusFilter === "inactive"
                   ? "No inactive members."
-                  : "Add your first crew member to get started."}
+                  : `Add your first ${teamTerminology.toLowerCase()} to get started.`}
               </p>
             </div>
           ) : (

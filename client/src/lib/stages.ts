@@ -1,47 +1,51 @@
+import { useIndustry } from "@/contexts/IndustryContext";
+import { paintingConfig } from "@/config/industryConfig";
+
 export type Stage = "lead" | "quoted" | "scheduled" | "in_progress" | "completed" | "paid";
 
-export const STAGES: { key: Stage; label: string; color: string }[] = [
-  { key: "lead", label: "New Lead", color: "stage-lead" },
-  { key: "quoted", label: "Quoted", color: "stage-quoted" },
-  { key: "scheduled", label: "Scheduled", color: "stage-scheduled" },
-  { key: "in_progress", label: "In Progress", color: "stage-in_progress" },
-  { key: "completed", label: "Completed", color: "stage-completed" },
-  { key: "paid", label: "Paid", color: "stage-paid" },
-];
+/**
+ * Static defaults — used outside React components (e.g. StageBadge utility).
+ * These match the painting config exactly so nothing changes visually.
+ */
+export const STAGES: { key: Stage; label: string; color: string }[] =
+  paintingConfig.pipelineStages.map((s) => ({
+    key: s.id as Stage,
+    label: s.label,
+    color: s.color,
+  }));
 
-export const STAGE_LABELS: Record<Stage, string> = {
-  lead: "New Lead",
-  quoted: "Quoted",
-  scheduled: "Scheduled",
-  in_progress: "In Progress",
-  completed: "Completed",
-  paid: "Paid",
-};
+export const STAGE_LABELS: Record<Stage, string> = Object.fromEntries(
+  paintingConfig.pipelineStages.map((s) => [s.id, s.label])
+) as Record<Stage, string>;
 
-export const PROJECT_TYPES = [
-  "Interior Painting",
-  "Exterior Painting",
-  "Cabinet Painting",
-  "Deck Staining",
-  "Fence Painting",
-  "Commercial Painting",
-  "Pressure Washing",
-  "Drywall Repair",
-  "Other",
-];
+export const PROJECT_TYPES = paintingConfig.projectTypes;
 
-export const LEAD_SOURCES = [
-  "Website",
-  "Google",
-  "Referral",
-  "Social Media",
-  "Door Hanger",
-  "Yard Sign",
-  "Yelp",
-  "Angi",
-  "HomeAdvisor",
-  "Other",
-];
+export const LEAD_SOURCES = paintingConfig.leadSources;
+
+/**
+ * React hook — returns industry-aware stages, project types, and lead sources.
+ * Use this inside components for dynamic config.
+ */
+export function useIndustryStages() {
+  const config = useIndustry();
+  const stages: { key: Stage; label: string; color: string }[] =
+    config.pipelineStages.map((s) => ({
+      key: s.id as Stage,
+      label: s.label,
+      color: s.color,
+    }));
+  const stageLabels: Record<Stage, string> = Object.fromEntries(
+    config.pipelineStages.map((s) => [s.id, s.label])
+  ) as Record<Stage, string>;
+
+  return {
+    stages,
+    stageLabels,
+    projectTypes: config.projectTypes,
+    leadSources: config.leadSources,
+    projectTypeLabel: config.projectTypeLabel,
+  };
+}
 
 export function formatCurrency(value: string | number | null | undefined): string {
   if (!value) return "$0.00";

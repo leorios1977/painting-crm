@@ -1,5 +1,6 @@
 import { trpc } from "@/lib/trpc";
-import { formatCurrency, formatDateTime, STAGE_LABELS, STAGES, type Stage } from "@/lib/stages";
+import { formatCurrency, formatDateTime, STAGE_LABELS, STAGES, type Stage, useIndustryStages } from "@/lib/stages";
+import { useIndustry } from "@/contexts/IndustryContext";
 import { StageBadge } from "@/components/StageBadge";
 import { SMS } from "@/components/SMS";
 import { Button } from "@/components/ui/button";
@@ -62,7 +63,7 @@ function CrewSelect({ value, onChange }: { value: string; onChange: (v: string) 
     return (
       <Input
         id="appt-crew"
-        placeholder="No crew members — add them in Crew page"
+        placeholder="No team members — add them in the team page"
         value={value}
         onChange={(e) => onChange(e.target.value)}
       />
@@ -72,7 +73,7 @@ function CrewSelect({ value, onChange }: { value: string; onChange: (v: string) 
   return (
     <Select value={value || "__none"} onValueChange={(v) => onChange(v === "__none" ? "" : v)}>
       <SelectTrigger id="appt-crew">
-        <SelectValue placeholder="Select crew member…" />
+        <SelectValue placeholder="Select team member…" />
       </SelectTrigger>
       <SelectContent>
         <SelectItem value="__none">— None —</SelectItem>
@@ -87,6 +88,7 @@ function CrewSelect({ value, onChange }: { value: string; onChange: (v: string) 
 }
 
 export default function LeadDetail() {
+  const { jobTerminology, teamTerminology, teamGroupName } = useIndustry();
   const params = useParams<{ id: string }>();
   const id = parseInt(params.id || "0");
   const [, setLocation] = useLocation();
@@ -995,7 +997,7 @@ export default function LeadDetail() {
               </div>
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="appt-job">Job Type</Label>
+              <Label htmlFor="appt-job">{jobTerminology + " Type"}</Label>
               <Input
                 id="appt-job"
                 placeholder="e.g. Exterior Paint, Deck Stain"
@@ -1004,7 +1006,7 @@ export default function LeadDetail() {
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="appt-crew">Crew Assigned</Label>
+              <Label htmlFor="appt-crew">{teamTerminology + " Assigned"}</Label>
               <CrewSelect value={apptCrew} onChange={setApptCrew} />
             </div>
             <div className="space-y-1.5">

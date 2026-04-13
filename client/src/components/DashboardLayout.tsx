@@ -23,6 +23,7 @@ import {
 import { getLoginUrl } from "@/const";
 import { useIsMobile } from "@/hooks/useMobile";
 import { useBranding } from "@/contexts/BrandingContext";
+import { useIndustry } from "@/contexts/IndustryContext";
 import { BarChart3, BookOpen, CalendarDays, FileText, HardHat, LayoutDashboard, LogOut, Mail, MessageSquare, PanelLeft, Receipt, Settings, Sparkles, Users } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
@@ -54,20 +55,23 @@ function BrandedCTAButton({
   );
 }
 
-const menuItems = [
-  { icon: LayoutDashboard, label: "Dashboard", path: "/" },
-  { icon: BarChart3, label: "Pipeline", path: "/pipeline" },
-  { icon: Users, label: "Leads", path: "/leads" },
-  { icon: CalendarDays, label: "Schedule", path: "/schedule" },
-  { icon: HardHat, label: "Crew", path: "/crew" },
-  { icon: Mail, label: "Email Automation", path: "/email-automation" },
-  { icon: MessageSquare, label: "Communication Log", path: "/communications" },
-  { icon: Receipt, label: "Invoices", path: "/invoices" },
-  { icon: FileText, label: "Blog / Articles", path: "/blog-manage" },
-  { icon: Sparkles, label: "AI Assistant", path: "/ai-assistant" },
-  { icon: BookOpen, label: "Documentation", path: "/docs" },
-  { icon: Settings, label: "Settings", path: "/settings" },
-];
+function useMenuItems() {
+  const { teamGroupName } = useIndustry();
+  return [
+    { icon: LayoutDashboard, label: "Dashboard", path: "/" },
+    { icon: BarChart3, label: "Pipeline", path: "/pipeline" },
+    { icon: Users, label: "Leads", path: "/leads" },
+    { icon: CalendarDays, label: "Schedule", path: "/schedule" },
+    { icon: HardHat, label: teamGroupName, path: "/crew" },
+    { icon: Mail, label: "Email Automation", path: "/email-automation" },
+    { icon: MessageSquare, label: "Communication Log", path: "/communications" },
+    { icon: Receipt, label: "Invoices", path: "/invoices" },
+    { icon: FileText, label: "Blog / Articles", path: "/blog-manage" },
+    { icon: Sparkles, label: "AI Assistant", path: "/ai-assistant" },
+    { icon: BookOpen, label: "Documentation", path: "/docs" },
+    { icon: Settings, label: "Settings", path: "/settings" },
+  ];
+}
 
 const SIDEBAR_WIDTH_KEY = "sidebar-width";
 const DEFAULT_WIDTH = 280;
@@ -168,6 +172,7 @@ function DashboardLayoutContent({
   const isCollapsed = state === "collapsed";
   const [isResizing, setIsResizing] = useState(false);
   const sidebarRef = useRef<HTMLDivElement>(null);
+  const menuItems = useMenuItems();
   const activeMenuItem = menuItems.find(item => item.path === location || (item.path !== '/' && location.startsWith(item.path)));
   const isMobile = useIsMobile();
 

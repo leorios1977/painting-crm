@@ -1,5 +1,6 @@
 import { trpc } from "@/lib/trpc";
-import { formatCurrency, formatDateTime, STAGE_LABELS, type Stage } from "@/lib/stages";
+import { formatCurrency, formatDateTime, type Stage } from "@/lib/stages";
+import { useIndustry } from "@/contexts/IndustryContext";
 import { StageBadge } from "@/components/StageBadge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -102,6 +103,7 @@ export default function Dashboard() {
   const [, setLocation] = useLocation();
   const { branding } = useBranding();
   const lineColor = branding.primaryColor || "#3b82f6";
+  const { dashboardKPILabels, jobTerminologyPlural, revenueLabel } = useIndustry();
 
   if (isLoading) {
     return (
@@ -144,7 +146,7 @@ export default function Dashboard() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
           <p className="text-muted-foreground text-sm mt-0.5">
-            Overview of your painting business pipeline
+            Overview of your business pipeline
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -174,35 +176,35 @@ export default function Dashboard() {
       {/* Stats Row — 5 cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <StatCard
-          title="Total Leads"
+          title={dashboardKPILabels.totalLeads}
           value={totalLeads}
           subtitle={rangeLabel}
           icon={Users}
           color="blue"
         />
         <StatCard
-          title="Pipeline Value"
+          title={dashboardKPILabels.pipelineValue}
           value={formatCurrency(pipelineValue)}
           subtitle={rangeLabel}
           icon={BarChart3}
           color="violet"
         />
         <StatCard
-          title="Revenue Collected"
+          title={dashboardKPILabels.revenueCollected}
           value={formatCurrency(revenueCollected)}
           subtitle="Paid invoices"
           icon={DollarSign}
           color="green"
         />
         <StatCard
-          title="Upcoming Jobs"
+          title={dashboardKPILabels.upcomingJobs}
           value={upcomingJobsCount}
           subtitle="Next 7 days"
           icon={CalendarDays}
           color="amber"
         />
         <StatCard
-          title="Conversion Rate"
+          title={dashboardKPILabels.conversionRate}
           value={`${conversionRate}%`}
           subtitle={`${paidLeads} of ${totalLeads} leads paid`}
           icon={Target}
@@ -216,8 +218,8 @@ export default function Dashboard() {
       <Card className="border shadow-sm">
         <CardHeader className="flex flex-row items-center justify-between pb-2">
           <div>
-            <CardTitle className="text-base font-semibold">Revenue Trend</CardTitle>
-            <p className="text-xs text-muted-foreground mt-0.5">Weekly revenue collected over the last 12 weeks</p>
+            <CardTitle className="text-base font-semibold">{`${revenueLabel} Trend`}</CardTitle>
+            <p className="text-xs text-muted-foreground mt-0.5">{`Weekly ${revenueLabel.toLowerCase()} over the last 12 weeks`}</p>
           </div>
           <TrendingUp className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
@@ -253,7 +255,7 @@ export default function Dashboard() {
                     fontSize: 12,
                     boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
                   }}
-                  formatter={(value: number) => [formatCurrency(value), "Revenue"]}
+                  formatter={(value: number) => [formatCurrency(value), revenueLabel]}
                   labelStyle={{ fontWeight: 600, marginBottom: 2 }}
                 />
                 <Line
@@ -317,14 +319,14 @@ export default function Dashboard() {
         {/* Upcoming Jobs */}
         <Card className="border shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between pb-4">
-            <CardTitle className="text-base font-semibold">Upcoming Jobs</CardTitle>
+            <CardTitle className="text-base font-semibold">{`Upcoming ${jobTerminologyPlural}`}</CardTitle>
             <CalendarDays className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             {upcomingJobs.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
                 <CalendarDays className="h-8 w-8 mx-auto mb-2 opacity-30" />
-                <p className="text-sm">No jobs scheduled this week</p>
+                <p className="text-sm">{`No ${jobTerminologyPlural.toLowerCase()} scheduled this week`}</p>
               </div>
             ) : (
               <div className="space-y-3">
