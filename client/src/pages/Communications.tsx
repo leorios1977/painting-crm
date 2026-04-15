@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
+import { useIndustry } from "@/contexts/IndustryContext";
 
 const TYPE_ICONS: Record<string, React.ElementType> = {
   email: Mail,
@@ -37,6 +38,7 @@ export default function Communications() {
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [, setLocation] = useLocation();
+  const { customerTerminology, jobTerminology } = useIndustry();
   const utils = trpc.useUtils();
 
   // Mark all SMS conversations as read when this page mounts so the sidebar badge clears

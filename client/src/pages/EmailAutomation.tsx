@@ -38,6 +38,7 @@ import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
 import Underline from "@tiptap/extension-underline";
 import Link from "@tiptap/extension-link";
+import { useIndustry } from "@/contexts/IndustryContext";
 
 const VARIABLE_TAGS = [
   "{customer_name}",
@@ -166,6 +167,7 @@ function TemplateCard({
 }
 
 export default function EmailAutomation() {
+  const { jobTerminology, customerTerminology } = useIndustry();
   const utils = trpc.useUtils();
   const { data: templates, isLoading: templatesLoading } = trpc.emailTemplates.list.useQuery();
   const { data: rules, isLoading: rulesLoading } = trpc.automationRules.list.useQuery();

@@ -32,8 +32,10 @@ import { Switch } from "@/components/ui/switch";
 import { useState, useRef } from "react";
 import { toast } from "sonner";
 import { useBranding } from "@/contexts/BrandingContext";
+import { useIndustry } from "@/contexts/IndustryContext";
 
 export default function Settings() {
+  const { jobTerminology, customerTerminology } = useIndustry();
   const { data: settings, refetch } = trpc.settings.get.useQuery();
   const { refetch: refetchBranding } = useBranding();
 

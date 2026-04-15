@@ -25,6 +25,7 @@ import {
 import { Plus, Pencil, Trash2, Search, Eye, FileText } from "lucide-react";
 import { useLocation } from "wouter";
 import { toast } from "sonner";
+import { useIndustry } from "@/contexts/IndustryContext";
 
 function statusBadge(status: string) {
   switch (status) {
@@ -40,6 +41,7 @@ function statusBadge(status: string) {
 }
 
 export default function Blog() {
+  const { jobTerminology, customerTerminology } = useIndustry();
   const [, navigate] = useLocation();
   const [search, setSearch] = useState("");
   const [deleteId, setDeleteId] = useState<number | null>(null);

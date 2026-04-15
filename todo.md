@@ -346,4 +346,10 @@
 - [x] Update Invoices.tsx with revenueLabel
 - [x] Update CustomerPortal.tsx with portalStages from context
 - [x] Update AIAssistant.tsx with industry-specific text
-- [x] All 120 tests passing, TypeScript clean, checkpoint saved
+- [x] Update Communications.tsx with useIndustry hook
+- [x] Update EmailAutomation.tsx with useIndustry hook
+- [x] Update CustomerPortal.tsx with jobTerminology dynamic labels
+- [x] Update Blog.tsx with useIndustry hook
+- [x] Update AIAssistant.tsx with jobTerminology and customerTerminology
+- [x] Update Settings.tsx with useIndustry hook
+- [x] All 120 tests passing, TypeScript clean, full IndustryContext refactor complete

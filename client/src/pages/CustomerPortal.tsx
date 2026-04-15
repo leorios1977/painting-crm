@@ -64,6 +64,17 @@ function getProgressStages(portalStages: { key: string; label: string }[]) {
   }));
 }
 
+function getDefaultProgressStages(jobTerminology: string) {
+  return [
+    { key: "lead", label: "Inquiry Received", icon: User },
+    { key: "quoted", label: "Quote Sent", icon: Paintbrush },
+    { key: "scheduled", label: `${jobTerminology} Scheduled`, icon: CalendarDays },
+    { key: "in_progress", label: "Work In Progress", icon: Wrench },
+    { key: "completed", label: `${jobTerminology} Complete`, icon: CheckCircle2 },
+    { key: "paid", label: "Payment Received", icon: CreditCard },
+  ];
+}
+
 const DEFAULT_PROGRESS_STAGES = [
   { key: "lead", label: "Inquiry Received", icon: User },
   { key: "quoted", label: "Quote Sent", icon: Paintbrush },
@@ -623,7 +634,7 @@ function PhotoGallery({ photos }: { photos: Photo[] }) {
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function CustomerPortal() {
-  const { portalStages } = useIndustry();
+  const { portalStages, jobTerminology } = useIndustry();
   const params = useParams<{ token: string }>();
   const token = params.token ?? "";
   const { data, isLoading, error } = trpc.portal.getData.useQuery(

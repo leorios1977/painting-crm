@@ -103,7 +103,7 @@ function CopyButton({ text }: { text: string }) {
 
 export default function AIAssistant() {
   const { user } = useAuth();
-  const { industryName, aiSuggestedPrompts } = useIndustry();
+  const { industryName, aiSuggestedPrompts, jobTerminology, customerTerminology } = useIndustry();
   const SUGGESTED_PROMPTS = aiSuggestedPrompts;
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
