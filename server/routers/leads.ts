@@ -13,7 +13,8 @@ import {
 } from "../db";
 import { scheduleReviewRequest } from "../services/reviews";
 import { getDb } from "../db";
-import { appSettings } from "../../drizzle/schema";
+import { appSettings, leads } from "../../drizzle/schema";
+import { eq, and, or, like, desc } from "drizzle-orm";
 
 const stageEnum = z.enum([
   "lead",
@@ -63,13 +64,35 @@ export const leadsRouter = router({
         search: z.string().optional(),
       }).optional()
     )
-    .query(async ({ input }) => {
-      return getLeads(input);
+    .query(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) return [];
+
+      const tenantId = ctx.req?.tenant?.id ?? 1;
+      let query = db.select().from(leads).$dynamic();
+
+      const conditions = [eq(leads.tenantId, tenantId)];
+      if (input?.stage) {
+        conditions.push(eq(leads.stage, input.stage as any));
+      }
+      if (input?.search) {
+        const s = `%${input.search}%`;
+        const searchCondition = or(
+          like(leads.firstName, s),
+          like(leads.lastName, s),
+          like(leads.email, s),
+          like(leads.phone, s),
+          like(leads.projectType, s)
+        );
+        if (searchCondition) conditions.push(searchCondition);
+      }
+
+      query = query.where(and(...conditions));
+      return query.orderBy(desc(leads.updatedAt));
     }),
 
-  kanban: protectedProcedure.query(async () => {
-    const all = await getLeadsByStage();
-    const stages: Record<string, typeof all> = {
+  kanban: protectedProcedure.query(async ({ ctx }) => {
+    const stages: Record<string, any[]> = {
       lead: [],
       quoted: [],
       scheduled: [],
@@ -77,6 +100,17 @@ export const leadsRouter = router({
       completed: [],
       paid: [],
     };
+
+    const db = await getDb();
+    if (!db) return stages;
+
+    const tenantId = ctx.req?.tenant?.id ?? 1;
+    const all = await db
+      .select()
+      .from(leads)
+      .where(eq(leads.tenantId, tenantId))
+      .orderBy(desc(leads.updatedAt));
+
     for (const lead of all) {
       if (stages[lead.stage]) stages[lead.stage].push(lead);
     }
@@ -85,18 +119,29 @@ export const leadsRouter = router({
 
   byId: protectedProcedure
     .input(z.object({ id: z.number() }))
-    .query(async ({ input }) => {
-      return getLeadById(input.id);
+    .query(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) return undefined;
+
+      const tenantId = ctx.req?.tenant?.id ?? 1;
+      const result = await db
+        .select()
+        .from(leads)
+        .where(and(eq(leads.id, input.id), eq(leads.tenantId, tenantId)))
+        .limit(1);
+      return result[0];
     }),
 
   create: protectedProcedure
     .input(leadInput)
     .mutation(async ({ input, ctx }) => {
+      const tenantId = ctx.req?.tenant?.id ?? 1;
       const data = {
         ...input,
         estimatedValue: input.estimatedValue || undefined,
         scheduledDate: input.scheduledDate ? new Date(input.scheduledDate) : undefined,
         createdBy: ctx.user.id,
+        tenantId: tenantId,
         lastContactedAt: new Date(),
       };
       const result = await createLead(data);
@@ -116,7 +161,19 @@ export const leadsRouter = router({
 
   update: protectedProcedure
     .input(z.object({ id: z.number(), data: leadInput.partial() }))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      // Only verify tenant ownership if DB is available
+      if (db) {
+        const tenantId = ctx.req?.tenant?.id ?? 1;
+        const lead = await db
+          .select()
+          .from(leads)
+          .where(and(eq(leads.id, input.id), eq(leads.tenantId, tenantId)))
+          .limit(1);
+        if (!lead[0]) throw new Error("Lead not found or access denied");
+      }
+
       const data = {
         ...input.data,
         scheduledDate: input.data.scheduledDate
@@ -130,8 +187,20 @@ export const leadsRouter = router({
   updateStage: protectedProcedure
     .input(z.object({ id: z.number(), stage: stageEnum }))
     .mutation(async ({ input, ctx }) => {
-      const lead = await getLeadById(input.id);
-      if (!lead) throw new Error("Lead not found");
+      const db = await getDb();
+      let lead: (typeof leads.$inferSelect) | undefined;
+
+      // Only verify tenant ownership if DB is available
+      if (db) {
+        const tenantId = ctx.req?.tenant?.id ?? 1;
+        const leadResult = await db
+          .select()
+          .from(leads)
+          .where(and(eq(leads.id, input.id), eq(leads.tenantId, tenantId)))
+          .limit(1);
+        lead = leadResult[0];
+        if (!lead) throw new Error("Lead not found or access denied");
+      }
 
       const updateData: Record<string, unknown> = {
         stage: input.stage,
@@ -149,7 +218,9 @@ export const leadsRouter = router({
         type: "system",
         direction: "internal",
         subject: "Stage Updated",
-        content: `Stage changed from "${lead.stage}" to "${input.stage}"`,
+        content: lead
+          ? `Stage changed from "${lead.stage}" to "${input.stage}"`
+          : `Stage changed to "${input.stage}"`,
         sentBy: ctx.user.id,
       });
 
@@ -160,7 +231,7 @@ export const leadsRouter = router({
         const template = await getEmailTemplateById(rule.templateId);
         if (!template) continue;
 
-        const leadRecord = { ...lead, ...updateData } as Record<string, unknown>;
+        const leadRecord = lead ? { ...lead, ...updateData } : updateData;
         const interpolatedBody = interpolateTemplate(template.body, leadRecord);
         const interpolatedSubject = interpolateTemplate(template.subject, leadRecord);
 
@@ -202,7 +273,19 @@ export const leadsRouter = router({
 
   delete: protectedProcedure
     .input(z.object({ id: z.number() }))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      // Only verify tenant ownership if DB is available
+      if (db) {
+        const tenantId = ctx.req?.tenant?.id ?? 1;
+        const lead = await db
+          .select()
+          .from(leads)
+          .where(and(eq(leads.id, input.id), eq(leads.tenantId, tenantId)))
+          .limit(1);
+        if (!lead[0]) throw new Error("Lead not found or access denied");
+      }
+
       await deleteLead(input.id);
       return { success: true };
     }),

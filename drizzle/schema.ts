@@ -8,6 +8,7 @@ import {
   decimal,
   boolean,
   json,
+  index,
 } from "drizzle-orm/mysql-core";
 
 // ─── Users (Auth) ────────────────────────────────────────────────────────────
@@ -29,6 +30,7 @@ export type InsertUser = typeof users.$inferInsert;
 // ─── Leads ───────────────────────────────────────────────────────────────────
 export const leads = mysqlTable("leads", {
   id: int("id").autoincrement().primaryKey(),
+  tenantId: int("tenantId").default(1).notNull(),
   // Contact info
   firstName: varchar("firstName", { length: 100 }).notNull(),
   lastName: varchar("lastName", { length: 100 }).notNull(),
@@ -240,6 +242,7 @@ export type InsertConversation = typeof conversations.$inferInsert;
 // ─── Appointments ───────────────────────────────────────────────────────────────────────────────
 export const appointments = mysqlTable("appointments", {
   id: int("id").autoincrement().primaryKey(),
+  tenantId: int("tenantId").default(1).notNull(),
   /** Foreign key to leads.id */
   leadId: int("leadId").notNull(),
   /** Name(s) of crew member(s) assigned to this job */
@@ -278,6 +281,7 @@ export type InsertAppointment = typeof appointments.$inferInsert;
 // ─── Invoices ──────────────────────────────────────────────────────────────────────────────
 export const invoices = mysqlTable("invoices", {
   id: int("id").autoincrement().primaryKey(),
+  tenantId: int("tenantId").default(1).notNull(),
   /** Foreign key to leads.id */
   leadId: int("leadId").notNull(),
   /** Human-readable invoice number, e.g. INV-0042 */

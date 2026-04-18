@@ -46,12 +46,14 @@ export const appointmentsRouter = router({
         leadId: z.number().optional(),
       }).optional()
     )
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) return [];
 
+      const tenantId = ctx.req?.tenant?.id ?? 1;
+
       // Build where conditions
-      const conditions = [];
+      const conditions = [eq(appointments.tenantId, tenantId)];
       if (input?.from) conditions.push(gte(appointments.scheduledDate, input.from));
       if (input?.to) conditions.push(lte(appointments.scheduledDate, input.to));
       if (input?.leadId) conditions.push(eq(appointments.leadId, input.leadId));
@@ -93,6 +95,7 @@ export const appointmentsRouter = router({
                 projectAddress: leads.projectAddress,
               })
               .from(leads)
+              .where(eq(leads.tenantId, tenantId))
           : leadRows;
 
       const leadMap = new Map(allLeadRows.map((l) => [l.id, l]));
@@ -106,26 +109,28 @@ export const appointmentsRouter = router({
   /** Get all appointments for a specific lead */
   byLead: protectedProcedure
     .input(z.object({ leadId: z.number() }))
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) return [];
+      const tenantId = ctx.req?.tenant?.id ?? 1;
       return db
         .select()
         .from(appointments)
-        .where(eq(appointments.leadId, input.leadId))
+        .where(and(eq(appointments.leadId, input.leadId), eq(appointments.tenantId, tenantId)))
         .orderBy(desc(appointments.scheduledDate));
     }),
 
   /** Get a single appointment by ID */
   byId: protectedProcedure
     .input(z.object({ id: z.number() }))
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) return null;
+      const tenantId = ctx.req?.tenant?.id ?? 1;
       const rows = await db
         .select()
         .from(appointments)
-        .where(eq(appointments.id, input.id))
+        .where(and(eq(appointments.id, input.id), eq(appointments.tenantId, tenantId)))
         .limit(1);
       return rows[0] ?? null;
     }),
@@ -149,8 +154,10 @@ export const appointmentsRouter = router({
       })
     )
     .mutation(async ({ input, ctx }) => {
+      const tenantId = ctx.req?.tenant?.id ?? 1;
       return createAppointment({
         ...input,
+        tenantId: tenantId,
         createdBy: ctx.user.id,
       });
     }),
@@ -168,7 +175,19 @@ export const appointmentsRouter = router({
         notes: z.string().optional(),
       })
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) throw new Error("DB not available");
+
+      const tenantId = ctx.req?.tenant?.id ?? 1;
+      // Verify appointment belongs to tenant before updating
+      const appt = await db
+        .select()
+        .from(appointments)
+        .where(and(eq(appointments.id, input.id), eq(appointments.tenantId, tenantId)))
+        .limit(1);
+      if (!appt[0]) throw new Error("Appointment not found or access denied");
+
       return updateAppointment(input);
     }),
 
@@ -181,6 +200,18 @@ export const appointmentsRouter = router({
       })
     )
     .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) throw new Error("DB not available");
+
+      const tenantId = ctx.req?.tenant?.id ?? 1;
+      // Verify appointment belongs to tenant before cancelling
+      const appt = await db
+        .select()
+        .from(appointments)
+        .where(and(eq(appointments.id, input.id), eq(appointments.tenantId, tenantId)))
+        .limit(1);
+      if (!appt[0]) throw new Error("Appointment not found or access denied");
+
       return cancelAppointment(input.id, input.reason, ctx.user.id);
     }),
 
@@ -190,10 +221,11 @@ export const appointmentsRouter = router({
    */
   upcoming: protectedProcedure
     .input(z.object({ days: z.number().min(1).max(90).default(7) }))
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) return [];
 
+      const tenantId = ctx.req?.tenant?.id ?? 1;
       const now = new Date();
       const future = new Date(now.getTime() + input.days * 24 * 60 * 60 * 1000);
 
@@ -202,6 +234,7 @@ export const appointmentsRouter = router({
         .from(appointments)
         .where(
           and(
+            eq(appointments.tenantId, tenantId),
             gte(appointments.scheduledDate, now),
             lte(appointments.scheduledDate, future),
             // Exclude cancelled and no_show
@@ -222,7 +255,8 @@ export const appointmentsRouter = router({
           phone: leads.phone,
           projectAddress: leads.projectAddress,
         })
-        .from(leads);
+        .from(leads)
+        .where(eq(leads.tenantId, tenantId));
 
       const leadMap = new Map(allLeads.map((l) => [l.id, l]));
 

@@ -22,6 +22,7 @@ import type { Invoice, InsertInvoice, InvoiceLineItem } from "../../drizzle/sche
 
 export interface GenerateInvoiceInput {
   leadId: number;
+  tenantId?: number;
   lineItems: InvoiceLineItem[];
   taxRate?: number; // percentage, e.g. 8.5 for 8.5%
   dueDate?: Date;

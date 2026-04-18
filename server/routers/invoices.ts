@@ -28,6 +28,7 @@ import { sendSMS } from "../services/sms";
  * markOverdueInvoices — server-side function called by the daily cron job.
  * Queries all invoices where status='sent' and dueDate < now,
  * updates them to 'overdue', and sends an SMS reminder to the customer.
+ * This is a system job, so it processes invoices across all tenants.
  */
 export async function markOverdueInvoices(): Promise<{ marked: number; smsSent: number }> {
   const db = await getDb();
@@ -111,9 +112,11 @@ export const invoicesRouter = router({
         })
         .optional()
     )
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) return [];
+
+      const tenantId = ctx.req?.tenant?.id ?? 1;
 
       let rows;
       if (input?.leadId && input?.status) {
@@ -122,6 +125,7 @@ export const invoicesRouter = router({
           .from(invoices)
           .where(
             and(
+              eq(invoices.tenantId, tenantId),
               eq(invoices.leadId, input.leadId),
               eq(invoices.status, input.status)
             )
@@ -132,20 +136,21 @@ export const invoicesRouter = router({
         rows = await db
           .select()
           .from(invoices)
-          .where(eq(invoices.leadId, input.leadId))
+          .where(and(eq(invoices.tenantId, tenantId), eq(invoices.leadId, input.leadId)))
           .orderBy(desc(invoices.createdAt))
           .limit(input.limit);
       } else if (input?.status) {
         rows = await db
           .select()
           .from(invoices)
-          .where(eq(invoices.status, input.status))
+          .where(and(eq(invoices.tenantId, tenantId), eq(invoices.status, input.status)))
           .orderBy(desc(invoices.createdAt))
           .limit(input.limit);
       } else {
         rows = await db
           .select()
           .from(invoices)
+          .where(eq(invoices.tenantId, tenantId))
           .orderBy(desc(invoices.createdAt))
           .limit(input?.limit ?? 50);
       }
@@ -161,7 +166,8 @@ export const invoicesRouter = router({
           email: leads.email,
           phone: leads.phone,
         })
-        .from(leads);
+        .from(leads)
+        .where(eq(leads.tenantId, tenantId));
 
       const leadMap = new Map(allLeads.map((l) => [l.id, l]));
 
@@ -174,26 +180,28 @@ export const invoicesRouter = router({
   /** Get all invoices for a specific lead */
   byLead: protectedProcedure
     .input(z.object({ leadId: z.number() }))
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) return [];
+      const tenantId = ctx.req?.tenant?.id ?? 1;
       return db
         .select()
         .from(invoices)
-        .where(eq(invoices.leadId, input.leadId))
+        .where(and(eq(invoices.leadId, input.leadId), eq(invoices.tenantId, tenantId)))
         .orderBy(desc(invoices.createdAt));
     }),
 
   /** Get a single invoice by ID */
   byId: protectedProcedure
     .input(z.object({ id: z.number() }))
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) return null;
+      const tenantId = ctx.req?.tenant?.id ?? 1;
       const rows = await db
         .select()
         .from(invoices)
-        .where(eq(invoices.id, input.id))
+        .where(and(eq(invoices.id, input.id), eq(invoices.tenantId, tenantId)))
         .limit(1);
       return rows[0] ?? null;
     }),
@@ -213,8 +221,10 @@ export const invoicesRouter = router({
       })
     )
     .mutation(async ({ input, ctx }) => {
+      const tenantId = ctx.req?.tenant?.id ?? 1;
       return generateInvoice({
         ...input,
+        tenantId: tenantId,
         createdBy: ctx.user.id,
       });
     }),
@@ -233,6 +243,18 @@ export const invoicesRouter = router({
       })
     )
     .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      // Only verify tenant ownership if DB is available
+      if (db) {
+        const tenantId = ctx.req?.tenant?.id ?? 1;
+        const inv = await db
+          .select()
+          .from(invoices)
+          .where(and(eq(invoices.id, input.invoiceId), eq(invoices.tenantId, tenantId)))
+          .limit(1);
+        if (!inv[0]) throw new Error("Invoice not found or access denied");
+      }
+
       return sendInvoice({
         invoiceId: input.invoiceId,
         sendSmsToCustomer: input.sendSmsToCustomer,
@@ -249,6 +271,18 @@ export const invoicesRouter = router({
       })
     )
     .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      // Only verify tenant ownership if DB is available
+      if (db) {
+        const tenantId = ctx.req?.tenant?.id ?? 1;
+        const inv = await db
+          .select()
+          .from(invoices)
+          .where(and(eq(invoices.id, input.invoiceId), eq(invoices.tenantId, tenantId)))
+          .limit(1);
+        if (!inv[0]) throw new Error("Invoice not found or access denied");
+      }
+
       return markInvoicePaid(
         input.invoiceId,
         input.stripeSessionId,
@@ -267,14 +301,15 @@ export const invoicesRouter = router({
         notes: z.string().optional(),
       })
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
 
+      const tenantId = ctx.req?.tenant?.id ?? 1;
       const rows = await db
         .select()
         .from(invoices)
-        .where(eq(invoices.id, input.id))
+        .where(and(eq(invoices.id, input.id), eq(invoices.tenantId, tenantId)))
         .limit(1);
       const invoice = rows[0];
       if (!invoice) throw new Error(`Invoice ${input.id} not found`);
@@ -319,27 +354,29 @@ export const invoicesRouter = router({
 
   /** Get count of overdue invoices for the sidebar badge */
   getOverdueCount: protectedProcedure
-    .query(async () => {
+    .query(async ({ ctx }) => {
       const db = await getDb();
       if (!db) return 0;
+      const tenantId = ctx.req?.tenant?.id ?? 1;
       const rows = await db
         .select({ cnt: count() })
         .from(invoices)
-        .where(eq(invoices.status, "overdue"));
+        .where(and(eq(invoices.status, "overdue"), eq(invoices.tenantId, tenantId)));
       return rows[0]?.cnt ?? 0;
     }),
 
   /** Delete a draft invoice */
   delete: protectedProcedure
     .input(z.object({ id: z.number() }))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
 
+      const tenantId = ctx.req?.tenant?.id ?? 1;
       const rows = await db
         .select()
         .from(invoices)
-        .where(eq(invoices.id, input.id))
+        .where(and(eq(invoices.id, input.id), eq(invoices.tenantId, tenantId)))
         .limit(1);
       const invoice = rows[0];
       if (!invoice) throw new Error(`Invoice ${input.id} not found`);

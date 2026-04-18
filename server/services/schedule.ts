@@ -20,6 +20,7 @@ import type { Appointment, InsertAppointment } from "../../drizzle/schema";
 
 export interface CreateAppointmentInput {
   leadId: number;
+  tenantId?: number;
   crewAssigned?: string;
   jobType?: string;
   scheduledDate: Date;
