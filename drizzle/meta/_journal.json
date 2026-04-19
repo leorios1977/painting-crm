@@ -127,6 +127,13 @@
       "when": 1776501955126,
       "tag": "0017_daffy_dark_phoenix",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "5",
+      "when": 1776599684729,
+      "tag": "0018_opposite_sebastian_shaw",
+      "breakpoints": true
     }
   ]
 }

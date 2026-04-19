@@ -13,7 +13,7 @@ import { z } from "zod";
 import { protectedProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
 import { conversations } from "../../drizzle/schema";
-import { eq, desc, sql } from "drizzle-orm";
+import { eq, desc, sql, and } from "drizzle-orm";
 import { sendSMS } from "../services/sms";
 import { ENV } from "../_core/env";
 
@@ -24,13 +24,14 @@ export const smsRouter = router({
    */
   list: protectedProcedure
     .input(z.object({ leadId: z.number() }))
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) return [];
+      const tenantId = ctx.req?.tenant?.id ?? 1;
       const rows = await db
         .select()
         .from(conversations)
-        .where(eq(conversations.leadId, input.leadId))
+        .where(eq(conversations.leadId, input.leadId) && eq(conversations.tenantId, tenantId))
         .orderBy(conversations.createdAt);
       return rows;
     }),
@@ -45,15 +46,15 @@ export const smsRouter = router({
         leadId: z.number(),
         to: z.string().min(7, "Phone number required"),
         message: z.string().min(1, "Message body required").max(1600),
-        tenantId: z.string().optional(),
       })
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
+      const tenantId = ctx.req?.tenant?.id ?? 1;
       const result = await sendSMS(
         input.to,
         input.message,
         input.leadId,
-        input.tenantId
+        tenantId
       );
       if (!result.success) {
         // Return the result with the error so the UI can display a warning
@@ -69,13 +70,14 @@ export const smsRouter = router({
    */
   markAsRead: protectedProcedure
     .input(z.object({ leadId: z.number() }))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) return { success: false };
+      const tenantId = ctx.req?.tenant?.id ?? 1;
       await db
         .update(conversations)
         .set({ read: true })
-        .where(eq(conversations.leadId, input.leadId));
+        .where(eq(conversations.leadId, input.leadId) && eq(conversations.tenantId, tenantId));
       return { success: true };
     }),
 
@@ -83,13 +85,14 @@ export const smsRouter = router({
    * Returns the count of unread conversations across all leads.
    * Used to display the badge count in the sidebar.
    */
-  getUnreadCount: protectedProcedure.query(async () => {
+  getUnreadCount: protectedProcedure.query(async ({ ctx }) => {
     const db = await getDb();
     if (!db) return 0;
+    const tenantId = ctx.req?.tenant?.id ?? 1;
     const [result] = await db
       .select({ count: sql<number>`COUNT(*)` })
       .from(conversations)
-      .where(eq(conversations.read, false));
+      .where(eq(conversations.read, false) && eq(conversations.tenantId, tenantId));
     return Number(result?.count ?? 0);
   }),
 
@@ -97,13 +100,14 @@ export const smsRouter = router({
    * Marks ALL conversations across all leads as read.
    * Called when the Communications page mounts to clear the sidebar badge.
    */
-  markAllRead: protectedProcedure.mutation(async () => {
+  markAllRead: protectedProcedure.mutation(async ({ ctx }) => {
     const db = await getDb();
     if (!db) return { success: false };
+    const tenantId = ctx.req?.tenant?.id ?? 1;
     await db
       .update(conversations)
       .set({ read: true })
-      .where(eq(conversations.read, false));
+      .where(eq(conversations.read, false) && eq(conversations.tenantId, tenantId));
     return { success: true };
   }),
 

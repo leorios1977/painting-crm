@@ -115,7 +115,7 @@ describe("sms.send", () => {
       "+15559876543",
       "Your appointment is confirmed!",
       1,
-      undefined
+      1
     );
     expect(result.success).toBe(true);
     expect(result.twilioSid).toBe("SM_test_sid_123");

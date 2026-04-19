@@ -18,8 +18,9 @@ import { storagePut } from "../storage";
 
 export const blogRouter = router({
   /** Admin: list all posts (all statuses) */
-  listAll: protectedProcedure.query(async () => {
-    return listAllPosts();
+  listAll: protectedProcedure.query(async ({ ctx }) => {
+    const tenantId = ctx.req?.tenant?.id ?? 1;
+    return listAllPosts(tenantId);
   }),
 
   /** Public: list published posts */
@@ -39,8 +40,9 @@ export const blogRouter = router({
   /** Admin: get a single post by ID */
   getById: protectedProcedure
     .input(z.object({ id: z.number() }))
-    .query(async ({ input }) => {
-      const post = await getPostById(input.id);
+    .query(async ({ input, ctx }) => {
+      const tenantId = ctx.req?.tenant?.id ?? 1;
+      const post = await getPostById(input.id, tenantId);
       if (!post) throw new TRPCError({ code: "NOT_FOUND", message: "Post not found" });
       return post;
     }),
@@ -62,8 +64,9 @@ export const blogRouter = router({
         status: z.enum(["draft", "published", "archived"]).optional(),
       })
     )
-    .mutation(async ({ input }) => {
-      return createPost(input);
+    .mutation(async ({ input, ctx }) => {
+      const tenantId = ctx.req?.tenant?.id ?? 1;
+      return createPost({ ...input, tenantId });
     }),
 
   /** Admin: update an existing post */
@@ -84,17 +87,19 @@ export const blogRouter = router({
         status: z.enum(["draft", "published", "archived"]).optional(),
       })
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
+      const tenantId = ctx.req?.tenant?.id ?? 1;
       const { id, ...data } = input;
-      await updatePost(id, data);
+      await updatePost(id, data, tenantId);
       return { success: true };
     }),
 
   /** Admin: delete a post */
   delete: protectedProcedure
     .input(z.object({ id: z.number() }))
-    .mutation(async ({ input }) => {
-      await deletePost(input.id);
+    .mutation(async ({ input, ctx }) => {
+      const tenantId = ctx.req?.tenant?.id ?? 1;
+      await deletePost(input.id, tenantId);
       return { success: true };
     }),
 
@@ -117,7 +122,8 @@ export const blogRouter = router({
         displayOrder: z.number().optional(),
       })
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
+      const tenantId = ctx.req?.tenant?.id ?? 1;
       const buffer = Buffer.from(input.imageBase64, "base64");
       const suffix = Math.random().toString(36).substring(2, 10);
       const key = `blog/${input.postId}/${suffix}-${input.filename}`;
@@ -127,6 +133,7 @@ export const blogRouter = router({
         imageUrl: url,
         caption: input.caption,
         displayOrder: input.displayOrder,
+        tenantId,
       });
       return { id: result.id, imageUrl: url };
     }),
@@ -134,8 +141,9 @@ export const blogRouter = router({
   /** Admin: delete a blog image */
   deleteImage: protectedProcedure
     .input(z.object({ imageId: z.number() }))
-    .mutation(async ({ input }) => {
-      await deletePostImage(input.imageId);
+    .mutation(async ({ input, ctx }) => {
+      const tenantId = ctx.req?.tenant?.id ?? 1;
+      await deletePostImage(input.imageId, tenantId);
       return { success: true };
     }),
 

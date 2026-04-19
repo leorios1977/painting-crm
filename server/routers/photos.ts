@@ -35,6 +35,7 @@ export const photosRouter = router({
     )
     .mutation(async ({ input, ctx }) => {
       const buffer = Buffer.from(input.base64Data, "base64");
+      const tenantId = ctx.req?.tenant?.id ?? 1;
 
       if (buffer.byteLength > MAX_FILE_SIZE_BYTES) {
         throw new TRPCError({
@@ -52,6 +53,7 @@ export const photosRouter = router({
           originalName: input.originalName,
           caption: input.caption,
           uploadedBy: ctx.user.id,
+          tenantId,
         });
         return { success: true, photo };
       } catch (err) {
@@ -70,15 +72,17 @@ export const photosRouter = router({
         type: z.enum(["before", "after"]).optional(),
       })
     )
-    .query(async ({ input }) => {
-      return listPhotos(input.leadId, input.type);
+    .query(async ({ input, ctx }) => {
+      const tenantId = ctx.req?.tenant?.id ?? 1;
+      return listPhotos(input.leadId, input.type, tenantId);
     }),
 
   /** Get photos for a lead grouped into { before: [], after: [] } */
   byLead: protectedProcedure
     .input(z.object({ leadId: z.number().int().positive() }))
-    .query(async ({ input }) => {
-      return getPhotosByLead(input.leadId);
+    .query(async ({ input, ctx }) => {
+      const tenantId = ctx.req?.tenant?.id ?? 1;
+      return getPhotosByLead(input.leadId, tenantId);
     }),
 
   /**
@@ -101,8 +105,9 @@ export const photosRouter = router({
   /** Delete a photo by ID */
   delete: protectedProcedure
     .input(z.object({ photoId: z.number().int().positive() }))
-    .mutation(async ({ input }) => {
-      const result = await deletePhoto(input.photoId);
+    .mutation(async ({ input, ctx }) => {
+      const tenantId = ctx.req?.tenant?.id ?? 1;
+      const result = await deletePhoto(input.photoId, tenantId);
       if (!result.success) {
         throw new TRPCError({
           code: "NOT_FOUND",

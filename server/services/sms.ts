@@ -34,7 +34,7 @@ export async function sendSMS(
   to: string,
   message: string,
   leadId: number,
-  tenantId?: string
+  tenantId?: number
 ): Promise<SendSMSResult> {
   const accountSid = ENV.twilioAccountSid;
   const authToken = ENV.twilioAuthToken;
@@ -144,7 +144,7 @@ export async function persistConversation(params: {
   toNumber: string;
   twilioSid?: string;
   status: string;
-  tenantId?: string;
+  tenantId?: number;
 }): Promise<void> {
   const db = await getDb();
   if (!db) {
@@ -159,6 +159,6 @@ export async function persistConversation(params: {
     toNumber: params.toNumber,
     twilioSid: params.twilioSid ?? null,
     status: params.status,
-    tenantId: params.tenantId ?? null,
+    tenantId: params.tenantId ?? 1,
   });
 }

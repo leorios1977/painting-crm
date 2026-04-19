@@ -81,7 +81,7 @@ describe("crew router", () => {
       vi.mocked(listCrewMembers).mockResolvedValue([MOCK_MEMBER]);
       const caller = makeCaller();
       await caller.crew.list({ status: "active" });
-      expect(listCrewMembers).toHaveBeenCalledWith("active");
+      expect(listCrewMembers).toHaveBeenCalledWith("active", 1);
     });
 
     it("returns empty array when no crew members", async () => {
@@ -148,7 +148,7 @@ describe("crew router", () => {
       const caller = makeCaller();
       const result = await caller.crew.deactivate({ id: 1 });
       expect(result?.status).toBe("inactive");
-      expect(deactivateCrewMember).toHaveBeenCalledWith(1);
+      expect(deactivateCrewMember).toHaveBeenCalledWith(1, 1);
     });
   });
 
@@ -158,7 +158,7 @@ describe("crew router", () => {
       const caller = makeCaller();
       const result = await caller.crew.reactivate({ id: 1 });
       expect(result?.status).toBe("active");
-      expect(reactivateCrewMember).toHaveBeenCalledWith(1);
+      expect(reactivateCrewMember).toHaveBeenCalledWith(1, 1);
     });
   });
 });

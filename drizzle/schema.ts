@@ -220,6 +220,7 @@ export type InsertAppSettings = typeof appSettings.$inferInsert;
 // ─── SMS Conversations ────────────────────────────────────────────────────────
 export const conversations = mysqlTable("conversations", {
   id: int("id").autoincrement().primaryKey(),
+  tenantId: int("tenantId").default(1).notNull(),
   leadId: int("leadId").notNull(),
   direction: mysqlEnum("direction", ["inbound", "outbound"]).notNull(),
   body: text("body").notNull(),
@@ -231,8 +232,6 @@ export const conversations = mysqlTable("conversations", {
   status: varchar("status", { length: 30 }).default("queued").notNull(),
   /** Whether this message has been read by the user */
   read: boolean("read").default(false).notNull(),
-  /** Optional tenantId for multi-tenant support */
-  tenantId: varchar("tenantId", { length: 64 }),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 
@@ -333,6 +332,7 @@ export interface InvoiceLineItem {
 // ─── Crew Members ────────────────────────────────────────────────────────────
 export const crewMembers = mysqlTable("crew_members", {
   id: int("id").autoincrement().primaryKey(),
+  tenantId: int("tenantId").default(1).notNull(),
   /** Full name of the crew member */
   name: varchar("name", { length: 200 }).notNull(),
   /** Contact phone number */
@@ -352,6 +352,7 @@ export type InsertCrewMember = typeof crewMembers.$inferInsert;
 // ─── Job Photos ───────────────────────────────────────────────────────────────
 export const jobPhotos = mysqlTable("job_photos", {
   id: int("id").autoincrement().primaryKey(),
+  tenantId: int("tenantId").default(1).notNull(),
   /** Foreign key to leads.id */
   leadId: int("leadId").notNull(),
   /** Public S3/CDN URL of the uploaded photo */
@@ -373,7 +374,7 @@ export type InsertJobPhoto = typeof jobPhotos.$inferInsert;
 // ─── Blog Posts ──────────────────────────────────────────────────────────────
 export const blogPosts = mysqlTable("blog_posts", {
   id: int("id").autoincrement().primaryKey(),
-  tenantId: int("tenantId"),
+  tenantId: int("tenantId").default(1).notNull(),
   title: varchar("title", { length: 500 }).notNull(),
   slug: varchar("slug", { length: 600 }).notNull().unique(),
   content: text("content"),

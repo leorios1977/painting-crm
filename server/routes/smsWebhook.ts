@@ -119,7 +119,7 @@ export function registerSmsWebhook(app: Express): void {
         twilioSid: messageSid || null,
         status: "received",
         read: false,
-        tenantId: null,
+        tenantId: 1,
       });
 
       console.log(`[SMS Webhook] Inbound SMS from ${from} → lead ${leadId}: "${messageBody.slice(0, 60)}"`);

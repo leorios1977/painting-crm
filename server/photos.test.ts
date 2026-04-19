@@ -132,7 +132,7 @@ describe("photos router", () => {
     const caller = appRouter.createCaller(makeAuthCtx());
     await caller.photos.list({ leadId: 42, type: "before" });
 
-    expect(listPhotos).toHaveBeenCalledWith(42, "before");
+    expect(listPhotos).toHaveBeenCalledWith(42, "before", 1);
   });
 
   it("photos.upload calls uploadPhoto with correct params", async () => {
@@ -171,7 +171,7 @@ describe("photos router", () => {
 
     const result = await caller.photos.delete({ photoId: 1 });
     expect(result.success).toBe(true);
-    expect(deletePhoto).toHaveBeenCalledWith(1);
+    expect(deletePhoto).toHaveBeenCalledWith(1, 1);
   });
 
   it("photos.delete throws NOT_FOUND when photo does not exist", async () => {

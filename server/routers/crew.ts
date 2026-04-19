@@ -36,27 +36,31 @@ export const crewRouter = router({
         status: z.enum(["active", "inactive", "all"]).default("all"),
       }).optional()
     )
-    .query(async ({ input }) => {
-      return listCrewMembers(input?.status ?? "all");
+    .query(async ({ input, ctx }) => {
+      const tenantId = ctx.req?.tenant?.id ?? 1;
+      return listCrewMembers(input?.status ?? "all", tenantId);
     }),
 
   /** Get a single crew member by ID */
   get: protectedProcedure
     .input(z.object({ id: z.number() }))
-    .query(async ({ input }) => {
-      return getCrewMember(input.id);
+    .query(async ({ input, ctx }) => {
+      const tenantId = ctx.req?.tenant?.id ?? 1;
+      return getCrewMember(input.id, tenantId);
     }),
 
   /** Create a new crew member */
   create: protectedProcedure
     .input(crewMemberSchema)
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
+      const tenantId = ctx.req?.tenant?.id ?? 1;
       return createCrewMember({
         name: input.name,
         phone: input.phone ?? null,
         email: input.email || null,
         role: input.role ?? null,
         status: input.status,
+        tenantId,
       });
     }),
 
@@ -68,27 +72,30 @@ export const crewRouter = router({
         data: crewMemberSchema.partial(),
       })
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
+      const tenantId = ctx.req?.tenant?.id ?? 1;
       const update: Record<string, unknown> = {};
       if (input.data.name !== undefined) update.name = input.data.name;
       if (input.data.phone !== undefined) update.phone = input.data.phone ?? null;
       if (input.data.email !== undefined) update.email = input.data.email || null;
       if (input.data.role !== undefined) update.role = input.data.role ?? null;
       if (input.data.status !== undefined) update.status = input.data.status;
-      return updateCrewMember(input.id, update as any);
+      return updateCrewMember(input.id, update as any, tenantId);
     }),
 
   /** Deactivate a crew member */
   deactivate: protectedProcedure
     .input(z.object({ id: z.number() }))
-    .mutation(async ({ input }) => {
-      return deactivateCrewMember(input.id);
+    .mutation(async ({ input, ctx }) => {
+      const tenantId = ctx.req?.tenant?.id ?? 1;
+      return deactivateCrewMember(input.id, tenantId);
     }),
 
   /** Reactivate a crew member */
   reactivate: protectedProcedure
     .input(z.object({ id: z.number() }))
-    .mutation(async ({ input }) => {
-      return reactivateCrewMember(input.id);
+    .mutation(async ({ input, ctx }) => {
+      const tenantId = ctx.req?.tenant?.id ?? 1;
+      return reactivateCrewMember(input.id, tenantId);
     }),
 });

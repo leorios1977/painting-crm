@@ -20,6 +20,7 @@ export interface UploadPhotoInput {
   originalName: string;
   caption?: string;
   uploadedBy?: number;
+  tenantId?: number;
 }
 
 export interface PhotoRecord {
@@ -35,7 +36,7 @@ export interface PhotoRecord {
 
 /** Upload a photo buffer to S3 and persist the record in job_photos */
 export async function uploadPhoto(input: UploadPhotoInput): Promise<PhotoRecord> {
-  const { leadId, type, fileBuffer, mimeType, originalName, caption, uploadedBy } = input;
+  const { leadId, type, fileBuffer, mimeType, originalName, caption, uploadedBy, tenantId = 1 } = input;
 
   // Derive extension from mime type or original filename
   const ext = getExtension(mimeType, originalName);
@@ -55,6 +56,7 @@ export async function uploadPhoto(input: UploadPhotoInput): Promise<PhotoRecord>
     type,
     caption: caption ?? null,
     uploadedBy: uploadedBy ?? null,
+    tenantId,
   });
 
   // Fetch the inserted record
@@ -72,7 +74,8 @@ export async function uploadPhoto(input: UploadPhotoInput): Promise<PhotoRecord>
 /** List all photos for a lead, optionally filtered by type */
 export async function listPhotos(
   leadId: number,
-  type?: "before" | "after"
+  type?: "before" | "after",
+  tenantId: number = 1
 ): Promise<PhotoRecord[]> {
   const db = await getDb();
   if (!db) return [];
@@ -81,14 +84,14 @@ export async function listPhotos(
     ? await db
         .select()
         .from(jobPhotos)
-        .where(and(eq(jobPhotos.leadId, leadId), eq(jobPhotos.type, type)))
-    : await db.select().from(jobPhotos).where(eq(jobPhotos.leadId, leadId));
+        .where(and(eq(jobPhotos.leadId, leadId), eq(jobPhotos.type, type), eq(jobPhotos.tenantId, tenantId)))
+    : await db.select().from(jobPhotos).where(and(eq(jobPhotos.leadId, leadId), eq(jobPhotos.tenantId, tenantId)));
 
   return rows as PhotoRecord[];
 }
 
 /** Delete a photo record from the DB (S3 object remains but is unreferenced) */
-export async function deletePhoto(photoId: number): Promise<{ success: boolean }> {
+export async function deletePhoto(photoId: number, tenantId: number = 1): Promise<{ success: boolean }> {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
 
@@ -96,23 +99,23 @@ export async function deletePhoto(photoId: number): Promise<{ success: boolean }
   const rows = await db
     .select()
     .from(jobPhotos)
-    .where(eq(jobPhotos.id, photoId))
+    .where(and(eq(jobPhotos.id, photoId), eq(jobPhotos.tenantId, tenantId)))
     .limit(1);
 
   if (!rows[0]) {
     return { success: false };
   }
 
-  await db.delete(jobPhotos).where(eq(jobPhotos.id, photoId));
+  await db.delete(jobPhotos).where(and(eq(jobPhotos.id, photoId), eq(jobPhotos.tenantId, tenantId)));
   return { success: true };
 }
 
 /** Get all photos for a lead grouped by type — used by CustomerPortal */
-export async function getPhotosByLead(leadId: number): Promise<{
+export async function getPhotosByLead(leadId: number, tenantId: number = 1): Promise<{
   before: PhotoRecord[];
   after: PhotoRecord[];
 }> {
-  const all = await listPhotos(leadId);
+  const all = await listPhotos(leadId, undefined, tenantId);
   return {
     before: all.filter((p) => p.type === "before"),
     after: all.filter((p) => p.type === "after"),

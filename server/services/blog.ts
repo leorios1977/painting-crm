@@ -12,7 +12,7 @@ export function slugify(title: string): string {
 }
 
 /** Ensure slug is unique by appending a counter if needed */
-async function uniqueSlug(baseSlug: string, excludeId?: number): Promise<string> {
+async function uniqueSlug(baseSlug: string, excludeId?: number, tenantId: number = 1): Promise<string> {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   let slug = baseSlug;
@@ -24,8 +24,8 @@ async function uniqueSlug(baseSlug: string, excludeId?: number): Promise<string>
       .from(blogPosts)
       .where(
         excludeId
-          ? and(eq(blogPosts.slug, candidate), sql`${blogPosts.id} != ${excludeId}`)
-          : eq(blogPosts.slug, candidate)
+          ? and(eq(blogPosts.slug, candidate), eq(blogPosts.tenantId, tenantId), sql`${blogPosts.id} != ${excludeId}`)
+          : and(eq(blogPosts.slug, candidate), eq(blogPosts.tenantId, tenantId))
       )
       .limit(1);
     if (existing.length === 0) return candidate;
@@ -34,12 +34,13 @@ async function uniqueSlug(baseSlug: string, excludeId?: number): Promise<string>
 }
 
 /** List all blog posts (admin view — all statuses) */
-export async function listAllPosts() {
+export async function listAllPosts(tenantId: number = 1) {
   const db = await getDb();
   if (!db) return [];
   return db
     .select()
     .from(blogPosts)
+    .where(eq(blogPosts.tenantId, tenantId))
     .orderBy(desc(blogPosts.createdAt));
 }
 
@@ -67,13 +68,13 @@ export async function getPostBySlug(slug: string) {
 }
 
 /** Get a single post by ID (admin) */
-export async function getPostById(id: number) {
+export async function getPostById(id: number, tenantId: number = 1) {
   const db = await getDb();
   if (!db) return null;
   const rows = await db
     .select()
     .from(blogPosts)
-    .where(eq(blogPosts.id, id))
+    .where(and(eq(blogPosts.id, id), eq(blogPosts.tenantId, tenantId)))
     .limit(1);
   return rows[0] ?? null;
 }
@@ -91,10 +92,12 @@ export async function createPost(data: {
   projectLatitude?: string;
   projectLongitude?: string;
   status?: "draft" | "published" | "archived";
+  tenantId?: number;
 }) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  const slug = await uniqueSlug(slugify(data.title));
+  const tenantId = data.tenantId ?? 1;
+  const slug = await uniqueSlug(slugify(data.title), undefined, tenantId);
   const now = data.status === "published" ? new Date() : undefined;
   const [result] = await db.insert(blogPosts).values({
     title: data.title,
@@ -110,6 +113,7 @@ export async function createPost(data: {
     projectLongitude: data.projectLongitude ?? null,
     status: data.status ?? "draft",
     publishedAt: now,
+    tenantId,
   });
   return { id: result.insertId, slug };
 }
@@ -129,7 +133,8 @@ export async function updatePost(
     projectLatitude?: string;
     projectLongitude?: string;
     status?: "draft" | "published" | "archived";
-  }
+  },
+  tenantId: number = 1
 ) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
@@ -137,7 +142,7 @@ export async function updatePost(
   const updates: Record<string, unknown> = {};
   if (data.title !== undefined) {
     updates.title = data.title;
-    updates.slug = await uniqueSlug(slugify(data.title), id);
+    updates.slug = await uniqueSlug(slugify(data.title), id, tenantId);
   }
   if (data.content !== undefined) updates.content = data.content;
   if (data.excerpt !== undefined) updates.excerpt = data.excerpt;
@@ -152,7 +157,7 @@ export async function updatePost(
     updates.status = data.status;
     // Set publishedAt when first published
     if (data.status === "published") {
-      const existing = await getPostById(id);
+      const existing = await getPostById(id, tenantId);
       if (existing && !existing.publishedAt) {
         updates.publishedAt = new Date();
       }
@@ -160,15 +165,15 @@ export async function updatePost(
   }
 
   if (Object.keys(updates).length === 0) return;
-  await db.update(blogPosts).set(updates).where(eq(blogPosts.id, id));
+  await db.update(blogPosts).set(updates).where(and(eq(blogPosts.id, id), eq(blogPosts.tenantId, tenantId)));
 }
 
 /** Delete a blog post and its images */
-export async function deletePost(id: number) {
+export async function deletePost(id: number, tenantId: number = 1) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   await db.delete(blogImages).where(eq(blogImages.postId, id));
-  await db.delete(blogPosts).where(eq(blogPosts.id, id));
+  await db.delete(blogPosts).where(and(eq(blogPosts.id, id), eq(blogPosts.tenantId, tenantId)));
 }
 
 /** Get images for a post */
@@ -188,6 +193,7 @@ export async function addPostImage(data: {
   imageUrl: string;
   caption?: string;
   displayOrder?: number;
+  tenantId?: number;
 }) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
@@ -201,7 +207,7 @@ export async function addPostImage(data: {
 }
 
 /** Delete a blog image */
-export async function deletePostImage(imageId: number) {
+export async function deletePostImage(imageId: number, tenantId: number = 1) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   await db.delete(blogImages).where(eq(blogImages.id, imageId));
