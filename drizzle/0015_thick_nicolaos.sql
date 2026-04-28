@@ -1,1 +1,0 @@
-ALTER TABLE `leads` ADD `tenantId` int DEFAULT 1 NOT NULL;

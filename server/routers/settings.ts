@@ -2,7 +2,7 @@ import { protectedProcedure, publicProcedure, router } from "../_core/trpc";
 import { z } from "zod";
 import { getDb } from "../db";
 import { appSettings } from "../../drizzle/schema";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { storagePut } from "../storage";
 import { nanoid } from "nanoid";
 import { ENV } from "../_core/env";
@@ -20,7 +20,8 @@ export const settingsRouter = router({
   getBranding: publicProcedure.query(async () => {
     const db = await getDb();
     if (!db) return { ...DEFAULT_BRANDING, googleAnalyticsId: null as string | null };
-    const rows = await db.select().from(appSettings).limit(1);
+    // For public branding, use tenant 1 (default)
+    const rows = await db.select().from(appSettings).where(eq(appSettings.tenantId, 1)).limit(1);
     const s = rows[0];
     if (!s) return { ...DEFAULT_BRANDING, googleAnalyticsId: null as string | null };
     return {
@@ -33,7 +34,8 @@ export const settingsRouter = router({
   }),
 
   // ─── Protected: get full settings ────────────────────────────────────────────
-  get: protectedProcedure.query(async () => {
+  get: protectedProcedure.query(async ({ ctx }) => {
+    const tenantId = ctx.req?.tenant?.id ?? 1;
     const db = await getDb();
     const empty = {
       companyName: null, companyEmail: null, reviewLink: null,
@@ -56,7 +58,7 @@ export const settingsRouter = router({
       linkedinUrl: null as string | null, linkedinEnabled: true,
     };
     if (!db) return empty;
-    const rows = await db.select().from(appSettings).limit(1);
+    const rows = await db.select().from(appSettings).where(eq(appSettings.tenantId, tenantId)).limit(1);
     const s = rows[0];
     if (!s) return empty;
 
@@ -127,12 +129,14 @@ export const settingsRouter = router({
       linkedinUrl: z.string().optional().nullable(),
       linkedinEnabled: z.boolean().optional(),
     }))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
+      const tenantId = ctx.req?.tenant?.id ?? 1;
       const db = await getDb();
       if (!db) throw new Error("Database not available");
-      const rows = await db.select().from(appSettings).limit(1);
+      const rows = await db.select().from(appSettings).where(eq(appSettings.tenantId, tenantId)).limit(1);
       if (rows.length === 0) {
         await db.insert(appSettings).values({
+          tenantId,
           companyName: input.companyName || null,
           companyEmail: input.companyEmail || null,
           reviewLink: input.reviewLink || null,
@@ -175,7 +179,7 @@ export const settingsRouter = router({
         if (input.tiktokEnabled !== undefined) updateData.tiktokEnabled = input.tiktokEnabled;
         if (input.linkedinUrl !== undefined) updateData.linkedinUrl = input.linkedinUrl || null;
         if (input.linkedinEnabled !== undefined) updateData.linkedinEnabled = input.linkedinEnabled;
-        await db.update(appSettings).set(updateData).where(eq(appSettings.id, rows[0].id));
+        await db.update(appSettings).set(updateData).where(and(eq(appSettings.id, rows[0].id), eq(appSettings.tenantId, tenantId)));
       }
       return { success: true };
     }),
@@ -233,7 +237,8 @@ export const settingsRouter = router({
       mimeType: z.string().regex(/^image\/(jpeg|png|gif|webp|svg\+xml)$/),
       originalName: z.string().max(300),
     }))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
+      const tenantId = ctx.req?.tenant?.id ?? 1;
       const db = await getDb();
       if (!db) throw new Error("Database not available");
 
@@ -247,27 +252,28 @@ export const settingsRouter = router({
       const { url } = await storagePut(fileKey, buffer, input.mimeType);
 
       // Persist to settings row
-      const rows = await db.select().from(appSettings).limit(1);
+      const rows = await db.select().from(appSettings).where(eq(appSettings.tenantId, tenantId)).limit(1);
       if (rows.length === 0) {
-        await db.insert(appSettings).values({ logoUrl: url, logoKey: fileKey });
+        await db.insert(appSettings).values({ tenantId, logoUrl: url, logoKey: fileKey });
       } else {
         await db.update(appSettings)
           .set({ logoUrl: url, logoKey: fileKey })
-          .where(eq(appSettings.id, rows[0].id));
+          .where(and(eq(appSettings.id, rows[0].id), eq(appSettings.tenantId, tenantId)));
       }
 
       return { success: true, logoUrl: url };
     }),
 
   // ─── Protected: remove logo ───────────────────────────────────────────────────
-  removeLogo: protectedProcedure.mutation(async () => {
+  removeLogo: protectedProcedure.mutation(async ({ ctx }) => {
+    const tenantId = ctx.req?.tenant?.id ?? 1;
     const db = await getDb();
     if (!db) throw new Error("Database not available");
-    const rows = await db.select().from(appSettings).limit(1);
+    const rows = await db.select().from(appSettings).where(eq(appSettings.tenantId, tenantId)).limit(1);
     if (rows.length > 0) {
       await db.update(appSettings)
         .set({ logoUrl: null, logoKey: null })
-        .where(eq(appSettings.id, rows[0].id));
+        .where(and(eq(appSettings.id, rows[0].id), eq(appSettings.tenantId, tenantId)));
     }
     return { success: true };
   }),

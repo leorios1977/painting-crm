@@ -31,14 +31,16 @@ const triggerTypeEnum = z.enum([
 ]);
 
 export const emailTemplatesRouter = router({
-  list: protectedProcedure.query(async () => {
-    return getEmailTemplates();
+  list: protectedProcedure.query(async ({ ctx }) => {
+    const tenantId = ctx.req?.tenant?.id ?? 1;
+    return getEmailTemplates(tenantId);
   }),
 
   byId: protectedProcedure
     .input(z.object({ id: z.number() }))
-    .query(async ({ input }) => {
-      return getEmailTemplateById(input.id);
+    .query(async ({ input, ctx }) => {
+      const tenantId = ctx.req?.tenant?.id ?? 1;
+      return getEmailTemplateById(input.id, tenantId);
     }),
 
   create: protectedProcedure
@@ -51,8 +53,9 @@ export const emailTemplatesRouter = router({
         isActive: z.boolean().optional(),
       })
     )
-    .mutation(async ({ input }) => {
-      await createEmailTemplate(input);
+    .mutation(async ({ input, ctx }) => {
+      const tenantId = ctx.req?.tenant?.id ?? 1;
+      await createEmailTemplate({ ...input, tenantId });
       return { success: true };
     }),
 
@@ -69,25 +72,28 @@ export const emailTemplatesRouter = router({
         }),
       })
     )
-    .mutation(async ({ input }) => {
-      await updateEmailTemplate(input.id, input.data);
+    .mutation(async ({ input, ctx }) => {
+      const tenantId = ctx.req?.tenant?.id ?? 1;
+      await updateEmailTemplate(input.id, input.data, tenantId);
       return { success: true };
     }),
 
   delete: protectedProcedure
     .input(z.object({ id: z.number() }))
-    .mutation(async ({ input }) => {
-      await deleteEmailTemplate(input.id);
+    .mutation(async ({ input, ctx }) => {
+      const tenantId = ctx.req?.tenant?.id ?? 1;
+      await deleteEmailTemplate(input.id, tenantId);
       return { success: true };
     }),
 });
 
 export const automationRulesRouter = router({
-  list: protectedProcedure.query(async () => {
-    const rules = await getAutomationRules();
+  list: protectedProcedure.query(async ({ ctx }) => {
+    const tenantId = ctx.req?.tenant?.id ?? 1;
+    const rules = await getAutomationRules(tenantId);
     const templates = await (async () => {
       const { getEmailTemplates } = await import("../db");
-      return getEmailTemplates();
+      return getEmailTemplates(tenantId);
     })();
     const templateMap = new Map(templates.map((t) => [t.id, t]));
     return rules.map((r) => ({
@@ -98,8 +104,9 @@ export const automationRulesRouter = router({
 
   byId: protectedProcedure
     .input(z.object({ id: z.number() }))
-    .query(async ({ input }) => {
-      return getAutomationRuleById(input.id);
+    .query(async ({ input, ctx }) => {
+      const tenantId = ctx.req?.tenant?.id ?? 1;
+      return getAutomationRuleById(input.id, tenantId);
     }),
 
   create: protectedProcedure
@@ -113,8 +120,9 @@ export const automationRulesRouter = router({
         isActive: z.boolean().optional(),
       })
     )
-    .mutation(async ({ input }) => {
-      await createAutomationRule(input);
+    .mutation(async ({ input, ctx }) => {
+      const tenantId = ctx.req?.tenant?.id ?? 1;
+      await createAutomationRule({ ...input, tenantId });
       return { success: true };
     }),
 
@@ -132,15 +140,17 @@ export const automationRulesRouter = router({
         }),
       })
     )
-    .mutation(async ({ input }) => {
-      await updateAutomationRule(input.id, input.data);
+    .mutation(async ({ input, ctx }) => {
+      const tenantId = ctx.req?.tenant?.id ?? 1;
+      await updateAutomationRule(input.id, input.data, tenantId);
       return { success: true };
     }),
 
   delete: protectedProcedure
     .input(z.object({ id: z.number() }))
-    .mutation(async ({ input }) => {
-      await deleteAutomationRule(input.id);
+    .mutation(async ({ input, ctx }) => {
+      const tenantId = ctx.req?.tenant?.id ?? 1;
+      await deleteAutomationRule(input.id, tenantId);
       return { success: true };
     }),
 });

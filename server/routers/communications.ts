@@ -24,8 +24,9 @@ export const communicationsRouter = router({
         })
         .optional()
     )
-    .query(async ({ input }) => {
-      const logs = await getCommunicationLog(input);
+    .query(async ({ input, ctx }) => {
+      const tenantId = ctx.req?.tenant?.id ?? 1;
+      const logs = await getCommunicationLog({ ...input, tenantId });
       // Enrich with lead info
       const leadIds = Array.from(new Set(logs.map((l) => l.leadId)));
       const leadMap: Record<number, { firstName: string; lastName: string }> = {};
@@ -52,8 +53,10 @@ export const communicationsRouter = router({
       })
     )
     .mutation(async ({ input, ctx }) => {
+      const tenantId = ctx.req?.tenant?.id ?? 1;
       await createCommunicationLogEntry({
         ...input,
+        tenantId,
         sentBy: ctx.user.id,
         sentAt: new Date(),
       });
@@ -64,8 +67,9 @@ export const communicationsRouter = router({
 export const attachmentsRouter = router({
   list: protectedProcedure
     .input(z.object({ leadId: z.number() }))
-    .query(async ({ input }) => {
-      return getAttachmentsByLeadId(input.leadId);
+    .query(async ({ input, ctx }) => {
+      const tenantId = ctx.req?.tenant?.id ?? 1;
+      return getAttachmentsByLeadId(input.leadId, tenantId);
     }),
 
   upload: protectedProcedure
@@ -79,6 +83,7 @@ export const attachmentsRouter = router({
       })
     )
     .mutation(async ({ input, ctx }) => {
+      const tenantId = ctx.req?.tenant?.id ?? 1;
       const suffix = nanoid(8);
       const fileKey = `crm/leads/${input.leadId}/${suffix}-${input.fileName}`;
       const buffer = Buffer.from(input.base64Data, "base64");
@@ -92,6 +97,7 @@ export const attachmentsRouter = router({
         mimeType: input.mimeType,
         fileSize: input.fileSize,
         uploadedBy: ctx.user.id,
+        tenantId,
       });
 
       return { success: true, url };
@@ -99,8 +105,9 @@ export const attachmentsRouter = router({
 
   delete: protectedProcedure
     .input(z.object({ id: z.number() }))
-    .mutation(async ({ input }) => {
-      await deleteAttachment(input.id);
+    .mutation(async ({ input, ctx }) => {
+      const tenantId = ctx.req?.tenant?.id ?? 1;
+      await deleteAttachment(input.id, tenantId);
       return { success: true };
     }),
 });

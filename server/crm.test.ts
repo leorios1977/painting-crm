@@ -206,14 +206,14 @@ describe("emailTemplates", () => {
     const ctx = createTestCtx();
     const caller = appRouter.createCaller(ctx);
     await caller.emailTemplates.update({ id: 1, data: { name: "Updated", subject: "New Subject", body: "<p>Body</p>" } });
-    expect(db.updateEmailTemplate).toHaveBeenCalledWith(1, expect.objectContaining({ name: "Updated" }));
+    expect(db.updateEmailTemplate).toHaveBeenCalledWith(1, expect.objectContaining({ name: "Updated" }), 1);
   });
 
   it("delete deletes a template", async () => {
     const ctx = createTestCtx();
     const caller = appRouter.createCaller(ctx);
     await caller.emailTemplates.delete({ id: 3 });
-    expect(db.deleteEmailTemplate).toHaveBeenCalledWith(3);
+    expect(db.deleteEmailTemplate).toHaveBeenCalledWith(3, 1);
   });
 });
 

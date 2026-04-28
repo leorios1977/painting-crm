@@ -371,3 +371,12 @@
 - [x] Fix updateStage test: always log stage change even without lead data
 - [x] All 120 tests passing, TypeScript clean, multi-tenant isolation complete
 - [x] Note: markOverdueInvoices is a system job that processes all tenants (no tenant filtering)
+
+## Phase 38: MySQL → PostgreSQL Migration for Supabase
+- [x] Step 1: Update package.json — remove mysql2, add postgres
+- [x] Step 2: Rewrite drizzle/schema.ts from MySQL to PostgreSQL syntax
+- [x] Step 3: Update server/db.ts to use postgres-js driver
+- [x] Step 4: Update drizzle.config.ts to PostgreSQL dialect (already done)
+- [x] Step 5: Clear old migration SQL files from drizzle/ folder
+- [x] Step 6: Install dependencies and generate/apply fresh PostgreSQL migrations
+- [x] Step 7: Run Vitest test suite and confirm all 120 tests pass

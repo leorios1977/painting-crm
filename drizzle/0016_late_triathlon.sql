@@ -1,1 +1,0 @@
-ALTER TABLE `appointments` ADD `tenantId` int DEFAULT 1 NOT NULL;

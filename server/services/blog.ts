@@ -114,8 +114,8 @@ export async function createPost(data: {
     status: data.status ?? "draft",
     publishedAt: now,
     tenantId,
-  });
-  return { id: result.insertId, slug };
+  }).returning({ id: blogPosts.id });
+  return { id: result.id, slug };
 }
 
 /** Update an existing blog post */
@@ -202,8 +202,8 @@ export async function addPostImage(data: {
     imageUrl: data.imageUrl,
     caption: data.caption ?? null,
     displayOrder: data.displayOrder ?? 0,
-  });
-  return { id: result.insertId };
+  }).returning({ id: blogImages.id });
+  return { id: result.id };
 }
 
 /** Delete a blog image */

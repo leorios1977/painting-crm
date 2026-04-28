@@ -225,10 +225,11 @@ export const leadsRouter = router({
       });
 
       // Fire automation rules
-      const rules = await getRulesByTriggerStage(input.stage);
+      const tenantId = ctx.req?.tenant?.id ?? 1;
+      const rules = await getRulesByTriggerStage(input.stage, tenantId);
       for (const rule of rules) {
         if (rule.delayHours && rule.delayHours > 0) continue; // Skip delayed for now
-        const template = await getEmailTemplateById(rule.templateId);
+        const template = await getEmailTemplateById(rule.templateId, tenantId);
         if (!template) continue;
 
         const leadRecord = lead ? { ...lead, ...updateData } : updateData;

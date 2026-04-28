@@ -1,5 +1,6 @@
 import { and, desc, eq, like, or, sql } from "drizzle-orm";
-import { drizzle } from "drizzle-orm/mysql2";
+import { drizzle } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
 import {
   Attachment,
   AutomationRule,
@@ -25,7 +26,8 @@ let _db: ReturnType<typeof drizzle> | null = null;
 export async function getDb() {
   if (!_db && process.env.DATABASE_URL) {
     try {
-      _db = drizzle(process.env.DATABASE_URL);
+      const client = postgres(process.env.DATABASE_URL, { ssl: "require" });
+      _db = drizzle(client);
     } catch (error) {
       console.warn("[Database] Failed to connect:", error);
       _db = null;
@@ -64,7 +66,7 @@ export async function upsertUser(user: InsertUser): Promise<void> {
   if (!values.lastSignedIn) values.lastSignedIn = new Date();
   if (Object.keys(updateSet).length === 0) updateSet.lastSignedIn = new Date();
 
-  await db.insert(users).values(values).onDuplicateKeyUpdate({ set: updateSet });
+  await db.insert(users).values(values).onConflictDoUpdate({ target: users.openId, set: updateSet });
 }
 
 export async function getUserByOpenId(openId: string) {
@@ -146,16 +148,16 @@ export async function getLeadsByStage() {
 
 // ─── Email Templates ──────────────────────────────────────────────────────────
 
-export async function getEmailTemplates() {
+export async function getEmailTemplates(tenantId: number) {
   const db = await getDb();
   if (!db) return [];
-  return db.select().from(emailTemplates).orderBy(desc(emailTemplates.updatedAt));
+  return db.select().from(emailTemplates).where(eq(emailTemplates.tenantId, tenantId)).orderBy(desc(emailTemplates.updatedAt));
 }
 
-export async function getEmailTemplateById(id: number) {
+export async function getEmailTemplateById(id: number, tenantId: number) {
   const db = await getDb();
   if (!db) return undefined;
-  const result = await db.select().from(emailTemplates).where(eq(emailTemplates.id, id)).limit(1);
+  const result = await db.select().from(emailTemplates).where(and(eq(emailTemplates.id, id), eq(emailTemplates.tenantId, tenantId))).limit(1);
   return result[0];
 }
 
@@ -165,19 +167,19 @@ export async function createEmailTemplate(data: InsertEmailTemplate) {
   await db.insert(emailTemplates).values(data);
 }
 
-export async function updateEmailTemplate(id: number, data: Partial<InsertEmailTemplate>) {
+export async function updateEmailTemplate(id: number, data: Partial<InsertEmailTemplate>, tenantId: number) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
-  await db.update(emailTemplates).set(data).where(eq(emailTemplates.id, id));
+  await db.update(emailTemplates).set(data).where(and(eq(emailTemplates.id, id), eq(emailTemplates.tenantId, tenantId)));
 }
 
-export async function deleteEmailTemplate(id: number) {
+export async function deleteEmailTemplate(id: number, tenantId: number) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
-  await db.delete(emailTemplates).where(eq(emailTemplates.id, id));
+  await db.delete(emailTemplates).where(and(eq(emailTemplates.id, id), eq(emailTemplates.tenantId, tenantId)));
 }
 
-export async function getTemplatesByTriggerStage(stage: string) {
+export async function getTemplatesByTriggerStage(stage: string, tenantId: number) {
   const db = await getDb();
   if (!db) return [];
   return db
@@ -186,23 +188,24 @@ export async function getTemplatesByTriggerStage(stage: string) {
     .where(
       and(
         sql`${emailTemplates.triggerStage} = ${stage}`,
-        eq(emailTemplates.isActive, true)
+        eq(emailTemplates.isActive, true),
+        eq(emailTemplates.tenantId, tenantId)
       )
     );
 }
 
 // ─── Automation Rules ─────────────────────────────────────────────────────────
 
-export async function getAutomationRules() {
+export async function getAutomationRules(tenantId: number) {
   const db = await getDb();
   if (!db) return [];
-  return db.select().from(automationRules).orderBy(desc(automationRules.updatedAt));
+  return db.select().from(automationRules).where(eq(automationRules.tenantId, tenantId)).orderBy(desc(automationRules.updatedAt));
 }
 
-export async function getAutomationRuleById(id: number) {
+export async function getAutomationRuleById(id: number, tenantId: number) {
   const db = await getDb();
   if (!db) return undefined;
-  const result = await db.select().from(automationRules).where(eq(automationRules.id, id)).limit(1);
+  const result = await db.select().from(automationRules).where(and(eq(automationRules.id, id), eq(automationRules.tenantId, tenantId))).limit(1);
   return result[0];
 }
 
@@ -212,19 +215,19 @@ export async function createAutomationRule(data: InsertAutomationRule) {
   await db.insert(automationRules).values(data);
 }
 
-export async function updateAutomationRule(id: number, data: Partial<InsertAutomationRule>) {
+export async function updateAutomationRule(id: number, data: Partial<InsertAutomationRule>, tenantId: number) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
-  await db.update(automationRules).set(data).where(eq(automationRules.id, id));
+  await db.update(automationRules).set(data).where(and(eq(automationRules.id, id), eq(automationRules.tenantId, tenantId)));
 }
 
-export async function deleteAutomationRule(id: number) {
+export async function deleteAutomationRule(id: number, tenantId: number) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
-  await db.delete(automationRules).where(eq(automationRules.id, id));
+  await db.delete(automationRules).where(and(eq(automationRules.id, id), eq(automationRules.tenantId, tenantId)));
 }
 
-export async function getRulesByTriggerStage(stage: string) {
+export async function getRulesByTriggerStage(stage: string, tenantId: number) {
   const db = await getDb();
   if (!db) return [];
   const validStage = stage as NonNullable<AutomationRule["triggerStage"]>;
@@ -235,7 +238,8 @@ export async function getRulesByTriggerStage(stage: string) {
       and(
         sql`${automationRules.triggerStage} = ${validStage}`,
         eq(automationRules.isActive, true),
-        eq(automationRules.triggerType, "stage_change")
+        eq(automationRules.triggerType, "stage_change"),
+        eq(automationRules.tenantId, tenantId)
       )
     );
 }
@@ -246,12 +250,16 @@ export async function getCommunicationLog(filters?: {
   leadId?: number;
   type?: string;
   search?: string;
+  tenantId?: number;
 }) {
   const db = await getDb();
   if (!db) return [];
 
   let query = db.select().from(communicationLog).$dynamic();
   const conditions = [];
+
+  const tenantId = filters?.tenantId ?? 1;
+  conditions.push(eq(communicationLog.tenantId, tenantId));
 
   if (filters?.leadId) {
     conditions.push(eq(communicationLog.leadId, filters.leadId));
@@ -278,13 +286,13 @@ export async function createCommunicationLogEntry(data: InsertCommunicationLog) 
 
 // ─── Attachments ──────────────────────────────────────────────────────────────
 
-export async function getAttachmentsByLeadId(leadId: number) {
+export async function getAttachmentsByLeadId(leadId: number, tenantId: number) {
   const db = await getDb();
   if (!db) return [];
   return db
     .select()
     .from(attachments)
-    .where(eq(attachments.leadId, leadId))
+    .where(and(eq(attachments.leadId, leadId), eq(attachments.tenantId, tenantId)))
     .orderBy(desc(attachments.createdAt));
 }
 
@@ -294,10 +302,10 @@ export async function createAttachment(data: InsertAttachment) {
   await db.insert(attachments).values(data);
 }
 
-export async function deleteAttachment(id: number) {
+export async function deleteAttachment(id: number, tenantId: number) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
-  await db.delete(attachments).where(eq(attachments.id, id));
+  await db.delete(attachments).where(and(eq(attachments.id, id), eq(attachments.tenantId, tenantId)));
 }
 
 // ─── Dashboard Stats ──────────────────────────────────────────────────────────
