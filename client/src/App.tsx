@@ -25,11 +25,13 @@ import BlogEditor from "./pages/BlogEditor";
 import BlogList from "./pages/BlogList";
 import BlogPost from "./pages/BlogPost";
 import AIAssistant from "./pages/AIAssistant";
+import Login from "./pages/Login";
 
 function Router() {
   return (
     <Switch>
       {/* Public routes — no auth, no sidebar */}
+      <Route path="/login" component={Login} />
       <Route path="/portal/:token" component={CustomerPortal} />
       <Route path="/blog" component={BlogList} />
       <Route path="/blog/:slug" component={BlogPost} />

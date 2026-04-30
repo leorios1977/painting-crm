@@ -1,7 +1,7 @@
-import { getLoginUrl } from "@/const";
 import { trpc } from "@/lib/trpc";
 import { TRPCClientError } from "@trpc/client";
 import { useCallback, useEffect, useMemo } from "react";
+import { clearAuthToken } from "../../main";
 
 type UseAuthOptions = {
   redirectOnUnauthenticated?: boolean;
@@ -9,10 +9,8 @@ type UseAuthOptions = {
 };
 
 export function useAuth(options?: UseAuthOptions) {
-  const { redirectOnUnauthenticated = false, redirectPath } = options ?? {};
-  // Lazily resolve the login URL only when actually needed for redirect,
-  // so a missing/invalid VITE_OAUTH_PORTAL_URL never crashes on initial render.
-  const resolvedRedirectPath = redirectPath ?? (redirectOnUnauthenticated ? getLoginUrl() : "");
+  const { redirectOnUnauthenticated = false, redirectPath = "/login" } =
+    options ?? {};
   const utils = trpc.useUtils();
 
   const meQuery = trpc.auth.me.useQuery(undefined, {
@@ -36,18 +34,24 @@ export function useAuth(options?: UseAuthOptions) {
       ) {
         return;
       }
-      throw error;
+      // ignore other errors during logout
     } finally {
+      clearAuthToken();
       utils.auth.me.setData(undefined, null);
       await utils.auth.me.invalidate();
+      window.location.href = "/login";
     }
   }, [logoutMutation, utils]);
 
   const state = useMemo(() => {
-    localStorage.setItem(
-      "manus-runtime-user-info",
-      JSON.stringify(meQuery.data)
-    );
+    try {
+      localStorage.setItem(
+        "manus-runtime-user-info",
+        JSON.stringify(meQuery.data)
+      );
+    } catch {
+      // ignore storage errors
+    }
     return {
       user: meQuery.data ?? null,
       loading: meQuery.isLoading || logoutMutation.isPending,
@@ -67,13 +71,12 @@ export function useAuth(options?: UseAuthOptions) {
     if (meQuery.isLoading || logoutMutation.isPending) return;
     if (state.user) return;
     if (typeof window === "undefined") return;
-    const target = resolvedRedirectPath || getLoginUrl();
-    if (window.location.pathname === target) return;
+    if (window.location.pathname === redirectPath) return;
 
-    window.location.href = target;
+    window.location.href = redirectPath;
   }, [
     redirectOnUnauthenticated,
-    resolvedRedirectPath,
+    redirectPath,
     logoutMutation.isPending,
     meQuery.isLoading,
     state.user,

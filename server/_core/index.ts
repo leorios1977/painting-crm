@@ -9,6 +9,7 @@ import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
 import { registerSmsWebhook } from "../routes/smsWebhook";
 import { registerStripeWebhook } from "../routers";
+import { registerEmailPasswordAuthRoutes } from "../routes/emailPasswordAuth";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -38,7 +39,9 @@ async function startServer() {
   // Configure body parser with larger size limit for file uploads
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
-  // OAuth callback under /api/oauth/callback
+  // Email/password auth endpoints: POST /api/auth/login, POST /api/auth/logout
+  registerEmailPasswordAuthRoutes(app);
+  // OAuth callback under /api/oauth/callback (kept for backward compatibility)
   registerOAuthRoutes(app);
   // Twilio inbound SMS webhook — must be before tRPC so it handles raw form bodies
   registerSmsWebhook(app);

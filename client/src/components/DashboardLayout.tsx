@@ -20,7 +20,7 @@ import {
   SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { getLoginUrl } from "@/const";
+// getLoginUrl removed — replaced by email/password /login route
 import { useIsMobile } from "@/hooks/useMobile";
 import { useBranding } from "@/contexts/BrandingContext";
 import { useIndustry } from "@/contexts/IndustryContext";
@@ -129,7 +129,7 @@ export default function DashboardLayout({
           </div>
           <BrandedCTAButton
             onClick={() => {
-              window.location.href = getLoginUrl();
+              window.location.href = "/login";
             }}
             size="lg"
             className="w-full shadow-lg hover:shadow-xl transition-all"
