@@ -1,5 +1,4 @@
 import { build } from 'esbuild';
-import { resolve } from 'path';
 
 await build({
   entryPoints: ['api/index.ts'],
@@ -7,8 +6,8 @@ await build({
   platform: 'node',
   target: 'node20',
   format: 'cjs',
-  outfile: 'dist/api/index.js',
+  outfile: 'api/bundle.js',
   external: ['pg-native'],
   tsconfig: './tsconfig.json',
 });
-console.log('API bundle built successfully');
+console.log('API bundle built: api/bundle.js');
