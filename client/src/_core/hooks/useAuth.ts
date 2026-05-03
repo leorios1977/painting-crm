@@ -1,7 +1,7 @@
 import { trpc } from "@/lib/trpc";
+import { clearAuthToken } from "@/lib/auth";
 import { TRPCClientError } from "@trpc/client";
 import { useCallback, useEffect, useMemo } from "react";
-import { clearAuthToken } from "../../main";
 
 type UseAuthOptions = {
   redirectOnUnauthenticated?: boolean;

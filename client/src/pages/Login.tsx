@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { setAuthToken, getAuthToken } from "../main";
+import { setAuthToken, getAuthToken } from "@/lib/auth";
 import { trpc } from "@/lib/trpc";
 
 export default function Login() {
