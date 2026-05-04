@@ -17,6 +17,7 @@ import { ENV } from "../_core/env";
 import { sendSMS } from "./sms";
 import { generatePortalToken, buildPortalUrl } from "./portal";
 import type { Invoice, InsertInvoice, InvoiceLineItem } from "../../drizzle/schema";
+import { sendInvoiceEmail } from "./email";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -270,6 +271,41 @@ export async function sendInvoice(
     } catch (err) {
       smsError = (err as Error).message;
       console.error("[Invoices] SMS send failed:", smsError);
+    }
+  }
+
+  // ── Send invoice email to customer ───────────────────────────────────────
+  if (lead.email) {
+    try {
+      // Fetch business name from app settings
+      const { appSettings } = await import("../../drizzle/schema");
+      let businessName = "PaintPro CRM";
+      try {
+        const settingsRows = await db
+          .select({ businessName: appSettings.businessName })
+          .from(appSettings)
+          .limit(1);
+        businessName = settingsRows[0]?.businessName || businessName;
+      } catch { /* non-fatal */ }
+
+      const lineItems = invoice.lineItems as unknown as InvoiceLineItem[];
+      await sendInvoiceEmail({
+        customerName: `${lead.firstName} ${lead.lastName}`.trim(),
+        customerEmail: lead.email,
+        invoiceNumber: invoice.invoiceNumber,
+        invoiceTotal: `$${totalAmount.toFixed(2)}`,
+        dueDate: invoice.dueDate ? new Date(invoice.dueDate).toLocaleDateString() : undefined,
+        paymentLink: stripeUrl,
+        businessName,
+        lineItems: lineItems?.map(item => ({
+          description: item.description,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice,
+          total: item.quantity * item.unitPrice,
+        })),
+      });
+    } catch (emailErr) {
+      console.warn("[Invoices] Failed to send invoice email:", (emailErr as Error).message);
     }
   }
 

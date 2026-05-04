@@ -20,4 +20,6 @@ export const ENV = {
   twilioPhoneNumber: process.env.TWILIO_PHONE_NUMBER ?? "",
   // App public URL — used for building absolute URLs in backend (webhooks, email links)
   appUrl: process.env.APP_URL ?? "",
+  // Resend — transactional email API key
+  resendApiKey: process.env.RESEND_API_KEY ?? "",
 };

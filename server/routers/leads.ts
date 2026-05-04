@@ -12,9 +12,11 @@ import {
   updateLead,
 } from "../db";
 import { scheduleReviewRequest } from "../services/reviews";
+import { sendNewLeadNotification, sendQuoteEmail } from "../services/email";
 import { getDb } from "../db";
 import { appSettings, leads } from "../../drizzle/schema";
 import { eq, and, or, like, desc } from "drizzle-orm";
+import { ENV } from "../_core/env";
 
 const stageEnum = z.enum([
   "lead",
@@ -145,16 +147,49 @@ export const leadsRouter = router({
         lastContactedAt: new Date(),
       };
       const result = await createLead(data);
+      const newLeadId = (result as { id?: number; insertId?: number })?.id
+        || (result as { insertId?: number })?.insertId
+        || 0;
 
       // Log creation
       await createCommunicationLogEntry({
-        leadId: (result as { insertId?: number })?.insertId || 0,
+        leadId: newLeadId,
         type: "system",
         direction: "internal",
         subject: "Lead Created",
         content: `New lead created: ${input.firstName} ${input.lastName}`,
         sentBy: ctx.user.id,
       });
+
+      // Send new lead notification email to business owner (non-fatal)
+      try {
+        const ownerEmail = ENV.ownerEmail;
+        if (ownerEmail) {
+          // Fetch business name from settings if available
+          const db = await getDb();
+          let businessName = "PaintPro CRM";
+          if (db) {
+            const settingsRows = await db
+              .select({ businessName: appSettings.businessName })
+              .from(appSettings)
+              .limit(1);
+            businessName = settingsRows[0]?.businessName || businessName;
+          }
+          await sendNewLeadNotification({
+            leadFirstName: input.firstName,
+            leadLastName: input.lastName,
+            leadEmail: input.email || null,
+            leadPhone: input.phone || null,
+            leadSource: input.source || null,
+            estimatedValue: input.estimatedValue || null,
+            notes: input.projectDescription || null,
+            ownerEmail,
+            businessName,
+          });
+        }
+      } catch (emailErr) {
+        console.warn("[Leads] Failed to send new lead notification email:", (emailErr as Error).message);
+      }
 
       return result;
     }),
@@ -246,6 +281,35 @@ export const leadsRouter = router({
           automationRuleId: rule.id,
           sentBy: ctx.user.id,
         });
+      }
+
+      // ── Send quote email when stage moves to 'quoted' ──
+      if (input.stage === "quoted" && lead?.email) {
+        try {
+          const db = await getDb();
+          let businessName = "PaintPro CRM";
+          if (db) {
+            const settingsRows = await db
+              .select({ businessName: appSettings.businessName })
+              .from(appSettings)
+              .limit(1);
+            businessName = settingsRows[0]?.businessName || businessName;
+          }
+          const customerName = `${lead.firstName} ${lead.lastName}`.trim();
+          const quoteAmount = lead.estimatedValue
+            ? `$${parseFloat(String(lead.estimatedValue)).toFixed(2)}`
+            : "TBD";
+          await sendQuoteEmail({
+            customerName,
+            customerEmail: lead.email,
+            quoteAmount,
+            jobDescription: lead.projectDescription || lead.projectType || undefined,
+            businessName,
+            notes: lead.projectDescription || null,
+          });
+        } catch (emailErr) {
+          console.warn("[Leads] Failed to send quote email:", (emailErr as Error).message);
+        }
       }
 
       // ── Auto-trigger Google Review request when stage moves to 'completed' ──
