@@ -4,15 +4,16 @@
  * Simple email/password authentication endpoints for Vercel deployment.
  * Replaces Manus OpenID OAuth flow with JWT tokens stored in localStorage.
  *
- * POST /api/auth/login  — validate credentials, return signed JWT
- * POST /api/auth/logout — stateless; client discards the token
+ * POST /api/auth/login    — validate credentials, return signed JWT
+ * POST /api/auth/logout   — stateless; client discards the token
+ * POST /api/auth/register — create a new user account and return signed JWT
  */
 
 import type { Express, Request, Response } from "express";
 import bcrypt from "bcryptjs";
 import { SignJWT, jwtVerify } from "jose";
 import { getDb } from "../db";
-import { users } from "../../drizzle/schema";
+import { users, appSettings } from "../../drizzle/schema";
 import { eq } from "drizzle-orm";
 import { ENV } from "../_core/env";
 
@@ -111,5 +112,101 @@ export function registerEmailPasswordAuthRoutes(app: Express): void {
    */
   app.post("/api/auth/logout", (_req: Request, res: Response) => {
     return res.json({ success: true });
+  });
+
+  /**
+   * POST /api/auth/register
+   * Body: { businessName, ownerName, email, password, phone?, city?, state?, website?, hearAboutUs?, plan? }
+   * Returns: { token: string, user: { id, name, email, role } }
+   */
+  app.post("/api/auth/register", async (req: Request, res: Response) => {
+    try {
+      const {
+        businessName,
+        ownerName,
+        email,
+        password,
+        phone,
+        city,
+        state,
+        plan,
+        hearAboutUs,
+      } = req.body as {
+        businessName?: string;
+        ownerName?: string;
+        email?: string;
+        password?: string;
+        phone?: string;
+        city?: string;
+        state?: string;
+        website?: string;
+        hearAboutUs?: string;
+        plan?: string;
+      };
+
+      if (!businessName?.trim()) return res.status(400).json({ error: "Business name is required" });
+      if (!ownerName?.trim()) return res.status(400).json({ error: "Owner name is required" });
+      if (!email?.trim()) return res.status(400).json({ error: "Email is required" });
+      if (!password || password.length < 8) return res.status(400).json({ error: "Password must be at least 8 characters" });
+
+      const normalizedEmail = email.toLowerCase().trim();
+
+      const db = await getDb();
+      if (!db) return res.status(503).json({ error: "Database unavailable" });
+
+      const [existing] = await db
+        .select({ id: users.id })
+        .from(users)
+        .where(eq(users.email, normalizedEmail))
+        .limit(1);
+
+      if (existing) return res.status(409).json({ error: "An account with this email already exists" });
+
+      const passwordHash = await bcrypt.hash(password, 12);
+      const openId = `email-${normalizedEmail}-${Date.now()}`;
+
+      const [newUser] = await db
+        .insert(users)
+        .values({
+          openId,
+          name: ownerName.trim(),
+          email: normalizedEmail,
+          passwordHash,
+          loginMethod: "email-password",
+          role: "user",
+          lastSignedIn: new Date(),
+        })
+        .returning();
+
+      if (!newUser) return res.status(500).json({ error: "Failed to create account" });
+
+      try {
+        await db.insert(appSettings).values({
+          tenantId: newUser.id,
+          businessName: businessName.trim(),
+          companyEmail: normalizedEmail,
+        });
+      } catch (settingsErr) {
+        console.warn("[Register] Failed to seed app_settings:", (settingsErr as Error).message);
+      }
+
+      console.log(
+        `[Register] New account: ${businessName} (${normalizedEmail})` +
+        (phone ? ` | Phone: ${phone}` : "") +
+        (city && state ? ` | ${city}, ${state}` : "") +
+        (plan ? ` | Plan: ${plan}` : "") +
+        (hearAboutUs ? ` | Source: ${hearAboutUs}` : "")
+      );
+
+      const token = await signEmailJwt(newUser.id, normalizedEmail, newUser.role);
+
+      return res.status(201).json({
+        token,
+        user: { id: newUser.id, name: newUser.name, email: newUser.email, role: newUser.role },
+      });
+    } catch (err) {
+      console.error("[Auth] Register error:", err);
+      return res.status(500).json({ error: "Internal server error" });
+    }
   });
 }

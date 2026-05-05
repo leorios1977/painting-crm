@@ -174,7 +174,7 @@ export default function Landing() {
             Stop juggling spreadsheets and start closing more jobs.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/login">
+            <Link href="/signup">
               <Button
                 size="lg"
                 className="bg-yellow-400 hover:bg-yellow-300 text-gray-900 font-bold text-base px-8 py-6 rounded-xl shadow-lg hover:shadow-xl transition-all"
@@ -323,7 +323,7 @@ export default function Landing() {
                   ))}
                 </ul>
 
-                <Link href="/login">
+                <Link href="/signup">
                   <Button
                     className={`w-full font-semibold py-5 rounded-xl text-base ${
                       tier.highlight
@@ -352,7 +352,7 @@ export default function Landing() {
           <p className="text-blue-200 text-lg mb-8">
             Join hundreds of painting contractors who use PaintersPro to win more jobs and get paid faster.
           </p>
-          <Link href="/login">
+          <Link href="/signup">
             <Button
               size="lg"
               className="bg-yellow-400 hover:bg-yellow-300 text-gray-900 font-bold text-base px-10 py-6 rounded-xl shadow-lg"
@@ -378,7 +378,7 @@ export default function Landing() {
               <a href="#features" className="hover:text-white transition-colors">Features</a>
               <a href="#pricing" className="hover:text-white transition-colors">Pricing</a>
               <Link href="/login" className="hover:text-white transition-colors">Log In</Link>
-              <Link href="/login" className="hover:text-white transition-colors">Sign Up</Link>
+              <Link href="/signup" className="hover:text-white transition-colors">Sign Up</Link>
             </div>
             <div className="text-sm text-center md:text-right">
               <div className="text-gray-500">Powered by</div>

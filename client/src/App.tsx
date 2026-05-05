@@ -27,12 +27,14 @@ import BlogPost from "./pages/BlogPost";
 import AIAssistant from "./pages/AIAssistant";
 import Login from "./pages/Login";
 import Landing from "./pages/Landing";
+import Signup from "./pages/Signup";
 
 function Router() {
   return (
     <Switch>
       {/* Public routes — no auth, no sidebar */}
       <Route path="/" component={Landing} />
+      <Route path="/signup" component={Signup} />
       <Route path="/login" component={Login} />
       <Route path="/portal/:token" component={CustomerPortal} />
       <Route path="/blog" component={BlogList} />

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useLocation } from "wouter";
+import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -114,6 +114,12 @@ export default function Login() {
                 {loading ? "Signing in…" : "Sign in"}
               </Button>
             </form>
+            <div className="mt-4 text-center text-sm text-muted-foreground">
+              Don&apos;t have an account?{" "}
+              <Link href="/signup" className="font-semibold text-primary hover:underline">
+                Sign up free
+              </Link>
+            </div>
           </CardContent>
         </Card>
       </div>
