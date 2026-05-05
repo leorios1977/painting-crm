@@ -13,6 +13,7 @@ import {
 } from "../db";
 import { scheduleReviewRequest } from "../services/reviews";
 import { sendNewLeadNotification, sendQuoteEmail } from "../services/email";
+import { sendJobCompletionEmail } from "../lib/email";
 import { getDb } from "../db";
 import { appSettings, leads } from "../../drizzle/schema";
 import { eq, and, or, like, desc } from "drizzle-orm";
@@ -318,13 +319,32 @@ export const leadsRouter = router({
           const db = await getDb();
           if (db) {
             const settingsRows = await db
-              .select({ autoReviewEnabled: appSettings.autoReviewEnabled })
+              .select({
+                autoReviewEnabled: appSettings.autoReviewEnabled,
+                businessName: appSettings.businessName,
+                googleReviewLink: appSettings.googleReviewLink,
+              })
               .from(appSettings)
               .limit(1);
             const autoEnabled = settingsRows[0]?.autoReviewEnabled ?? false;
             if (autoEnabled) {
               // Schedule review request 2 hours after job completion
               scheduleReviewRequest(input.id, 2 * 60 * 60 * 1000, ctx.user.id);
+            }
+            // Send job completion email to customer (non-fatal)
+            if (lead && lead.email) {
+              try {
+                await sendJobCompletionEmail({
+                  customerName: `${lead.firstName} ${lead.lastName}`.trim(),
+                  customerEmail: lead.email,
+                  businessName: settingsRows[0]?.businessName || "PaintPro CRM",
+                  jobDescription: lead.projectDescription || lead.projectType || undefined,
+                  completionDate: new Date().toLocaleDateString(),
+                  googleReviewLink: settingsRows[0]?.googleReviewLink || undefined,
+                });
+              } catch (completionEmailErr) {
+                console.warn("[Leads] Failed to send job completion email:", (completionEmailErr as Error).message);
+              }
             }
           }
         } catch (reviewErr) {

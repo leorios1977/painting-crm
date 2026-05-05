@@ -18,6 +18,7 @@ import { sendSMS } from "./sms";
 import { generatePortalToken, buildPortalUrl } from "./portal";
 import type { Invoice, InsertInvoice, InvoiceLineItem } from "../../drizzle/schema";
 import { sendInvoiceEmail } from "./email";
+import { sendInvoiceSentEmail } from "../lib/email";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -290,6 +291,22 @@ export async function sendInvoice(
 
       const lineItems = invoice.lineItems as unknown as InvoiceLineItem[];
       await sendInvoiceEmail({
+        customerName: `${lead.firstName} ${lead.lastName}`.trim(),
+        customerEmail: lead.email,
+        invoiceNumber: invoice.invoiceNumber,
+        invoiceTotal: `$${totalAmount.toFixed(2)}`,
+        dueDate: invoice.dueDate ? new Date(invoice.dueDate).toLocaleDateString() : undefined,
+        paymentLink: stripeUrl,
+        businessName,
+        lineItems: lineItems?.map(item => ({
+          description: item.description,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice,
+          total: item.quantity * item.unitPrice,
+        })),
+      });
+      // Also send via lib/email for new email lib consistency
+      await sendInvoiceSentEmail({
         customerName: `${lead.firstName} ${lead.lastName}`.trim(),
         customerEmail: lead.email,
         invoiceNumber: invoice.invoiceNumber,
