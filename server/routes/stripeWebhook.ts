@@ -2,153 +2,67 @@
  * stripeWebhook.ts — Stripe payment webhook handler
  *
  * Listens for POST /api/webhooks/stripe and handles:
- *   - checkout.session.completed
- *   - payment_intent.succeeded
+ *   - checkout.session.completed      → mark invoice paid, send confirmation
+ *   - payment_intent.succeeded        → mark invoice paid, send confirmation
+ *   - payment_intent.payment_failed   → log failure reason, update status to 'overdue'
  *
- * For each event, the handler:
- *   1. Verifies the Stripe-Signature header using STRIPE_WEBHOOK_SECRET
- *   2. Extracts the payment link ID or session ID from the event payload
- *   3. Finds the matching invoice in the database
- *   4. Marks the invoice as paid (status → 'paid', paidAt → now)
- *   5. Updates the associated lead's pipeline stage to 'paid'
+ * For each successful payment event, the handler:
+ *   1. Verifies the Stripe-Signature header using stripe.webhooks.constructEvent()
+ *   2. Finds the matching invoice in the database
+ *   3. Marks the invoice as paid (status → 'paid', paidAt → now)
+ *   4. Updates the associated lead's pipeline stage to 'paid'
+ *   5. Sends a payment confirmation email to the customer (non-fatal)
+ *   6. Sends a payment notification SMS to the business owner (non-fatal)
+ *
+ * For failed payments:
+ *   1. Finds the matching invoice
+ *   2. Logs the failure reason to the communication log
+ *   3. Updates invoice status to 'overdue' (schema's closest status to 'failed')
+ *
+ * Returns 200 immediately to Stripe; all processing is async and wrapped in
+ * try/catch so failures never crash the server.
+ *
+ * ─── Required Vercel Environment Variables ────────────────────────────────────
+ * STRIPE_WEBHOOK_SECRET  — Stripe Dashboard → Developers → Webhooks → Signing secret
  *
  * Register in Stripe Dashboard → Developers → Webhooks:
  *   Endpoint URL: https://paintcrm-h9zwcmfu.manus.space/api/webhooks/stripe
- *   Events: checkout.session.completed, payment_intent.succeeded
+ *   Events to send:
+ *     checkout.session.completed
+ *     payment_intent.succeeded
+ *     payment_intent.payment_failed
  *
- * Register in server/_core/index.ts BEFORE express.json() middleware so that
- * the raw body is preserved for signature verification.
+ * IMPORTANT: Register in server/_core/index.ts BEFORE express.json() middleware
+ * so the raw body Buffer is preserved for stripe.webhooks.constructEvent().
  */
 import type { Express, Request, Response } from "express";
+import Stripe from "stripe";
 import { getDb } from "../db";
-import { invoices, leads, communicationLog } from "../../drizzle/schema";
-import { eq, or } from "drizzle-orm";
+import { invoices, leads, communicationLog, appSettings } from "../../drizzle/schema";
+import { eq } from "drizzle-orm";
 import { ENV } from "../_core/env";
-import crypto from "crypto";
+import { sendEmail } from "../lib/email";
+import { sendSMS } from "../lib/sms";
 
-// ─── Types for Stripe event payloads ─────────────────────────────────────────
+// ─── Stripe client (lazy — only instantiated when secret key is present) ──────
 
-interface StripeCheckoutSession {
-  id: string;
-  object: "checkout.session";
-  payment_link?: string | null;
-  payment_intent?: string | null;
-  payment_status?: string;
-  amount_total?: number | null;
-  currency?: string | null;
-  customer_email?: string | null;
-  metadata?: Record<string, string>;
-}
-
-interface StripePaymentIntent {
-  id: string;
-  object: "payment_intent";
-  status?: string;
-  amount?: number;
-  currency?: string;
-  metadata?: Record<string, string>;
-}
-
-interface StripeEvent {
-  id: string;
-  object: "event";
-  type: string;
-  data: {
-    object: StripeCheckoutSession | StripePaymentIntent | Record<string, unknown>;
-  };
-}
-
-// ─── Signature verification ───────────────────────────────────────────────────
-
-/**
- * Verifies the Stripe-Signature header using the webhook signing secret.
- *
- * Stripe signs each webhook payload with a HMAC-SHA256 signature.
- * The header format is: t=<timestamp>,v1=<signature>[,v0=<old_signature>]
- *
- * Returns true if:
- *   - No STRIPE_WEBHOOK_SECRET is configured (dev/test mode — logs a warning)
- *   - The computed signature matches the v1 signature in the header
- *
- * Returns false if the signature is invalid or the timestamp is stale (>5 min).
- */
-function verifyStripeSignature(
-  rawBody: Buffer,
-  signatureHeader: string | undefined,
-  secret: string
-): { valid: boolean; reason?: string } {
-  if (!secret) {
-    console.warn(
-      "[Stripe Webhook] STRIPE_WEBHOOK_SECRET not set — skipping signature verification (dev mode)"
-    );
-    return { valid: true };
+function getStripeClient(): Stripe | null {
+  if (!ENV.stripeSecretKey) {
+    console.warn("[Stripe Webhook] STRIPE_SECRET_KEY not set — Stripe client unavailable");
+    return null;
   }
-
-  if (!signatureHeader) {
-    return { valid: false, reason: "Missing Stripe-Signature header" };
-  }
-
-  // Parse header: t=<timestamp>,v1=<sig1>[,v1=<sig2>]
-  const parts: Record<string, string[]> = {};
-  for (const part of signatureHeader.split(",")) {
-    const [key, value] = part.split("=", 2);
-    if (key && value) {
-      if (!parts[key]) parts[key] = [];
-      parts[key].push(value);
-    }
-  }
-
-  const timestamp = parts["t"]?.[0];
-  const signatures = parts["v1"] ?? [];
-
-  if (!timestamp || signatures.length === 0) {
-    return { valid: false, reason: "Malformed Stripe-Signature header" };
-  }
-
-  // Reject stale webhooks (>5 minutes old) to prevent replay attacks
-  const timestampMs = parseInt(timestamp, 10) * 1000;
-  const ageMs = Date.now() - timestampMs;
-  if (ageMs > 5 * 60 * 1000) {
-    return { valid: false, reason: `Webhook timestamp too old (${Math.round(ageMs / 1000)}s)` };
-  }
-
-  // Compute expected signature: HMAC-SHA256(timestamp + "." + rawBody, secret)
-  const signedPayload = `${timestamp}.${rawBody.toString("utf8")}`;
-  const expectedSig = crypto
-    .createHmac("sha256", secret)
-    .update(signedPayload, "utf8")
-    .digest("hex");
-
-  // Compare against all v1 signatures (Stripe can send multiple during key rotation)
-  const isValid = signatures.some((sig) => {
-    try {
-      return crypto.timingSafeEqual(Buffer.from(sig, "hex"), Buffer.from(expectedSig, "hex"));
-    } catch {
-      return false;
-    }
-  });
-
-  if (!isValid) {
-    return { valid: false, reason: "Signature mismatch" };
-  }
-
-  return { valid: true };
+  return new Stripe(ENV.stripeSecretKey);
 }
 
 // ─── Invoice lookup helpers ───────────────────────────────────────────────────
 
-/**
- * Finds an invoice by Stripe payment link ID or session ID.
- * Returns the first matching unpaid invoice, or undefined if not found.
- */
 async function findInvoiceByStripeIds(
   paymentLinkId: string | null | undefined,
-  sessionId: string | null | undefined
+  sessionOrIntentId: string | null | undefined
 ) {
   const db = await getDb();
   if (!db) return undefined;
 
-  // Try by payment link ID first (most reliable — set when invoice is created)
   if (paymentLinkId) {
     const rows = await db
       .select()
@@ -158,12 +72,11 @@ async function findInvoiceByStripeIds(
     if (rows[0]) return rows[0];
   }
 
-  // Fall back to session ID (set when customer opens the checkout)
-  if (sessionId) {
+  if (sessionOrIntentId) {
     const rows = await db
       .select()
       .from(invoices)
-      .where(eq(invoices.stripeSessionId, sessionId))
+      .where(eq(invoices.stripeSessionId, sessionOrIntentId))
       .limit(1);
     if (rows[0]) return rows[0];
   }
@@ -171,10 +84,98 @@ async function findInvoiceByStripeIds(
   return undefined;
 }
 
-/**
- * Marks an invoice as paid and updates the lead's pipeline stage to 'paid'.
- * Logs the payment event to the communication log.
- */
+// ─── Post-payment notifications ───────────────────────────────────────────────
+
+async function sendPaymentNotifications(
+  invoiceId: number,
+  leadId: number,
+  invoiceNumber: string,
+  totalAmount: string
+): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+
+  const leadRows = await db.select().from(leads).where(eq(leads.id, leadId)).limit(1);
+  const lead = leadRows[0];
+  if (!lead) return;
+
+  const customerName = `${lead.firstName} ${lead.lastName}`.trim();
+
+  let businessName = "PaintPro CRM";
+  try {
+    const settingsRows = await db
+      .select({ businessName: appSettings.businessName })
+      .from(appSettings)
+      .limit(1);
+    businessName = settingsRows[0]?.businessName || businessName;
+  } catch { /* non-fatal */ }
+
+  // ── Email: Payment confirmation → customer ──────────────────────────────────
+  if (lead.email) {
+    try {
+      const html = `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; margin: 0; padding: 20px;">
+  <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+    <div style="background: #059669; padding: 24px 32px;">
+      <h1 style="color: #ffffff; margin: 0; font-size: 20px; font-weight: 600;">Payment Confirmed</h1>
+      <p style="color: #a7f3d0; margin: 4px 0 0; font-size: 14px;">${businessName}</p>
+    </div>
+    <div style="padding: 32px;">
+      <p style="color: #374151; font-size: 16px; margin: 0 0 16px;">Hi ${customerName},</p>
+      <p style="color: #374151; font-size: 15px; margin: 0 0 24px;">
+        We have received your payment for invoice <strong>#${invoiceNumber}</strong>. Thank you for your business!
+      </p>
+      <table style="width: 100%; border-collapse: collapse; background: #f9fafb; border-radius: 6px;">
+        <tr>
+          <td style="padding: 12px 16px; color: #6b7280; font-size: 14px; width: 160px;">Invoice</td>
+          <td style="padding: 12px 16px; color: #111827; font-size: 14px; font-weight: 600;">#${invoiceNumber}</td>
+        </tr>
+        <tr>
+          <td style="padding: 12px 16px; color: #6b7280; font-size: 14px; border-top: 1px solid #e5e7eb;">Amount Paid</td>
+          <td style="padding: 12px 16px; color: #059669; font-size: 14px; font-weight: 700; border-top: 1px solid #e5e7eb;">$${totalAmount}</td>
+        </tr>
+        <tr>
+          <td style="padding: 12px 16px; color: #6b7280; font-size: 14px; border-top: 1px solid #e5e7eb;">Date</td>
+          <td style="padding: 12px 16px; color: #111827; font-size: 14px; border-top: 1px solid #e5e7eb;">${new Date().toLocaleDateString()}</td>
+        </tr>
+      </table>
+    </div>
+    <div style="background: #f9fafb; padding: 16px 32px; border-top: 1px solid #e5e7eb;">
+      <p style="color: #9ca3af; font-size: 12px; margin: 0;">Thank you from the ${businessName} team.</p>
+    </div>
+  </div>
+</body>
+</html>`;
+      await sendEmail({
+        to: lead.email,
+        subject: `Payment Confirmed — Invoice #${invoiceNumber} | ${businessName}`,
+        html,
+      });
+      console.log(`[Stripe Webhook] Payment confirmation email sent to ${lead.email}`);
+    } catch (emailErr) {
+      console.warn("[Stripe Webhook] Failed to send payment confirmation email:", (emailErr as Error).message);
+    }
+  }
+
+  // ── SMS: Payment notification → business owner ──────────────────────────────
+  try {
+    const ownerPhone = process.env.OWNER_PHONE;
+    if (ownerPhone) {
+      await sendSMS({
+        to: ownerPhone,
+        body: `${customerName} paid invoice #${invoiceNumber} - $${totalAmount}`,
+      });
+      console.log(`[Stripe Webhook] Payment SMS sent to owner (${ownerPhone})`);
+    }
+  } catch (smsErr) {
+    console.warn("[Stripe Webhook] Failed to send payment SMS:", (smsErr as Error).message);
+  }
+}
+
+// ─── markPaidAndUpdateLead ────────────────────────────────────────────────────
+
 async function markPaidAndUpdateLead(
   invoiceId: number,
   leadId: number,
@@ -186,19 +187,16 @@ async function markPaidAndUpdateLead(
 
   const paidAt = new Date();
 
-  // Update invoice status
   await db
     .update(invoices)
     .set({ status: "paid", paidAt, stripeSessionId: sessionId ?? null })
     .where(eq(invoices.id, invoiceId));
 
-  // Update lead pipeline stage to 'paid'
   await db
     .update(leads)
     .set({ stage: "paid", paidAt })
     .where(eq(leads.id, leadId));
 
-  // Log the payment event
   try {
     const inv = await db.select().from(invoices).where(eq(invoices.id, invoiceId)).limit(1);
     const invoice = inv[0];
@@ -211,7 +209,7 @@ async function markPaidAndUpdateLead(
         `Invoice ${invoice?.invoiceNumber ?? `#${invoiceId}`} marked as paid` +
         (invoice?.total ? ` ($${invoice.total})` : "") +
         `. Stripe event: ${eventType}.` +
-        (sessionId ? ` Session: ${sessionId}.` : ""),
+        (sessionId ? ` Session/Intent: ${sessionId}.` : ""),
       sentBy: null,
     });
   } catch (logErr) {
@@ -222,43 +220,51 @@ async function markPaidAndUpdateLead(
 // ─── Event handlers ───────────────────────────────────────────────────────────
 
 async function handleCheckoutSessionCompleted(
-  session: StripeCheckoutSession
+  session: Stripe.Checkout.Session
 ): Promise<{ processed: boolean; reason?: string }> {
   if (session.payment_status !== "paid") {
     return { processed: false, reason: `payment_status is '${session.payment_status}', not 'paid'` };
   }
 
-  const invoice = await findInvoiceByStripeIds(session.payment_link, session.id);
+  const invoice = await findInvoiceByStripeIds(
+    session.payment_link as string | null,
+    session.id
+  );
   if (!invoice) {
     return {
       processed: false,
       reason: `No invoice found for payment_link=${session.payment_link ?? "null"} session=${session.id}`,
     };
   }
-
   if (invoice.status === "paid") {
     return { processed: true, reason: "Already paid — skipping" };
   }
 
   await markPaidAndUpdateLead(invoice.id, invoice.leadId, session.id, "checkout.session.completed");
-  console.log(
-    `[Stripe Webhook] Invoice ${invoice.invoiceNumber} (id=${invoice.id}) marked paid via checkout.session.completed`
-  );
+  console.log(`[Stripe Webhook] Invoice ${invoice.invoiceNumber} (id=${invoice.id}) marked paid via checkout.session.completed`);
+
+  try {
+    await sendPaymentNotifications(
+      invoice.id,
+      invoice.leadId,
+      invoice.invoiceNumber,
+      parseFloat(String(invoice.total)).toFixed(2)
+    );
+  } catch (notifErr) {
+    console.warn("[Stripe Webhook] Post-payment notifications failed:", (notifErr as Error).message);
+  }
+
   return { processed: true };
 }
 
 async function handlePaymentIntentSucceeded(
-  paymentIntent: StripePaymentIntent
+  paymentIntent: Stripe.PaymentIntent
 ): Promise<{ processed: boolean; reason?: string }> {
-  // payment_intent.succeeded doesn't carry a payment_link directly.
-  // Try to find the invoice by the payment intent ID stored in stripeSessionId,
-  // or via metadata if the invoice ID was embedded.
   const metaInvoiceId = paymentIntent.metadata?.invoice_id
     ? parseInt(paymentIntent.metadata.invoice_id, 10)
     : undefined;
 
   let invoice;
-
   if (metaInvoiceId && !isNaN(metaInvoiceId)) {
     const db = await getDb();
     if (db) {
@@ -271,7 +277,6 @@ async function handlePaymentIntentSucceeded(
     }
   }
 
-  // Fall back: look up by stripeSessionId matching the payment intent ID
   if (!invoice) {
     invoice = await findInvoiceByStripeIds(null, paymentIntent.id);
   }
@@ -282,15 +287,101 @@ async function handlePaymentIntentSucceeded(
       reason: `No invoice found for payment_intent=${paymentIntent.id}`,
     };
   }
-
   if (invoice.status === "paid") {
     return { processed: true, reason: "Already paid — skipping" };
   }
 
   await markPaidAndUpdateLead(invoice.id, invoice.leadId, paymentIntent.id, "payment_intent.succeeded");
-  console.log(
-    `[Stripe Webhook] Invoice ${invoice.invoiceNumber} (id=${invoice.id}) marked paid via payment_intent.succeeded`
+  console.log(`[Stripe Webhook] Invoice ${invoice.invoiceNumber} (id=${invoice.id}) marked paid via payment_intent.succeeded`);
+
+  try {
+    const amountPaid = paymentIntent.amount
+      ? (paymentIntent.amount / 100).toFixed(2)
+      : parseFloat(String(invoice.total)).toFixed(2);
+    await sendPaymentNotifications(
+      invoice.id,
+      invoice.leadId,
+      invoice.invoiceNumber,
+      amountPaid
+    );
+  } catch (notifErr) {
+    console.warn("[Stripe Webhook] Post-payment notifications failed:", (notifErr as Error).message);
+  }
+
+  return { processed: true };
+}
+
+async function handlePaymentIntentPaymentFailed(
+  paymentIntent: Stripe.PaymentIntent
+): Promise<{ processed: boolean; reason?: string }> {
+  // Extract failure reason from last_payment_error
+  const failureReason =
+    (paymentIntent as unknown as { last_payment_error?: { message?: string } })
+      .last_payment_error?.message ?? "Unknown failure reason";
+
+  console.warn(
+    `[Stripe Webhook] payment_intent.payment_failed: ${paymentIntent.id} — ${failureReason}`
   );
+
+  const metaInvoiceId = paymentIntent.metadata?.invoice_id
+    ? parseInt(paymentIntent.metadata.invoice_id, 10)
+    : undefined;
+
+  let invoice;
+  if (metaInvoiceId && !isNaN(metaInvoiceId)) {
+    const db = await getDb();
+    if (db) {
+      const rows = await db
+        .select()
+        .from(invoices)
+        .where(eq(invoices.id, metaInvoiceId))
+        .limit(1);
+      invoice = rows[0];
+    }
+  }
+
+  if (!invoice) {
+    invoice = await findInvoiceByStripeIds(null, paymentIntent.id);
+  }
+
+  if (!invoice) {
+    return {
+      processed: false,
+      reason: `No invoice found for failed payment_intent=${paymentIntent.id}`,
+    };
+  }
+
+  const db = await getDb();
+  if (db) {
+    try {
+      // Update invoice status to 'overdue' (schema's closest status to 'failed')
+      await db
+        .update(invoices)
+        .set({ status: "overdue" })
+        .where(eq(invoices.id, invoice.id));
+
+      // Log the failure reason to the communication log
+      await db.insert(communicationLog).values({
+        leadId: invoice.leadId,
+        type: "system",
+        direction: "internal",
+        subject: `Payment failed — Invoice ${invoice.invoiceNumber}`,
+        content:
+          `Payment attempt failed for invoice ${invoice.invoiceNumber}` +
+          (invoice.total ? ` ($${invoice.total})` : "") +
+          `. Failure reason: ${failureReason}` +
+          `. Stripe PaymentIntent: ${paymentIntent.id}.`,
+        sentBy: null,
+      });
+
+      console.log(
+        `[Stripe Webhook] Invoice ${invoice.invoiceNumber} (id=${invoice.id}) marked overdue — payment failed: ${failureReason}`
+      );
+    } catch (dbErr) {
+      console.error("[Stripe Webhook] Failed to update invoice on payment failure:", (dbErr as Error).message);
+    }
+  }
+
   return { processed: true };
 }
 
@@ -299,18 +390,16 @@ async function handlePaymentIntentSucceeded(
 /**
  * Registers the POST /api/webhooks/stripe route on the Express app.
  *
- * IMPORTANT: This must be registered BEFORE express.json() middleware so that
- * the raw request body is available for Stripe signature verification.
+ * IMPORTANT: This MUST be registered BEFORE express.json() middleware so that
+ * the raw request body Buffer is preserved for stripe.webhooks.constructEvent().
  * Call this from server/_core/index.ts.
  */
 export function registerStripeWebhook(app: Express): void {
-  // Use express.raw() to capture the raw body — required for Stripe signature verification.
-  // This only applies to this specific route, not the rest of the app.
   app.post(
     "/api/webhooks/stripe",
     // eslint-disable-next-line @typescript-eslint/no-misused-promises
     (req: Request, res: Response, next) => {
-      // Capture raw body as Buffer before any JSON parsing
+      // Capture raw body as Buffer — required for stripe.webhooks.constructEvent()
       const chunks: Buffer[] = [];
       req.on("data", (chunk: Buffer) => chunks.push(chunk));
       req.on("end", () => {
@@ -323,69 +412,81 @@ export function registerStripeWebhook(app: Express): void {
       });
     },
     async (req: Request, res: Response) => {
-      const rawBody = (req as Request & { rawBody?: Buffer }).rawBody;
+      // ── Respond 200 immediately so Stripe does not time out ─────────────────
+      res.status(200).json({ received: true });
 
-      if (!rawBody) {
-        res.status(400).json({ error: "No request body received" });
-        return;
-      }
-
-      // ── Signature verification ────────────────────────────────────────────
-      const signatureHeader = req.headers["stripe-signature"] as string | undefined;
-      const webhookSecret = ENV.stripeWebhookSecret;
-
-      const { valid, reason } = verifyStripeSignature(rawBody, signatureHeader, webhookSecret);
-      if (!valid) {
-        console.error(`[Stripe Webhook] Signature verification failed: ${reason}`);
-        res.status(400).json({ error: `Webhook signature invalid: ${reason}` });
-        return;
-      }
-
-      // ── Parse event ───────────────────────────────────────────────────────
-      let event: StripeEvent;
+      // ── All processing is async and fully wrapped — never crashes ────────────
       try {
-        event = JSON.parse(rawBody.toString("utf8")) as StripeEvent;
-      } catch (parseErr) {
-        console.error("[Stripe Webhook] Failed to parse JSON body:", (parseErr as Error).message);
-        res.status(400).json({ error: "Invalid JSON body" });
-        return;
-      }
-
-      console.log(`[Stripe Webhook] Received event: ${event.type} (id=${event.id})`);
-
-      // ── Route by event type ───────────────────────────────────────────────
-      try {
-        let result: { processed: boolean; reason?: string } = {
-          processed: false,
-          reason: "Unhandled event type",
-        };
-
-        if (event.type === "checkout.session.completed") {
-          result = await handleCheckoutSessionCompleted(
-            event.data.object as StripeCheckoutSession
-          );
-        } else if (event.type === "payment_intent.succeeded") {
-          result = await handlePaymentIntentSucceeded(
-            event.data.object as StripePaymentIntent
-          );
-        } else {
-          // Acknowledge other event types without processing them
-          console.log(`[Stripe Webhook] Ignoring unhandled event type: ${event.type}`);
-          res.status(200).json({ received: true, processed: false, reason: "Unhandled event type" });
+        const rawBody = (req as Request & { rawBody?: Buffer }).rawBody;
+        if (!rawBody) {
+          console.error("[Stripe Webhook] No raw body captured");
           return;
         }
 
-        if (result.processed) {
-          res.status(200).json({ received: true, processed: true });
+        const signatureHeader = req.headers["stripe-signature"] as string | undefined;
+        const webhookSecret = ENV.stripeWebhookSecret;
+        const stripe = getStripeClient();
+
+        // ── Signature verification via stripe.webhooks.constructEvent ──────────
+        let event: Stripe.Event;
+        if (webhookSecret && stripe) {
+          try {
+            event = stripe.webhooks.constructEvent(
+              rawBody,
+              signatureHeader ?? "",
+              webhookSecret
+            );
+          } catch (sigErr) {
+            console.error(
+              `[Stripe Webhook] stripe.webhooks.constructEvent failed: ${(sigErr as Error).message}`
+            );
+            return;
+          }
         } else {
-          // Still return 200 so Stripe doesn't retry — just log the skip reason
-          console.log(`[Stripe Webhook] Event not processed: ${result.reason}`);
-          res.status(200).json({ received: true, processed: false, reason: result.reason });
+          // Dev/test mode — no secret configured, parse body directly
+          if (!webhookSecret) {
+            console.warn(
+              "[Stripe Webhook] STRIPE_WEBHOOK_SECRET not set — skipping signature verification (dev mode)"
+            );
+          }
+          try {
+            event = JSON.parse(rawBody.toString("utf8")) as Stripe.Event;
+          } catch (parseErr) {
+            console.error("[Stripe Webhook] Failed to parse JSON body:", (parseErr as Error).message);
+            return;
+          }
         }
-      } catch (handlerErr) {
-        console.error("[Stripe Webhook] Handler error:", (handlerErr as Error).message);
-        // Return 500 so Stripe retries the event
-        res.status(500).json({ error: "Internal server error processing webhook" });
+
+        console.log(`[Stripe Webhook] Received event: ${event.type} (id=${event.id})`);
+
+        // ── Route by event type ──────────────────────────────────────────────
+        if (event.type === "checkout.session.completed") {
+          const result = await handleCheckoutSessionCompleted(
+            event.data.object as Stripe.Checkout.Session
+          );
+          if (!result.processed) {
+            console.log(`[Stripe Webhook] checkout.session.completed not processed: ${result.reason}`);
+          }
+        } else if (event.type === "payment_intent.succeeded") {
+          const result = await handlePaymentIntentSucceeded(
+            event.data.object as Stripe.PaymentIntent
+          );
+          if (!result.processed) {
+            console.log(`[Stripe Webhook] payment_intent.succeeded not processed: ${result.reason}`);
+          }
+        } else if (event.type === "payment_intent.payment_failed") {
+          const result = await handlePaymentIntentPaymentFailed(
+            event.data.object as Stripe.PaymentIntent
+          );
+          if (!result.processed) {
+            console.log(`[Stripe Webhook] payment_intent.payment_failed not processed: ${result.reason}`);
+          }
+        } else {
+          console.log(`[Stripe Webhook] Ignoring unhandled event type: ${event.type}`);
+        }
+      } catch (err) {
+        // Never crash — log and swallow all errors
+        console.error("[Stripe Webhook] Unhandled error in async processing:", (err as Error).message);
       }
     }
   );
