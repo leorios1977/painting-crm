@@ -58,7 +58,7 @@ function BrandedCTAButton({
 function useMenuItems() {
   const { teamGroupName } = useIndustry();
   return [
-    { icon: LayoutDashboard, label: "Dashboard", path: "/" },
+    { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
     { icon: BarChart3, label: "Pipeline", path: "/pipeline" },
     { icon: Users, label: "Leads", path: "/leads" },
     { icon: CalendarDays, label: "Schedule", path: "/schedule" },

@@ -26,38 +26,40 @@ import BlogList from "./pages/BlogList";
 import BlogPost from "./pages/BlogPost";
 import AIAssistant from "./pages/AIAssistant";
 import Login from "./pages/Login";
+import Landing from "./pages/Landing";
 
 function Router() {
   return (
     <Switch>
       {/* Public routes — no auth, no sidebar */}
+      <Route path="/" component={Landing} />
       <Route path="/login" component={Login} />
       <Route path="/portal/:token" component={CustomerPortal} />
       <Route path="/blog" component={BlogList} />
       <Route path="/blog/:slug" component={BlogPost} />
-      {/* Admin dashboard routes */}
+      {/* Admin dashboard routes — wrapped in DashboardLayout (handles auth redirect) */}
       <Route>
         <DashboardLayout>
-      <Switch>
-        <Route path="/" component={Dashboard} />
-        <Route path="/pipeline" component={Pipeline} />
-        <Route path="/leads" component={Leads} />
-        <Route path="/leads/:id" component={LeadDetail} />
-        <Route path="/email-automation" component={EmailAutomation} />
-        <Route path="/schedule" component={Schedule} />
-        <Route path="/crew" component={Crew} />
-        <Route path="/blog-manage" component={Blog} />
-        <Route path="/blog-manage/new" component={BlogEditor} />
-        <Route path="/blog-manage/edit/:id" component={BlogEditor} />
-        <Route path="/communications" component={Communications} />
-        <Route path="/invoices" component={Invoices} />
-        <Route path="/ai-assistant" component={AIAssistant} />
-        <Route path="/docs" component={Docs} />
-        <Route path="/settings" component={Settings} />
-        <Route path="/404" component={NotFound} />
-          <Route component={NotFound} />
-        </Switch>
-      </DashboardLayout>
+          <Switch>
+            <Route path="/dashboard" component={Dashboard} />
+            <Route path="/pipeline" component={Pipeline} />
+            <Route path="/leads" component={Leads} />
+            <Route path="/leads/:id" component={LeadDetail} />
+            <Route path="/email-automation" component={EmailAutomation} />
+            <Route path="/schedule" component={Schedule} />
+            <Route path="/crew" component={Crew} />
+            <Route path="/blog-manage" component={Blog} />
+            <Route path="/blog-manage/new" component={BlogEditor} />
+            <Route path="/blog-manage/edit/:id" component={BlogEditor} />
+            <Route path="/communications" component={Communications} />
+            <Route path="/invoices" component={Invoices} />
+            <Route path="/ai-assistant" component={AIAssistant} />
+            <Route path="/docs" component={Docs} />
+            <Route path="/settings" component={Settings} />
+            <Route path="/404" component={NotFound} />
+            <Route component={NotFound} />
+          </Switch>
+        </DashboardLayout>
       </Route>
     </Switch>
   );
@@ -67,14 +69,14 @@ function App() {
   return (
     <ErrorBoundary>
       <IndustryProvider config={paintingConfig}>
-      <ThemeProvider defaultTheme="light">
-        <BrandingProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Router />
-          </TooltipProvider>
-        </BrandingProvider>
-      </ThemeProvider>
+        <ThemeProvider defaultTheme="light">
+          <BrandingProvider>
+            <TooltipProvider>
+              <Toaster />
+              <Router />
+            </TooltipProvider>
+          </BrandingProvider>
+        </ThemeProvider>
       </IndustryProvider>
     </ErrorBoundary>
   );

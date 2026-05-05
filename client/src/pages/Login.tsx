@@ -20,7 +20,7 @@ export default function Login() {
   useEffect(() => {
     const token = getAuthToken();
     if (token) {
-      setLocation("/");
+      setLocation("/dashboard");
     }
   }, [setLocation]);
 
@@ -46,7 +46,7 @@ export default function Login() {
       setAuthToken(data.token);
       // Invalidate auth cache so trpc.auth.me refetches with the new token
       await utils.auth.me.invalidate();
-      setLocation("/");
+      setLocation("/dashboard");
     } catch {
       setError("Network error. Please check your connection and try again.");
     } finally {
