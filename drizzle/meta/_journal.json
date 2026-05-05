@@ -15,6 +15,13 @@
       "when": 1777529237460,
       "tag": "0001_fresh_energizer",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1777953635116,
+      "tag": "0002_steep_lake",
+      "breakpoints": true
     }
   ]
 }

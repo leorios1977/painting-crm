@@ -257,6 +257,18 @@ export const appSettings = pgTable(
     // ─── White-label branding ───────────────────────────────────────────────────
     /** Business display name shown in sidebar and browser tab */
     businessName: varchar("businessName", { length: 200 }),
+    /** Owner full name */
+    ownerName: varchar("ownerName", { length: 200 }),
+    /** Business phone number */
+    phone: varchar("phone", { length: 30 }),
+    /** Business city */
+    city: varchar("city", { length: 100 }),
+    /** Business state */
+    state: varchar("state", { length: 50 }),
+    /** Business website URL */
+    website: varchar("website", { length: 500 }),
+    /** Subscription plan: starter, pro, max */
+    plan: varchar("plan", { length: 50 }).default("starter"),
     /** S3/CDN URL of the uploaded business logo */
     logoUrl: text("logoUrl"),
     /** S3 key for the logo file (used for deletion) */

@@ -1,0 +1,1771 @@
+{
+  "id": "65f374e6-88ab-495c-b87d-76a252526038",
+  "prevId": "ca1beeec-cd50-4d5d-bd1d-c7ba5814526f",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.app_settings": {
+      "name": "app_settings",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "tenantId": {
+          "name": "tenantId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 1
+        },
+        "companyName": {
+          "name": "companyName",
+          "type": "varchar(200)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "companyEmail": {
+          "name": "companyEmail",
+          "type": "varchar(320)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "reviewLink": {
+          "name": "reviewLink",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "stripeSecretKey": {
+          "name": "stripeSecretKey",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "googleCalendarId": {
+          "name": "googleCalendarId",
+          "type": "varchar(300)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "googleServiceAccountKey": {
+          "name": "googleServiceAccountKey",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "googleReviewLink": {
+          "name": "googleReviewLink",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "autoReviewEnabled": {
+          "name": "autoReviewEnabled",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "businessName": {
+          "name": "businessName",
+          "type": "varchar(200)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ownerName": {
+          "name": "ownerName",
+          "type": "varchar(200)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "phone": {
+          "name": "phone",
+          "type": "varchar(30)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "city": {
+          "name": "city",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "state": {
+          "name": "state",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "website": {
+          "name": "website",
+          "type": "varchar(500)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "plan": {
+          "name": "plan",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'starter'"
+        },
+        "logoUrl": {
+          "name": "logoUrl",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "logoKey": {
+          "name": "logoKey",
+          "type": "varchar(500)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "primaryColor": {
+          "name": "primaryColor",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "secondaryColor": {
+          "name": "secondaryColor",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "stripePublishableKey": {
+          "name": "stripePublishableKey",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "googleAnalyticsId": {
+          "name": "googleAnalyticsId",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "socialMediaEnabled": {
+          "name": "socialMediaEnabled",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "facebookUrl": {
+          "name": "facebookUrl",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "facebookEnabled": {
+          "name": "facebookEnabled",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "instagramUrl": {
+          "name": "instagramUrl",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "instagramEnabled": {
+          "name": "instagramEnabled",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "whatsappNumber": {
+          "name": "whatsappNumber",
+          "type": "varchar(30)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "whatsappEnabled": {
+          "name": "whatsappEnabled",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "twitterUrl": {
+          "name": "twitterUrl",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "twitterEnabled": {
+          "name": "twitterEnabled",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "youtubeUrl": {
+          "name": "youtubeUrl",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "youtubeEnabled": {
+          "name": "youtubeEnabled",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "tiktokUrl": {
+          "name": "tiktokUrl",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "tiktokEnabled": {
+          "name": "tiktokEnabled",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "linkedinUrl": {
+          "name": "linkedinUrl",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "linkedinEnabled": {
+          "name": "linkedinEnabled",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "app_settings_tenantId_idx": {
+          "name": "app_settings_tenantId_idx",
+          "columns": [
+            {
+              "expression": "tenantId",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.appointments": {
+      "name": "appointments",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "tenantId": {
+          "name": "tenantId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 1
+        },
+        "leadId": {
+          "name": "leadId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "crewAssigned": {
+          "name": "crewAssigned",
+          "type": "varchar(300)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "jobType": {
+          "name": "jobType",
+          "type": "varchar(200)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "scheduledDate": {
+          "name": "scheduledDate",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "timeSlot": {
+          "name": "timeSlot",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status": {
+          "name": "status",
+          "type": "appointment_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'scheduled'"
+        },
+        "notes": {
+          "name": "notes",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "smsSent": {
+          "name": "smsSent",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "emailSent": {
+          "name": "emailSent",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "createdBy": {
+          "name": "createdBy",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.attachments": {
+      "name": "attachments",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "tenantId": {
+          "name": "tenantId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 1
+        },
+        "leadId": {
+          "name": "leadId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "fileName": {
+          "name": "fileName",
+          "type": "varchar(300)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "fileKey": {
+          "name": "fileKey",
+          "type": "varchar(500)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "fileUrl": {
+          "name": "fileUrl",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "mimeType": {
+          "name": "mimeType",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "fileSize": {
+          "name": "fileSize",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "uploadedBy": {
+          "name": "uploadedBy",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "attachments_tenantId_idx": {
+          "name": "attachments_tenantId_idx",
+          "columns": [
+            {
+              "expression": "tenantId",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.automation_rules": {
+      "name": "automation_rules",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "tenantId": {
+          "name": "tenantId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 1
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(200)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "triggerType": {
+          "name": "triggerType",
+          "type": "automation_trigger_type",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "triggerStage": {
+          "name": "triggerStage",
+          "type": "lead_stage",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "delayHours": {
+          "name": "delayHours",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "templateId": {
+          "name": "templateId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "isActive": {
+          "name": "isActive",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "automation_rules_tenantId_idx": {
+          "name": "automation_rules_tenantId_idx",
+          "columns": [
+            {
+              "expression": "tenantId",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.blog_images": {
+      "name": "blog_images",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "postId": {
+          "name": "postId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "imageUrl": {
+          "name": "imageUrl",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "caption": {
+          "name": "caption",
+          "type": "varchar(500)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "displayOrder": {
+          "name": "displayOrder",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.blog_posts": {
+      "name": "blog_posts",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "tenantId": {
+          "name": "tenantId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 1
+        },
+        "title": {
+          "name": "title",
+          "type": "varchar(500)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "slug": {
+          "name": "slug",
+          "type": "varchar(600)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "content": {
+          "name": "content",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "excerpt": {
+          "name": "excerpt",
+          "type": "varchar(500)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "seoTitle": {
+          "name": "seoTitle",
+          "type": "varchar(200)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "seoKeywords": {
+          "name": "seoKeywords",
+          "type": "varchar(500)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "seoDescription": {
+          "name": "seoDescription",
+          "type": "varchar(200)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "featuredImageUrl": {
+          "name": "featuredImageUrl",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "projectAddress": {
+          "name": "projectAddress",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "projectLatitude": {
+          "name": "projectLatitude",
+          "type": "numeric(10, 7)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "projectLongitude": {
+          "name": "projectLongitude",
+          "type": "numeric(10, 7)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status": {
+          "name": "status",
+          "type": "blog_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'draft'"
+        },
+        "publishedAt": {
+          "name": "publishedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "blog_posts_tenantId_idx": {
+          "name": "blog_posts_tenantId_idx",
+          "columns": [
+            {
+              "expression": "tenantId",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "blog_posts_slug_unique": {
+          "name": "blog_posts_slug_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "slug"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.communication_log": {
+      "name": "communication_log",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "tenantId": {
+          "name": "tenantId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 1
+        },
+        "leadId": {
+          "name": "leadId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "type": {
+          "name": "type",
+          "type": "communication_type",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "direction": {
+          "name": "direction",
+          "type": "communication_direction",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'outbound'"
+        },
+        "subject": {
+          "name": "subject",
+          "type": "varchar(500)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "content": {
+          "name": "content",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "templateId": {
+          "name": "templateId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "automationRuleId": {
+          "name": "automationRuleId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sentBy": {
+          "name": "sentBy",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sentAt": {
+          "name": "sentAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "communication_log_tenantId_idx": {
+          "name": "communication_log_tenantId_idx",
+          "columns": [
+            {
+              "expression": "tenantId",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.conversations": {
+      "name": "conversations",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "tenantId": {
+          "name": "tenantId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 1
+        },
+        "leadId": {
+          "name": "leadId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "direction": {
+          "name": "direction",
+          "type": "conversation_direction",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "body": {
+          "name": "body",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "fromNumber": {
+          "name": "fromNumber",
+          "type": "varchar(30)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "toNumber": {
+          "name": "toNumber",
+          "type": "varchar(30)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "twilioSid": {
+          "name": "twilioSid",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status": {
+          "name": "status",
+          "type": "varchar(30)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'queued'"
+        },
+        "read": {
+          "name": "read",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "conversations_tenantId_idx": {
+          "name": "conversations_tenantId_idx",
+          "columns": [
+            {
+              "expression": "tenantId",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.crew_members": {
+      "name": "crew_members",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "tenantId": {
+          "name": "tenantId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 1
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(200)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "phone": {
+          "name": "phone",
+          "type": "varchar(30)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "email": {
+          "name": "email",
+          "type": "varchar(200)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "role": {
+          "name": "role",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status": {
+          "name": "status",
+          "type": "crew_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'active'"
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "crew_members_tenantId_idx": {
+          "name": "crew_members_tenantId_idx",
+          "columns": [
+            {
+              "expression": "tenantId",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.email_templates": {
+      "name": "email_templates",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "tenantId": {
+          "name": "tenantId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 1
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(200)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "subject": {
+          "name": "subject",
+          "type": "varchar(500)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "body": {
+          "name": "body",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "triggerStage": {
+          "name": "triggerStage",
+          "type": "template_trigger_stage",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'manual'"
+        },
+        "isActive": {
+          "name": "isActive",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "isDefault": {
+          "name": "isDefault",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "email_templates_tenantId_idx": {
+          "name": "email_templates_tenantId_idx",
+          "columns": [
+            {
+              "expression": "tenantId",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.invoices": {
+      "name": "invoices",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "tenantId": {
+          "name": "tenantId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 1
+        },
+        "leadId": {
+          "name": "leadId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "invoiceNumber": {
+          "name": "invoiceNumber",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "lineItems": {
+          "name": "lineItems",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "subtotal": {
+          "name": "subtotal",
+          "type": "numeric(10, 2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "tax": {
+          "name": "tax",
+          "type": "numeric(10, 2)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'0.00'"
+        },
+        "total": {
+          "name": "total",
+          "type": "numeric(10, 2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "invoice_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'draft'"
+        },
+        "dueDate": {
+          "name": "dueDate",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "paidAt": {
+          "name": "paidAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "stripePaymentLink": {
+          "name": "stripePaymentLink",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "stripePaymentLinkId": {
+          "name": "stripePaymentLinkId",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "stripeSessionId": {
+          "name": "stripeSessionId",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "notes": {
+          "name": "notes",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "smsSent": {
+          "name": "smsSent",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "createdBy": {
+          "name": "createdBy",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.job_photos": {
+      "name": "job_photos",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "tenantId": {
+          "name": "tenantId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 1
+        },
+        "leadId": {
+          "name": "leadId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "photoUrl": {
+          "name": "photoUrl",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "photoKey": {
+          "name": "photoKey",
+          "type": "varchar(500)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "type": {
+          "name": "type",
+          "type": "photo_type",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "caption": {
+          "name": "caption",
+          "type": "varchar(300)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "uploadedBy": {
+          "name": "uploadedBy",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "uploadedAt": {
+          "name": "uploadedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "job_photos_tenantId_idx": {
+          "name": "job_photos_tenantId_idx",
+          "columns": [
+            {
+              "expression": "tenantId",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.leads": {
+      "name": "leads",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "tenantId": {
+          "name": "tenantId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 1
+        },
+        "firstName": {
+          "name": "firstName",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "lastName": {
+          "name": "lastName",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "email": {
+          "name": "email",
+          "type": "varchar(320)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "phone": {
+          "name": "phone",
+          "type": "varchar(30)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "projectType": {
+          "name": "projectType",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "projectAddress": {
+          "name": "projectAddress",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "projectDescription": {
+          "name": "projectDescription",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "estimatedValue": {
+          "name": "estimatedValue",
+          "type": "numeric(10, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "stage": {
+          "name": "stage",
+          "type": "lead_stage",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'lead'"
+        },
+        "source": {
+          "name": "source",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "assignedTo": {
+          "name": "assignedTo",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "lastContactedAt": {
+          "name": "lastContactedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "scheduledDate": {
+          "name": "scheduledDate",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "completedDate": {
+          "name": "completedDate",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "stripeCustomerId": {
+          "name": "stripeCustomerId",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "stripeInvoiceId": {
+          "name": "stripeInvoiceId",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "stripePaymentLinkUrl": {
+          "name": "stripePaymentLinkUrl",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "paidAt": {
+          "name": "paidAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "calendarEventId": {
+          "name": "calendarEventId",
+          "type": "varchar(200)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "portalToken": {
+          "name": "portalToken",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "portalPhotos": {
+          "name": "portalPhotos",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "createdBy": {
+          "name": "createdBy",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "leads_portalToken_unique": {
+          "name": "leads_portalToken_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "portalToken"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.users": {
+      "name": "users",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "openId": {
+          "name": "openId",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "email": {
+          "name": "email",
+          "type": "varchar(320)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "passwordHash": {
+          "name": "passwordHash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "loginMethod": {
+          "name": "loginMethod",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "role": {
+          "name": "role",
+          "type": "user_role",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'user'"
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "lastSignedIn": {
+          "name": "lastSignedIn",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "users_openId_unique": {
+          "name": "users_openId_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "openId"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {
+    "public.appointment_status": {
+      "name": "appointment_status",
+      "schema": "public",
+      "values": [
+        "scheduled",
+        "confirmed",
+        "in_progress",
+        "completed",
+        "cancelled",
+        "no_show"
+      ]
+    },
+    "public.automation_trigger_type": {
+      "name": "automation_trigger_type",
+      "schema": "public",
+      "values": [
+        "stage_change",
+        "scheduled",
+        "manual",
+        "days_after_stage"
+      ]
+    },
+    "public.blog_status": {
+      "name": "blog_status",
+      "schema": "public",
+      "values": [
+        "draft",
+        "published",
+        "archived"
+      ]
+    },
+    "public.communication_direction": {
+      "name": "communication_direction",
+      "schema": "public",
+      "values": [
+        "inbound",
+        "outbound",
+        "internal"
+      ]
+    },
+    "public.communication_type": {
+      "name": "communication_type",
+      "schema": "public",
+      "values": [
+        "email",
+        "call",
+        "note",
+        "sms",
+        "system"
+      ]
+    },
+    "public.conversation_direction": {
+      "name": "conversation_direction",
+      "schema": "public",
+      "values": [
+        "inbound",
+        "outbound"
+      ]
+    },
+    "public.crew_status": {
+      "name": "crew_status",
+      "schema": "public",
+      "values": [
+        "active",
+        "inactive"
+      ]
+    },
+    "public.invoice_status": {
+      "name": "invoice_status",
+      "schema": "public",
+      "values": [
+        "draft",
+        "sent",
+        "paid",
+        "overdue"
+      ]
+    },
+    "public.lead_stage": {
+      "name": "lead_stage",
+      "schema": "public",
+      "values": [
+        "lead",
+        "quoted",
+        "scheduled",
+        "in_progress",
+        "completed",
+        "paid"
+      ]
+    },
+    "public.photo_type": {
+      "name": "photo_type",
+      "schema": "public",
+      "values": [
+        "before",
+        "after"
+      ]
+    },
+    "public.template_trigger_stage": {
+      "name": "template_trigger_stage",
+      "schema": "public",
+      "values": [
+        "lead",
+        "quoted",
+        "scheduled",
+        "in_progress",
+        "completed",
+        "paid",
+        "manual"
+      ]
+    },
+    "public.user_role": {
+      "name": "user_role",
+      "schema": "public",
+      "values": [
+        "user",
+        "admin"
+      ]
+    }
+  },
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

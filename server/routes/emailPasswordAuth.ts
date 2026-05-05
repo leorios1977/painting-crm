@@ -16,6 +16,7 @@ import { getDb } from "../db";
 import { users, appSettings } from "../../drizzle/schema";
 import { eq } from "drizzle-orm";
 import { ENV } from "../_core/env";
+import { sendEmail } from "../lib/email";
 
 const TOKEN_EXPIRY_SECONDS = 365 * 24 * 60 * 60; // 1 year
 
@@ -117,7 +118,7 @@ export function registerEmailPasswordAuthRoutes(app: Express): void {
   /**
    * POST /api/auth/register
    * Body: { businessName, ownerName, email, password, phone?, city?, state?, website?, hearAboutUs?, plan? }
-   * Returns: { token: string, user: { id, name, email, role } }
+   * Returns: { success: true, token, user: { id, email, businessName } }
    */
   app.post("/api/auth/register", async (req: Request, res: Response) => {
     try {
@@ -129,6 +130,7 @@ export function registerEmailPasswordAuthRoutes(app: Express): void {
         phone,
         city,
         state,
+        website,
         plan,
         hearAboutUs,
       } = req.body as {
@@ -144,6 +146,7 @@ export function registerEmailPasswordAuthRoutes(app: Express): void {
         plan?: string;
       };
 
+      // ── Validation ────────────────────────────────────────────────────────────
       if (!businessName?.trim()) return res.status(400).json({ error: "Business name is required" });
       if (!ownerName?.trim()) return res.status(400).json({ error: "Owner name is required" });
       if (!email?.trim()) return res.status(400).json({ error: "Email is required" });
@@ -154,17 +157,20 @@ export function registerEmailPasswordAuthRoutes(app: Express): void {
       const db = await getDb();
       if (!db) return res.status(503).json({ error: "Database unavailable" });
 
+      // ── Duplicate email check ─────────────────────────────────────────────────
       const [existing] = await db
         .select({ id: users.id })
         .from(users)
         .where(eq(users.email, normalizedEmail))
         .limit(1);
 
-      if (existing) return res.status(409).json({ error: "An account with this email already exists" });
+      if (existing) return res.status(409).json({ error: "Email already registered" });
 
+      // ── Hash password ─────────────────────────────────────────────────────────
       const passwordHash = await bcrypt.hash(password, 12);
       const openId = `email-${normalizedEmail}-${Date.now()}`;
 
+      // ── Create user with role 'admin' (business owner) ────────────────────────
       const [newUser] = await db
         .insert(users)
         .values({
@@ -173,18 +179,25 @@ export function registerEmailPasswordAuthRoutes(app: Express): void {
           email: normalizedEmail,
           passwordHash,
           loginMethod: "email-password",
-          role: "user",
+          role: "admin",
           lastSignedIn: new Date(),
         })
         .returning();
 
       if (!newUser) return res.status(500).json({ error: "Failed to create account" });
 
+      // ── Seed app_settings with all business info ──────────────────────────────
       try {
         await db.insert(appSettings).values({
           tenantId: newUser.id,
           businessName: businessName.trim(),
+          ownerName: ownerName.trim(),
           companyEmail: normalizedEmail,
+          phone: phone?.trim() || null,
+          city: city?.trim() || null,
+          state: state?.trim() || null,
+          website: website?.trim() || null,
+          plan: plan?.toLowerCase() || "starter",
         });
       } catch (settingsErr) {
         console.warn("[Register] Failed to seed app_settings:", (settingsErr as Error).message);
@@ -198,11 +211,56 @@ export function registerEmailPasswordAuthRoutes(app: Express): void {
         (hearAboutUs ? ` | Source: ${hearAboutUs}` : "")
       );
 
+      // ── Send welcome email ────────────────────────────────────────────────────
+      try {
+        await sendEmail({
+          to: normalizedEmail,
+          subject: "Welcome to PaintPro — Let's Get Started!",
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px;">
+              <div style="text-align: center; margin-bottom: 32px;">
+                <h1 style="color: #1d4ed8; font-size: 28px; margin: 0;">Welcome to PaintPro! 🎉</h1>
+              </div>
+              <p style="font-size: 16px; color: #374151;">Hi <strong>${ownerName.trim()}</strong>,</p>
+              <p style="font-size: 16px; color: #374151;">
+                Your account for <strong>${businessName.trim()}</strong> is ready. You now have full access to
+                your PaintPro CRM dashboard — leads, invoicing, scheduling, SMS automation, and more.
+              </p>
+              <div style="background: #f3f4f6; border-radius: 8px; padding: 16px; margin: 24px 0;">
+                <p style="margin: 0; font-size: 14px; color: #6b7280;">Account details</p>
+                <p style="margin: 4px 0 0; font-size: 15px; color: #111827;"><strong>Business:</strong> ${businessName.trim()}</p>
+                <p style="margin: 4px 0 0; font-size: 15px; color: #111827;"><strong>Owner:</strong> ${ownerName.trim()}</p>
+                <p style="margin: 4px 0 0; font-size: 15px; color: #111827;"><strong>Email:</strong> ${normalizedEmail}</p>
+                ${plan ? `<p style="margin: 4px 0 0; font-size: 15px; color: #111827;"><strong>Plan:</strong> ${plan}</p>` : ""}
+              </div>
+              <div style="text-align: center; margin: 32px 0;">
+                <a href="https://painterspro.app/login"
+                   style="background: #1d4ed8; color: white; text-decoration: none; padding: 14px 32px;
+                          border-radius: 8px; font-size: 16px; font-weight: bold; display: inline-block;">
+                  Go to My Dashboard →
+                </a>
+              </div>
+              <p style="font-size: 14px; color: #9ca3af; text-align: center;">
+                painterspro.app &bull; Powered by Agent Flow LLC
+              </p>
+            </div>
+          `,
+        });
+      } catch (emailErr) {
+        console.warn("[Register] Welcome email failed:", (emailErr as Error).message);
+      }
+
+      // ── Return JWT + user ─────────────────────────────────────────────────────
       const token = await signEmailJwt(newUser.id, normalizedEmail, newUser.role);
 
       return res.status(201).json({
+        success: true,
         token,
-        user: { id: newUser.id, name: newUser.name, email: newUser.email, role: newUser.role },
+        user: {
+          id: newUser.id,
+          email: newUser.email,
+          businessName: businessName.trim(),
+        },
       });
     } catch (err) {
       console.error("[Auth] Register error:", err);
