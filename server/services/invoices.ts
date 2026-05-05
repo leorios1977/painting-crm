@@ -19,6 +19,7 @@ import { generatePortalToken, buildPortalUrl } from "./portal";
 import type { Invoice, InsertInvoice, InvoiceLineItem } from "../../drizzle/schema";
 import { sendInvoiceEmail } from "./email";
 import { sendInvoiceSentEmail } from "../lib/email";
+import { sendInvoiceSentSMS } from "../lib/sms";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -323,6 +324,30 @@ export async function sendInvoice(
       });
     } catch (emailErr) {
       console.warn("[Invoices] Failed to send invoice email:", (emailErr as Error).message);
+    }
+  }
+
+  // ── SMS #3: Invoice Sent → Customer (via lib/sms) ─────────────────────────────────────────────
+  if (lead.phone) {
+    try {
+      const { appSettings: appSettingsTable } = await import("../../drizzle/schema");
+      let bizName = "PaintPro CRM";
+      try {
+        const settingsRows = await db
+          .select({ businessName: appSettingsTable.businessName })
+          .from(appSettingsTable)
+          .limit(1);
+        bizName = settingsRows[0]?.businessName || bizName;
+      } catch { /* non-fatal */ }
+      await sendInvoiceSentSMS({
+        customerPhone: lead.phone,
+        businessName: bizName,
+        invoiceNumber: invoice.invoiceNumber,
+        invoiceAmount: totalAmount.toFixed(2),
+        paymentLink: stripeUrl,
+      });
+    } catch (invoiceSmsErr) {
+      console.warn("[Invoices] Failed to send invoice SMS:", (invoiceSmsErr as Error).message);
     }
   }
 

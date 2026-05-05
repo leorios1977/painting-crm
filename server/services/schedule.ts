@@ -14,6 +14,7 @@ import { getDb } from "../db";
 import { appointments, leads, communicationLog, crewMembers } from "../../drizzle/schema";
 import { eq } from "drizzle-orm";
 import { sendSMS } from "./sms";
+import { sendAppointmentReminderSMS } from "../lib/sms";
 import type { Appointment, InsertAppointment } from "../../drizzle/schema";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -396,4 +397,77 @@ async function sendConfirmationEmail(params: {
       content: params.body,
     });
   }
+}
+
+// ─── Appointment Reminder (24-hour) ──────────────────────────────────────────
+/**
+ * Sends a 24-hour appointment reminder SMS to the customer.
+ * Called by a scheduled job or manually from the appointments router.
+ *
+ * @param appointmentId  The appointment to send the reminder for
+ * @param tenantId       Optional tenant identifier
+ */
+export async function sendAppointmentReminder(
+  appointmentId: number,
+  tenantId?: number
+): Promise<{ sent: boolean; error?: string }> {
+  const db = await getDb();
+  if (!db) return { sent: false, error: "Database not available" };
+
+  // Fetch appointment
+  const apptRows = await db
+    .select()
+    .from(appointments)
+    .where(eq(appointments.id, appointmentId))
+    .limit(1);
+  const appt = apptRows[0];
+  if (!appt) return { sent: false, error: `Appointment ${appointmentId} not found` };
+
+  // Fetch lead for customer phone
+  const leadRows = await db
+    .select()
+    .from(leads)
+    .where(eq(leads.id, appt.leadId))
+    .limit(1);
+  const lead = leadRows[0];
+  if (!lead?.phone) {
+    console.warn(`[Schedule] No phone for lead ${appt.leadId} — reminder not sent`);
+    return { sent: false, error: "No customer phone number" };
+  }
+
+  // Fetch business name from app settings
+  const { appSettings } = await import("../../drizzle/schema");
+  let businessName = "PaintPro CRM";
+  try {
+    const settingsRows = await db
+      .select({ businessName: appSettings.businessName })
+      .from(appSettings)
+      .limit(1);
+    businessName = settingsRows[0]?.businessName || businessName;
+  } catch { /* non-fatal */ }
+
+  // Build the appointment time string
+  const appointmentTime = formatAppointmentDate(appt.scheduledDate, appt.timeSlot);
+
+  const result = await sendAppointmentReminderSMS({
+    customerPhone: lead.phone,
+    businessName,
+    appointmentTime,
+  });
+
+  // Log the reminder in communication log
+  try {
+    await db.insert(communicationLog).values({
+      leadId: appt.leadId,
+      type: "sms",
+      direction: "outbound",
+      subject: "Appointment Reminder",
+      content: `24-hour reminder sent for appointment on ${appointmentTime}. SMS ${result.sent ? "delivered" : "failed"}.`,
+      ...(tenantId ? {} : {}),
+    });
+  } catch (logErr) {
+    console.warn("[Schedule] Failed to log reminder:", (logErr as Error).message);
+  }
+
+  return result;
 }

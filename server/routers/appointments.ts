@@ -20,6 +20,7 @@ import {
   createAppointment,
   updateAppointment,
   cancelAppointment,
+  sendAppointmentReminder,
 } from "../services/schedule";
 
 // ─── Shared input schemas ─────────────────────────────────────────────────────
@@ -264,5 +265,17 @@ export const appointmentsRouter = router({
         ...appt,
         lead: leadMap.get(appt.leadId) ?? null,
       }));
+    }),
+
+  /**
+   * Send a 24-hour appointment reminder SMS to the customer.
+   * SMS #2: Appointment Reminder — triggered manually or by a scheduled job.
+   */
+  sendReminder: protectedProcedure
+    .input(z.object({ id: z.number() }))
+    .mutation(async ({ input, ctx }) => {
+      const tenantId = ctx.req?.tenant?.id ?? 1;
+      const result = await sendAppointmentReminder(input.id, tenantId);
+      return result;
     }),
 });

@@ -14,6 +14,7 @@ import {
 import { scheduleReviewRequest } from "../services/reviews";
 import { sendNewLeadNotification, sendQuoteEmail } from "../services/email";
 import { sendJobCompletionEmail } from "../lib/email";
+import { sendNewLeadSMS, sendJobCompletionSMS } from "../lib/sms";
 import { getDb } from "../db";
 import { appSettings, leads } from "../../drizzle/schema";
 import { eq, and, or, like, desc } from "drizzle-orm";
@@ -162,20 +163,24 @@ export const leadsRouter = router({
         sentBy: ctx.user.id,
       });
 
+      // ── Fetch settings once for both email and SMS notifications ──
+      const db2 = await getDb();
+      let businessName = "PaintPro CRM";
+      let ownerPhone: string | undefined;
+      if (db2) {
+        try {
+          const settingsRows = await db2
+            .select({ businessName: appSettings.businessName })
+            .from(appSettings)
+            .limit(1);
+          businessName = settingsRows[0]?.businessName || businessName;
+        } catch { /* non-fatal */ }
+      }
+
       // Send new lead notification email to business owner (non-fatal)
       try {
         const ownerEmail = ENV.ownerEmail;
         if (ownerEmail) {
-          // Fetch business name from settings if available
-          const db = await getDb();
-          let businessName = "PaintPro CRM";
-          if (db) {
-            const settingsRows = await db
-              .select({ businessName: appSettings.businessName })
-              .from(appSettings)
-              .limit(1);
-            businessName = settingsRows[0]?.businessName || businessName;
-          }
           await sendNewLeadNotification({
             leadFirstName: input.firstName,
             leadLastName: input.lastName,
@@ -190,6 +195,22 @@ export const leadsRouter = router({
         }
       } catch (emailErr) {
         console.warn("[Leads] Failed to send new lead notification email:", (emailErr as Error).message);
+      }
+
+      // ── SMS #1: New Lead → Business Owner ──
+      // Owner phone is read from OWNER_PHONE env var (set in Vercel/env)
+      try {
+        ownerPhone = process.env.OWNER_PHONE;
+        if (ownerPhone) {
+          await sendNewLeadSMS({
+            ownerPhone,
+            leadName: `${input.firstName} ${input.lastName}`.trim(),
+            leadPhone: input.phone || null,
+            leadSource: input.source || null,
+          });
+        }
+      } catch (smsErr) {
+        console.warn("[Leads] Failed to send new lead SMS:", (smsErr as Error).message);
       }
 
       return result;
@@ -313,7 +334,7 @@ export const leadsRouter = router({
         }
       }
 
-      // ── Auto-trigger Google Review request when stage moves to 'completed' ──
+      // ── Auto-trigger Google Review request + SMS when stage moves to 'completed' ──
       if (input.stage === "completed") {
         try {
           const db = await getDb();
@@ -331,19 +352,35 @@ export const leadsRouter = router({
               // Schedule review request 2 hours after job completion
               scheduleReviewRequest(input.id, 2 * 60 * 60 * 1000, ctx.user.id);
             }
+            const bName = settingsRows[0]?.businessName || "PaintPro CRM";
+            const reviewLink = settingsRows[0]?.googleReviewLink || undefined;
+
             // Send job completion email to customer (non-fatal)
             if (lead && lead.email) {
               try {
                 await sendJobCompletionEmail({
                   customerName: `${lead.firstName} ${lead.lastName}`.trim(),
                   customerEmail: lead.email,
-                  businessName: settingsRows[0]?.businessName || "PaintPro CRM",
+                  businessName: bName,
                   jobDescription: lead.projectDescription || lead.projectType || undefined,
                   completionDate: new Date().toLocaleDateString(),
-                  googleReviewLink: settingsRows[0]?.googleReviewLink || undefined,
+                  googleReviewLink: reviewLink,
                 });
               } catch (completionEmailErr) {
                 console.warn("[Leads] Failed to send job completion email:", (completionEmailErr as Error).message);
+              }
+            }
+
+            // ── SMS #4: Job Completion → Customer ──
+            if (lead && lead.phone) {
+              try {
+                await sendJobCompletionSMS({
+                  customerPhone: lead.phone,
+                  businessName: bName,
+                  googleReviewLink: reviewLink,
+                });
+              } catch (completionSmsErr) {
+                console.warn("[Leads] Failed to send job completion SMS:", (completionSmsErr as Error).message);
               }
             }
           }
