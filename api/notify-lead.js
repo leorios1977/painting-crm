@@ -95,7 +95,11 @@ module.exports = async function handler(req, res) {
     RESEND: !!process.env.RESEND_API_KEY,
     O1: !!process.env.NOTIFY_OWNER_1, O2: !!process.env.NOTIFY_OWNER_2,
   });
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Use POST' });
+ res.setHeader('Access-Control-Allow-Origin', '*');
+res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+if (req.method === 'OPTIONS') return res.status(200).end();
+if (req.method !== 'POST') return res.status(405).json({ error: 'Use POST' });
   const { firstName='there', phone=null, email=null,
           service=null, portalUrl='', imageCount=0 } = req.body || {};
   const errors = []; let smsSent=false, emailSent=false, ownersSms=false;
