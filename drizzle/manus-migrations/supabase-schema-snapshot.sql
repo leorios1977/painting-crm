@@ -1,0 +1,4 @@
+-- PaintersMax CRM - Full Supabase Schema Snapshot
+-- Captured from Manus session May 2026
+-- This reflects the complete schema as applied to production Supabase
+-- DO NOT run this file - reference only
