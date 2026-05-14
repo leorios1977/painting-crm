@@ -22,6 +22,6 @@ export const ENV = {
   appUrl: process.env.APP_URL ?? "",
   // Resend — transactional email API key
   resendApiKey: process.env.RESEND_API_KEY ?? "",
-  // Resend — sender FROM address (e.g. noreply@painterspro.app)
-  fromEmail: process.env.FROM_EMAIL ?? "noreply@painterspro.app",
+  // Resend — sender FROM address (e.g. noreply@paintersmax.app)
+  fromEmail: process.env.FROM_EMAIL ?? "noreply@paintersmax.app",
 };

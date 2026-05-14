@@ -234,14 +234,14 @@ export function registerEmailPasswordAuthRoutes(app: Express): void {
                 ${plan ? `<p style="margin: 4px 0 0; font-size: 15px; color: #111827;"><strong>Plan:</strong> ${plan}</p>` : ""}
               </div>
               <div style="text-align: center; margin: 32px 0;">
-                <a href="https://painterspro.app/login"
+                <a href="https://paintersmax.app/login"
                    style="background: #1d4ed8; color: white; text-decoration: none; padding: 14px 32px;
                           border-radius: 8px; font-size: 16px; font-weight: bold; display: inline-block;">
                   Go to My Dashboard →
                 </a>
               </div>
               <p style="font-size: 14px; color: #9ca3af; text-align: center;">
-                painterspro.app &bull; Powered by Agent Flow LLC
+                paintersmax.app &bull; Powered by Agent Flow LLC
               </p>
             </div>
           `,

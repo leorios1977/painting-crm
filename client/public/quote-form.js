@@ -3,14 +3,14 @@
  * ============================================
  * Drop this single script tag anywhere on your website:
  *
- *   <script src="https://painterspro.app/quote-form.js"></script>
+ *   <script src="https://paintersmax.app/quote-form.js"></script>
  *
  * The widget will inject a mobile-friendly quote request form into the page.
  * It requires zero external dependencies and uses only inline styles.
  *
  * Configuration (optional — set before loading the script):
  *   window.PaintProWidget = {
- *     apiUrl:      'https://painterspro.app/api/public/leads',  // default
+ *     apiUrl:      'https://paintersmax.app/api/public/leads',  // default
  *     source:      'dfw-painters.com',   // identifies which site sent the lead
  *     primaryColor: '#1d4ed8',           // button / accent color (CSS color)
  *     title:       'Get a Free Quote',   // form heading
@@ -24,7 +24,7 @@
   /* ── Configuration ─────────────────────────────────────────────────────── */
   var cfg = Object.assign(
     {
-      apiUrl: "https://painterspro.app/api/public/leads",
+      apiUrl: "https://paintersmax.app/api/public/leads",
       source: (function () {
         try { return global.location.hostname; } catch (e) { return "widget"; }
       })(),

@@ -12,7 +12,7 @@
  *
  * Configuration:
  *   RESEND_API_KEY   — Required. Resend API key. If missing, emails are skipped (no crash).
- *   FROM_EMAIL       — Optional. Sender address. Defaults to noreply@painterspro.app
+ *   FROM_EMAIL       — Optional. Sender address. Defaults to noreply@paintersmax.app
  */
 
 import { Resend } from "resend";
@@ -20,7 +20,7 @@ import { Resend } from "resend";
 // ─── Configuration ────────────────────────────────────────────────────────────
 
 function getFromAddress(): string {
-  return process.env.FROM_EMAIL ?? "noreply@painterspro.app";
+  return process.env.FROM_EMAIL ?? "noreply@paintersmax.app";
 }
 
 function getResendClient(): Resend | null {

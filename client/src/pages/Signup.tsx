@@ -225,7 +225,7 @@ export default function Signup() {
         <div className="max-w-2xl mx-auto flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
             <span className="text-2xl">🎨</span>
-            <span className="font-bold text-xl text-gray-900">PaintersPro</span>
+            <span className="font-bold text-xl text-gray-900">PaintersMax</span>
           </Link>
           <Link href="/login" className="text-sm text-gray-500 hover:text-blue-600 transition-colors">
             Already have an account? <span className="font-semibold text-blue-600">Log in</span>

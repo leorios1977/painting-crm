@@ -77,7 +77,7 @@ async function sendEmail(to, firstName, service, portalUrl, imageCount) {
     '<p style="color:#888;font-size:13px;">Questions? <a href="tel:+14698344211" style="color:#F59E0B;font-weight:700;">(469) 834-4211</a></p></div>' +
     '</div><div style="background:#0D0D0D;padding:20px;text-align:center;">' +
     '<p style="color:#666;font-size:12px;margin:0;">© 2026 DFW Pro Painters · Powered by ' +
-    '<a href="https://painterspro.app" style="color:#F59E0B;">PaintPro CRM</a></p></div></div></body></html>';
+    '<a href="https://paintersmax.app" style="color:#F59E0B;">PaintPro CRM</a></p></div></div></body></html>';
   const r = await httpPost(
     'api.resend.com', '/emails',
     { 'Authorization': 'Bearer ' + key, 'Content-Type': 'application/json' },

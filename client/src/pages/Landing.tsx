@@ -128,7 +128,7 @@ export default function Landing() {
           <div className="flex items-center gap-2">
             <span className="text-2xl">🎨</span>
             <span className="font-bold text-xl text-gray-900 tracking-tight">
-              PaintersPro
+              PaintersMax
             </span>
           </div>
           <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-600">
@@ -350,7 +350,7 @@ export default function Landing() {
             Ready to grow your painting business?
           </h2>
           <p className="text-blue-200 text-lg mb-8">
-            Join hundreds of painting contractors who use PaintersPro to win more jobs and get paid faster.
+            Join hundreds of painting contractors who use PaintersMax to win more jobs and get paid faster.
           </p>
           <Link href="/signup">
             <Button
@@ -370,8 +370,8 @@ export default function Landing() {
             <div className="flex items-center gap-2">
               <span className="text-2xl">🎨</span>
               <div>
-                <div className="font-bold text-white text-lg">PaintersPro</div>
-                <div className="text-xs text-gray-500">painterspro.app</div>
+                <div className="font-bold text-white text-lg">PaintersMax</div>
+                <div className="text-xs text-gray-500">paintersmax.app</div>
               </div>
             </div>
             <div className="flex flex-wrap justify-center gap-x-8 gap-y-2 text-sm">
@@ -386,7 +386,7 @@ export default function Landing() {
             </div>
           </div>
           <div className="mt-8 pt-8 border-t border-gray-800 text-center text-xs text-gray-600">
-            © {new Date().getFullYear()} Agent Flow LLC · painterspro.app · All rights reserved
+            © {new Date().getFullYear()} Agent Flow LLC · paintersmax.app · All rights reserved
           </div>
         </div>
       </footer>
