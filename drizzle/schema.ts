@@ -87,6 +87,41 @@ export const blogStatusEnum = pgEnum("blog_status", [
 ]);
 
 // ─── Users (Auth) ────────────────────────────────────────────────────────────
+// ─── Tenants ─────────────────────────────────────────────────────────────────
+export const tenants = pgTable("tenants", {
+  id: serial("id").primaryKey(),
+  businessName: varchar("businessName", { length: 200 }).notNull(),
+  industry: varchar("industry", { length: 100 }).notNull().default("painting"),
+  subdomain: varchar("subdomain", { length: 100 }).notNull().unique(),
+  customDomain: varchar("customDomain", { length: 255 }).unique(),
+  plan: varchar("plan", { length: 50 }).notNull().default("starter"),
+  stripeCustomerId: varchar("stripeCustomerId", { length: 255 }),
+  billingStatus: varchar("billingStatus", { length: 50 }).notNull().default("active"),
+  logoUrl: text("logoUrl"),
+  primaryColor: varchar("primaryColor", { length: 20 }),
+  secondaryColor: varchar("secondaryColor", { length: 20 }),
+  brandName: varchar("brandName", { length: 200 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
+});
+
+export type Tenant = typeof tenants.$inferSelect;
+export type InsertTenant = typeof tenants.$inferInsert;
+
+export const tenantIntegrations = pgTable("tenant_integrations", {
+  id: serial("id").primaryKey(),
+  tenantId: integer("tenantId").notNull(),
+  service: varchar("service", { length: 100 }).notNull(),
+  mode: varchar("mode", { length: 20 }).notNull().default("shared"),
+  apiKeyEncrypted: text("apiKeyEncrypted"),
+  configJson: text("configJson"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
+});
+
+export type TenantIntegration = typeof tenantIntegrations.$inferSelect;
+export type InsertTenantIntegration = typeof tenantIntegrations.$inferInsert;
+
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   openId: varchar("openId", { length: 64 }).notNull().unique(),

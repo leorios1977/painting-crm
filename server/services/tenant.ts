@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { getDb } from "../db";
-import { tenants, tenantIntegrations } from "../../drizzle/schema";
+import { tenants, tenantIntegrations, type Tenant } from "../../drizzle/schema";
 
 export interface TenantConfig {
   id: number;
@@ -59,9 +59,9 @@ export async function getTenantConfig(tenantId: number): Promise<TenantConfig | 
       industry: tenant.industry,
       subdomain: tenant.subdomain,
       customDomain: tenant.customDomain,
-      plan: tenant.plan,
+      plan: tenant.plan as "starter" | "pro" | "enterprise",
       stripeCustomerId: tenant.stripeCustomerId,
-      billingStatus: tenant.billingStatus,
+      billingStatus: tenant.billingStatus as "active" | "suspended" | "cancelled",
       logoUrl: tenant.logoUrl,
       primaryColor: tenant.primaryColor,
       secondaryColor: tenant.secondaryColor,
@@ -70,7 +70,7 @@ export async function getTenantConfig(tenantId: number): Promise<TenantConfig | 
       integrations: integrations.map((i) => ({
         id: i.id,
         service: i.service,
-        mode: i.mode,
+        mode: i.mode as "shared" | "custom",
         apiKeyEncrypted: i.apiKeyEncrypted,
         configJson: i.configJson,
         createdAt: i.createdAt,
