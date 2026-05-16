@@ -3,6 +3,7 @@ import { Link, useLocation } from "wouter";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { LiveTicker } from '../components/LiveTicker';
 
 // ─── Feature card data ────────────────────────────────────────────────────────
 
@@ -45,59 +46,6 @@ const features = [
   },
 ];
 
-// ─── Pricing tier data ────────────────────────────────────────────────────────
-
-const pricingTiers = [
-  {
-    name: "Starter",
-    price: "$97",
-    period: "/mo",
-    description: "Perfect for solo painters just getting started.",
-    highlight: false,
-    features: [
-      "1 user seat",
-      "Unlimited leads & pipeline",
-      "Professional invoicing",
-      "Stripe payment collection",
-      "Customer portal",
-      "Email notifications",
-    ],
-  },
-  {
-    name: "Pro",
-    price: "$197",
-    period: "/mo",
-    description: "The most popular plan for growing painting businesses.",
-    highlight: true,
-    badge: "Most Popular",
-    features: [
-      "Up to 5 user seats",
-      "Everything in Starter",
-      "SMS automation (Twilio)",
-      "Job scheduling & crew",
-      "Google review requests",
-      "Photo gallery",
-      "Blog & content tools",
-    ],
-  },
-  {
-    name: "Max",
-    price: "$397",
-    period: "/mo",
-    description: "For established companies that want every advantage.",
-    highlight: false,
-    features: [
-      "Unlimited user seats",
-      "Everything in Pro",
-      "White-label branding",
-      "AI assistant",
-      "Priority support",
-      "Custom onboarding",
-      "API access",
-    ],
-  },
-];
-
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function Landing() {
@@ -122,6 +70,8 @@ export default function Landing() {
 
   return (
     <div className="min-h-screen bg-white text-gray-900 font-sans">
+      <LiveTicker />
+
       {/* ── Nav ──────────────────────────────────────────────────────────────── */}
       <header className="sticky top-0 z-50 bg-white/90 backdrop-blur border-b border-gray-100">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
@@ -141,11 +91,11 @@ export default function Landing() {
                 Log in
               </Button>
             </Link>
-            <Link href="/login">
+            <a href="mailto:agentflowfounder@gmail.com">
               <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white">
-                Start Free Trial
+                Schedule a Free Demo →
               </Button>
-            </Link>
+            </a>
           </div>
         </div>
       </header>
@@ -162,7 +112,7 @@ export default function Landing() {
         />
         <div className="relative max-w-6xl mx-auto px-4 sm:px-6 py-24 md:py-36 text-center">
           <Badge className="mb-6 bg-white/20 text-white border-white/30 hover:bg-white/20 text-sm px-4 py-1">
-            Built exclusively for painting contractors
+            🔥 We prioritize markets with limited members — Is your market open?
           </Badge>
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold leading-tight mb-6 tracking-tight">
             Run Your Painting Business
@@ -170,18 +120,17 @@ export default function Landing() {
             <span className="text-yellow-300"> Like a Pro</span>
           </h1>
           <p className="text-lg sm:text-xl text-blue-100 max-w-2xl mx-auto mb-10 leading-relaxed">
-            CRM, invoicing, scheduling, SMS &amp; more — built for painters.
-            Stop juggling spreadsheets and start closing more jobs.
+            While your competitors are still juggling spreadsheets and missed calls, you could be running a fully automated painting business — one that captures leads, sends invoices, follows up automatically, and markets itself while you focus on the work. PaintersMax was built exclusively for painting contractors. We just launched. Your competitors haven't found us yet.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/signup">
+            <a href="mailto:agentflowfounder@gmail.com">
               <Button
                 size="lg"
                 className="bg-yellow-400 hover:bg-yellow-300 text-gray-900 font-bold text-base px-8 py-6 rounded-xl shadow-lg hover:shadow-xl transition-all"
               >
-                Start Free Trial →
+                Schedule a Free Demo →
               </Button>
-            </Link>
+            </a>
             <a href="#features">
               <Button
                 size="lg"
@@ -202,20 +151,6 @@ export default function Landing() {
           <svg viewBox="0 0 1440 60" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full">
             <path d="M0 60L1440 60L1440 20C1200 60 960 0 720 20C480 40 240 0 0 20L0 60Z" fill="white" />
           </svg>
-        </div>
-      </section>
-
-      {/* ── Social proof strip ────────────────────────────────────────────────── */}
-      <section className="bg-gray-50 border-y border-gray-100 py-8">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6">
-          <div className="flex flex-wrap justify-center gap-x-12 gap-y-4 text-sm text-gray-500 font-medium">
-            {["500+ painting companies", "50,000+ leads managed", "$8M+ invoiced", "4.9 ★ average rating"].map((stat) => (
-              <span key={stat} className="flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-blue-500 inline-block" />
-                {stat}
-              </span>
-            ))}
-          </div>
         </div>
       </section>
 
@@ -247,119 +182,275 @@ export default function Landing() {
 
       {/* ── Pricing ──────────────────────────────────────────────────────────── */}
       <section id="pricing" className="py-24 bg-gray-50">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-4">
-              Simple, transparent pricing
+        <div className="max-w-6xl mx-auto px-4">
+
+          <div className="text-center mb-6">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+              Simple, Honest Pricing
             </h2>
-            <p className="text-lg text-gray-500 max-w-xl mx-auto">
-              Choose the plan that fits your business. Upgrade or cancel anytime.
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              Founding member rates — locked in permanently at signup. As we add powerful new features every month, the price rises for new members. Yours stays the same. Forever.
             </p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch">
-            {pricingTiers.map((tier) => (
-              <div
-                key={tier.name}
-                className={`relative flex flex-col rounded-2xl p-8 transition-all ${
-                  tier.highlight
-                    ? "bg-blue-700 text-white shadow-2xl scale-105 border-2 border-blue-500"
-                    : "bg-white border border-gray-200 shadow-sm hover:shadow-md"
-                }`}
-              >
-                {tier.badge && (
-                  <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                    <Badge className="bg-yellow-400 text-gray-900 font-bold px-4 py-1 text-xs shadow">
-                      {tier.badge}
-                    </Badge>
-                  </div>
-                )}
-                <div className="mb-6">
-                  <h3
-                    className={`text-xl font-bold mb-1 ${
-                      tier.highlight ? "text-white" : "text-gray-900"
-                    }`}
-                  >
-                    {tier.name}
-                  </h3>
-                  <p
-                    className={`text-sm mb-4 ${
-                      tier.highlight ? "text-blue-200" : "text-gray-500"
-                    }`}
-                  >
-                    {tier.description}
-                  </p>
-                  <div className="flex items-end gap-1">
-                    <span
-                      className={`text-5xl font-extrabold ${
-                        tier.highlight ? "text-white" : "text-gray-900"
-                      }`}
-                    >
-                      {tier.price}
-                    </span>
-                    <span
-                      className={`text-base mb-2 ${
-                        tier.highlight ? "text-blue-200" : "text-gray-400"
-                      }`}
-                    >
-                      {tier.period}
-                    </span>
-                  </div>
-                </div>
 
-                <ul className="flex-1 space-y-3 mb-8">
-                  {tier.features.map((f) => (
-                    <li key={f} className="flex items-start gap-2 text-sm">
-                      <span
-                        className={`mt-0.5 text-base ${
-                          tier.highlight ? "text-yellow-300" : "text-blue-600"
-                        }`}
-                      >
-                        ✓
-                      </span>
-                      <span className={tier.highlight ? "text-blue-100" : "text-gray-600"}>
-                        {f}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-
-                <Link href="/signup">
-                  <Button
-                    className={`w-full font-semibold py-5 rounded-xl text-base ${
-                      tier.highlight
-                        ? "bg-yellow-400 hover:bg-yellow-300 text-gray-900"
-                        : "bg-blue-600 hover:bg-blue-700 text-white"
-                    }`}
-                  >
-                    Get Started →
-                  </Button>
-                </Link>
-              </div>
-            ))}
+          <div className="flex items-center justify-center gap-4 mb-12">
+            <span className="text-gray-600 font-medium">Monthly</span>
+            <span className="text-gray-400 text-sm">|</span>
+            <span className="text-gray-600 font-medium">
+              Annual
+              <span className="ml-2 bg-green-100 text-green-700 text-xs font-bold px-2 py-0.5 rounded-full">
+                Save 10%
+              </span>
+            </span>
+            <span className="text-gray-500 text-xs">(upgrade anytime)</span>
           </div>
-          <p className="text-center text-sm text-gray-400 mt-8">
-            All plans include a 14-day free trial. No credit card required.
-          </p>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-start">
+
+            {/* TIER 1 — Starter */}
+            <div className="bg-white rounded-2xl border border-gray-200 p-6 flex flex-col">
+              <div className="mb-4">
+                <span className="text-xs font-bold uppercase tracking-wider text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+                  🔒 Founding Rate
+                </span>
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-1">Starter</h3>
+              <p className="text-gray-500 text-sm mb-4">
+                Perfect for painters getting started with a professional digital presence
+              </p>
+              <div className="mb-1">
+                <span className="text-4xl font-black text-gray-900">$49</span>
+                <span className="text-gray-500">/month</span>
+              </div>
+              <p className="text-xs text-green-600 font-medium mb-6">or $529/year — save 10%</p>
+              <ul className="space-y-2 mb-8 flex-1 text-sm">
+                {[
+                  '5-page professional website',
+                  'Subdomain hosting included',
+                  'Logo design (1 revision)',
+                  'Lead management (50/month)',
+                  'Basic invoicing (10/month)',
+                  'Job scheduling calendar',
+                  'Customer contact database',
+                  'PaintersMax community access',
+                  'Mobile responsive & SSL included',
+                ].map((f) => (
+                  <li key={f} className="flex items-start gap-2">
+                    <span className="text-blue-500 mt-0.5">✓</span>
+                    <span className="text-gray-700">{f}</span>
+                  </li>
+                ))}
+              </ul>
+              <a href="mailto:agentflowfounder@gmail.com"
+                className="w-full py-3 px-4 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl text-center hover:border-blue-500 hover:text-blue-600 transition-colors block">
+                Schedule a Free Demo →
+              </a>
+              <p className="text-xs text-center text-gray-400 mt-2">No credit card required</p>
+              <p className="text-xs text-center text-gray-400 mt-1">Upgrade anytime</p>
+            </div>
+
+            {/* TIER 2 — Pro */}
+            <div className="bg-white rounded-2xl border border-blue-200 p-6 flex flex-col">
+              <div className="mb-4">
+                <span className="text-xs font-bold uppercase tracking-wider text-blue-600 bg-blue-50 px-2 py-1 rounded-full">
+                  🔒 Founding Rate
+                </span>
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-1">Pro</h3>
+              <p className="text-gray-500 text-sm mb-4">
+                For growing painting companies ready to automate and scale operations
+              </p>
+              <div className="mb-1">
+                <span className="text-4xl font-black text-gray-900">$97</span>
+                <span className="text-gray-500">/month</span>
+              </div>
+              <p className="text-xs text-green-600 font-medium mb-6">or $1,049/year — save 10%</p>
+              <ul className="space-y-2 mb-8 flex-1 text-sm">
+                {[
+                  'Everything in Starter',
+                  '10-page website',
+                  'Custom domain name included',
+                  'Unlimited leads & invoicing',
+                  'SMS notifications to customers',
+                  'Email automation & follow-ups',
+                  'Crew member management',
+                  'Job photos & documentation',
+                  'Review request automation',
+                  'Revenue tracking dashboard',
+                  'Business card design included',
+                ].map((f) => (
+                  <li key={f} className="flex items-start gap-2">
+                    <span className="text-blue-500 mt-0.5">✓</span>
+                    <span className="text-gray-700">{f}</span>
+                  </li>
+                ))}
+              </ul>
+              <a href="mailto:agentflowfounder@gmail.com"
+                className="w-full py-3 px-4 bg-blue-600 text-white font-semibold rounded-xl text-center hover:bg-blue-700 transition-colors block">
+                Schedule a Free Demo →
+              </a>
+              <p className="text-xs text-center text-gray-400 mt-2">No credit card required</p>
+              <p className="text-xs text-center text-gray-400 mt-1">Upgrade anytime</p>
+            </div>
+
+            {/* TIER 3 — Max (highlighted) */}
+            <div className="bg-gradient-to-b from-yellow-400 to-yellow-500 rounded-2xl p-6 flex flex-col relative shadow-xl shadow-yellow-200 lg:scale-105">
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap">
+                <span className="bg-gray-900 text-white text-xs font-black uppercase tracking-wider px-4 py-1.5 rounded-full shadow-lg">
+                  ⭐ Most Popular
+                </span>
+              </div>
+              <div className="mb-4 mt-3">
+                <span className="text-xs font-bold uppercase tracking-wider text-yellow-800 bg-yellow-300 px-2 py-1 rounded-full">
+                  🔒 Founding Rate
+                </span>
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-1">Max</h3>
+              <p className="text-gray-800 text-sm mb-4">
+                The complete growth engine for serious painting contractors who want to dominate their market
+              </p>
+              <div className="mb-1">
+                <span className="text-4xl font-black text-gray-900">$197</span>
+                <span className="text-gray-800">/month</span>
+              </div>
+              <p className="text-xs text-gray-800 font-medium mb-6">or $2,128/year — save 10%</p>
+              <ul className="space-y-2 mb-8 flex-1 text-sm">
+                {[
+                  'Everything in Pro',
+                  'AI Color Studio (room visualizer)',
+                  'Aria AI chatbot on your website',
+                  'Blueprint Bid Estimator (AI)',
+                  'Advanced SEO optimization',
+                  'Full brand kit included',
+                  'Customer job-tracking portal',
+                  'Profit margin calculator per job',
+                  'Monthly strategy call (30 min)',
+                  'Priority support (4hr response)',
+                  'Social media ad templates',
+                ].map((f) => (
+                  <li key={f} className="flex items-start gap-2">
+                    <span className="text-gray-900 mt-0.5">✓</span>
+                    <span className="text-gray-900 font-medium">{f}</span>
+                  </li>
+                ))}
+              </ul>
+              <a href="mailto:agentflowfounder@gmail.com"
+                className="w-full py-3 px-4 bg-gray-900 text-white font-semibold rounded-xl text-center hover:bg-gray-800 transition-colors block">
+                Schedule a Free Demo →
+              </a>
+              <p className="text-xs text-center text-gray-800 mt-2">No credit card required</p>
+              <p className="text-xs text-center text-gray-800 mt-1">Upgrade anytime</p>
+            </div>
+
+            {/* TIER 4 — Enterprise */}
+            <div className="bg-gray-900 rounded-2xl p-6 flex flex-col">
+              <div className="mb-4">
+                <span className="text-xs font-bold uppercase tracking-wider text-gray-400 bg-gray-800 px-2 py-1 rounded-full">
+                  For Large Operations
+                </span>
+              </div>
+              <h3 className="text-xl font-bold text-white mb-1">Enterprise</h3>
+              <p className="text-gray-400 text-sm mb-4">
+                Multi-location painting companies and franchises needing custom solutions
+              </p>
+              <div className="mb-1">
+                <span className="text-4xl font-black text-white">Custom</span>
+              </div>
+              <p className="text-xs text-gray-500 font-medium mb-6">Pricing based on your operation size</p>
+              <ul className="space-y-2 mb-8 flex-1 text-sm">
+                {[
+                  'Everything in Max',
+                  'Multiple locations & branches',
+                  'White-label (your own brand)',
+                  'Custom integrations',
+                  'Dedicated account manager',
+                  'Stripe Connect payments',
+                  'API access',
+                  'Custom feature development',
+                  'Team training & onboarding',
+                  '99.9% uptime SLA guarantee',
+                ].map((f) => (
+                  <li key={f} className="flex items-start gap-2">
+                    <span className="text-yellow-400 mt-0.5">✓</span>
+                    <span className="text-gray-300">{f}</span>
+                  </li>
+                ))}
+              </ul>
+              <a href="mailto:agentflowfounder@gmail.com"
+                className="w-full py-3 px-4 border-2 border-gray-600 text-white font-semibold rounded-xl text-center hover:border-yellow-400 hover:text-yellow-400 transition-colors block">
+                Contact Us →
+              </a>
+              <p className="text-xs text-center text-gray-500 mt-2">Let's build something custom</p>
+            </div>
+
+          </div>
+
+          {/* Founding member lock-in callout */}
+          <div className="mt-14 bg-blue-50 border border-blue-200 rounded-2xl p-8 text-center max-w-3xl mx-auto">
+            <h3 className="text-xl font-bold text-gray-900 mb-3">
+              🔐 Lock In Your Rate — Forever.
+            </h3>
+            <p className="text-gray-600 leading-relaxed">
+              This is founding member pricing. Not a promotion. Not a trial gimmick. A permanent lock. PaintersMax adds powerful new features every month — AI estimators, color visualizers, marketing tools, bookkeeping dashboards, and more. Every new feature rolls out to ALL active members automatically, including you. As the platform grows more powerful, the price rises for new members. But YOUR rate stays exactly where it is today.
+              <strong> Forever.</strong>
+            </p>
+            <p className="text-blue-700 font-bold text-lg mt-4">
+              Early members get more. Pay less. Win bigger. That's the founding member advantage.
+            </p>
+            <p className="text-gray-500 text-sm mt-3">
+              Save an additional 10% by choosing annual billing. Never worry about renewals again. Switch from monthly to annual anytime.
+            </p>
+          </div>
+
         </div>
       </section>
 
       {/* ── CTA Banner ───────────────────────────────────────────────────────── */}
-      <section className="bg-blue-700 py-20 text-white text-center">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6">
-          <h2 className="text-3xl sm:text-4xl font-extrabold mb-4">
-            Ready to grow your painting business?
+      <section className="py-24 bg-gradient-to-br from-blue-700 via-blue-600 to-indigo-700 text-white text-center">
+        <div className="max-w-3xl mx-auto px-4">
+
+          <div className="inline-block bg-yellow-400 text-gray-900 text-sm font-black uppercase tracking-wider px-4 py-2 rounded-full mb-8">
+            ⚡ Limited Spots Per Market
+          </div>
+
+          <h2 className="text-4xl font-black mb-6 leading-tight">
+            We prioritize markets with limited members.<br />
+            Your competitors haven't found us yet.
           </h2>
-          <p className="text-blue-200 text-lg mb-8">
-            Join hundreds of painting contractors who use PaintersMax to win more jobs and get paid faster.
+
+          <p className="text-xl text-blue-100 mb-4 leading-relaxed">
+            PaintersMax gives you a fully automated painting business — one that captures leads while you sleep, sends professional invoices in seconds, follows up with every prospect automatically, and puts your brand in front of homeowners in your market 24/7.
           </p>
-          <Link href="/signup">
-            <Button
-              size="lg"
-              className="bg-yellow-400 hover:bg-yellow-300 text-gray-900 font-bold text-base px-10 py-6 rounded-xl shadow-lg"
-            >
-              Start Your Free Trial Today →
-            </Button>
-          </Link>
+
+          <p className="text-blue-200 mb-4 leading-relaxed">
+            Every painter in America will be using software like this within 3 years. The painters who join in the first 100 will look back and say this was the smartest business decision they ever made.
+          </p>
+
+          <p className="text-blue-100 font-semibold mb-10">
+            Founding rates. Locked in. Forever. First 100 members only.
+          </p>
+
+          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
+            <a href="mailto:agentflowfounder@gmail.com"
+              className="bg-yellow-400 text-gray-900 font-black text-lg px-10 py-4 rounded-xl hover:bg-yellow-300 transition-colors shadow-xl inline-block">
+              Schedule a Free Demo →
+            </a>
+            <a href="#pricing"
+              className="border-2 border-white text-white font-semibold text-lg px-10 py-4 rounded-xl hover:bg-white hover:text-blue-700 transition-colors inline-block">
+              See Pricing
+            </a>
+          </div>
+
+          <p className="text-blue-200 text-sm">
+            🔒 Price locked in for life at signup
+            &nbsp;·&nbsp;
+            No credit card to get started
+            &nbsp;·&nbsp;
+            Cancel anytime
+            &nbsp;·&nbsp;
+            Upgrade anytime
+          </p>
+
         </div>
       </section>
 
@@ -371,7 +462,7 @@ export default function Landing() {
               <span className="text-2xl">🎨</span>
               <div>
                 <div className="font-bold text-white text-lg">PaintersMax</div>
-                <div className="text-xs text-gray-500">paintersmax.app</div>
+                <div className="text-xs text-gray-500">Built for painters. Powered by Agent Flow LLC.</div>
               </div>
             </div>
             <div className="flex flex-wrap justify-center gap-x-8 gap-y-2 text-sm">
@@ -386,7 +477,7 @@ export default function Landing() {
             </div>
           </div>
           <div className="mt-8 pt-8 border-t border-gray-800 text-center text-xs text-gray-600">
-            © {new Date().getFullYear()} Agent Flow LLC · paintersmax.app · All rights reserved
+            © 2026 Agent Flow LLC · paintersmax.app · All rights reserved
           </div>
         </div>
       </footer>

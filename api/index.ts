@@ -17,6 +17,7 @@ import { createContext } from "../server/_core/context";
 import { registerSmsWebhook } from "../server/routes/smsWebhook";
 import { registerStripeWebhook } from "../server/routers";
 import { registerEmailPasswordAuthRoutes } from "../server/routes/emailPasswordAuth";
+import publicStatsRouter from '../server/routes/publicStats';
 
 const app = express();
 
@@ -36,6 +37,9 @@ registerOAuthRoutes(app);
 
 // Twilio inbound SMS webhook — must be before tRPC
 registerSmsWebhook(app);
+
+// Public stats endpoint (no auth required)
+app.use('/api/public', publicStatsRouter);
 
 // tRPC API
 app.use(
