@@ -698,7 +698,7 @@ export default function CustomerPortal() {
             <h1 className="font-semibold text-slate-900 text-sm leading-tight">
               Your Project Portal
             </h1>
-            <p className="text-xs text-slate-500">Powered by PaintPro CRM</p>
+            <p className="text-xs text-slate-500">Powered by PaintersMax</p>
           </div>
         </div>
       </header>
@@ -853,7 +853,7 @@ export default function CustomerPortal() {
           <p>Have questions? Contact your painting contractor directly.</p>
           <p className="flex items-center justify-center gap-1">
             <Phone className="w-3 h-3" />
-            Powered by PaintPro CRM
+            Powered by PaintersMax
           </p>
         </div>
       </main>

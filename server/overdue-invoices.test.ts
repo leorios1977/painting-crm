@@ -75,7 +75,7 @@ const makeLead = (overrides = {}) => ({
  *   3. (per invoice) db.update().set().where()        → void
  *   4. (per invoice) db.select().from(leads).where().limit(1) → leadRows
  */
-function buildMockDb(overdueInvoices: object[], leads: object[], businessName = "PaintPro") {
+function buildMockDb(overdueInvoices: object[], leads: object[], businessName = "PaintersMax") {
   let selectCallIndex = 0;
   const selectResults = [
     overdueInvoices,                     // call 0: overdue invoices

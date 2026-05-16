@@ -90,7 +90,7 @@ describe("settings.getBranding (public)", () => {
       res: { clearCookie: vi.fn() } as unknown as TrpcContext["res"],
     });
     const branding = await caller.settings.getBranding();
-    expect(branding.businessName).toBe("PaintPro CRM");
+    expect(branding.businessName).toBe("PaintersMax");
     expect(branding.primaryColor).toBe("#1e3a5f");
     expect(branding.secondaryColor).toBe("#3b82f6");
     expect(branding.logoUrl).toBeNull();

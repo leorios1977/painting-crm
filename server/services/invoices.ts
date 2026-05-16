@@ -281,7 +281,7 @@ export async function sendInvoice(
     try {
       // Fetch business name from app settings
       const { appSettings } = await import("../../drizzle/schema");
-      let businessName = "PaintPro CRM";
+      let businessName = "PaintersMax";
       try {
         const settingsRows = await db
           .select({ businessName: appSettings.businessName })
@@ -331,7 +331,7 @@ export async function sendInvoice(
   if (lead.phone) {
     try {
       const { appSettings: appSettingsTable } = await import("../../drizzle/schema");
-      let bizName = "PaintPro CRM";
+      let bizName = "PaintersMax";
       try {
         const settingsRows = await db
           .select({ businessName: appSettingsTable.businessName })

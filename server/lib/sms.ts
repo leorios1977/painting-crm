@@ -1,7 +1,7 @@
 /**
  * server/lib/sms.ts
  *
- * Reusable Twilio SMS utility for PaintPro CRM.
+ * Reusable Twilio SMS utility for PaintersMax.
  *
  * Provides:
  *   sendSMS()                        — Low-level send wrapper using the official Twilio SDK
@@ -125,7 +125,7 @@ export interface AppointmentReminderSMSInput {
 export async function sendAppointmentReminderSMS(
   input: AppointmentReminderSMSInput
 ): Promise<SMSResult> {
-  const businessName = input.businessName || "PaintPro CRM";
+  const businessName = input.businessName || "PaintersMax";
   const body = `${businessName}: Reminder — your appointment is tomorrow at ${input.appointmentTime}. Reply STOP to opt out.`;
   return sendSMS({ to: input.customerPhone, body });
 }
@@ -146,7 +146,7 @@ export interface InvoiceSentSMSInput {
  * Message: "{business name}: Your invoice #{number} for ${amount} is ready. Pay here: {payment_link}"
  */
 export async function sendInvoiceSentSMS(input: InvoiceSentSMSInput): Promise<SMSResult> {
-  const businessName = input.businessName || "PaintPro CRM";
+  const businessName = input.businessName || "PaintersMax";
   const paymentPart = input.paymentLink ? ` Pay here: ${input.paymentLink}` : "";
   const body = `${businessName}: Your invoice #${input.invoiceNumber} for $${input.invoiceAmount} is ready.${paymentPart}`;
   return sendSMS({ to: input.customerPhone, body });
@@ -166,7 +166,7 @@ export interface JobCompletionSMSInput {
  * Message: "{business name}: Your job is complete! Thank you. We'd love a review: {google_review_link}"
  */
 export async function sendJobCompletionSMS(input: JobCompletionSMSInput): Promise<SMSResult> {
-  const businessName = input.businessName || "PaintPro CRM";
+  const businessName = input.businessName || "PaintersMax";
   const reviewPart = input.googleReviewLink
     ? ` We'd love a review: ${input.googleReviewLink}`
     : "";

@@ -74,7 +74,7 @@ function buildSmsConfirmation(params: {
   timeSlot?: string | null;
   companyName?: string;
 }): string {
-  const company = params.companyName || "PaintPro";
+  const company = params.companyName || "PaintersMax";
   const job = params.jobType || "your painting job";
   const when = formatAppointmentDate(params.scheduledDate, params.timeSlot);
   return `Hi ${params.firstName}! This is ${company} confirming your appointment for ${job} on ${when}. Reply STOP to opt out.`;
@@ -90,7 +90,7 @@ function buildEmailConfirmation(params: {
   crewAssigned?: string | null;
   companyName?: string;
 }): { subject: string; body: string } {
-  const company = params.companyName || "PaintPro";
+  const company = params.companyName || "PaintersMax";
   const job = params.jobType || "Painting Job";
   const when = formatAppointmentDate(params.scheduledDate, params.timeSlot);
   const crew = params.crewAssigned ? `\nCrew: ${params.crewAssigned}` : "";
@@ -437,7 +437,7 @@ export async function sendAppointmentReminder(
 
   // Fetch business name from app settings
   const { appSettings } = await import("../../drizzle/schema");
-  let businessName = "PaintPro CRM";
+  let businessName = "PaintersMax";
   try {
     const settingsRows = await db
       .select({ businessName: appSettings.businessName })

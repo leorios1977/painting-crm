@@ -9,7 +9,7 @@ export default function Docs() {
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Documentation</h1>
         <p className="text-muted-foreground text-sm mt-0.5">
-          User guides and setup instructions for PaintPro CRM
+          User guides and setup instructions for PaintersMax
         </p>
       </div>
 
@@ -37,7 +37,7 @@ export default function Docs() {
             <CardContent className="prose prose-sm max-w-none space-y-6">
               <section>
                 <h2 className="text-lg font-bold">Getting Started</h2>
-                <p className="text-muted-foreground">Welcome to PaintPro CRM — your painting business management hub. This guide walks you through the key features.</p>
+                <p className="text-muted-foreground">Welcome to PaintersMax — your painting business management hub. This guide walks you through the key features.</p>
               </section>
 
               <section>
@@ -121,7 +121,7 @@ export default function Docs() {
             <CardContent className="prose prose-sm max-w-none space-y-6">
               <section>
                 <h2 className="text-lg font-bold">Initial Setup</h2>
-                <p className="text-muted-foreground text-sm">This guide covers the one-time setup steps for administrators deploying PaintPro CRM.</p>
+                <p className="text-muted-foreground text-sm">This guide covers the one-time setup steps for administrators deploying PaintersMax.</p>
               </section>
 
               <section>

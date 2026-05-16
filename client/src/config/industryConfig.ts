@@ -86,7 +86,7 @@ export interface IndustryConfig {
 
 export const paintingConfig: IndustryConfig = {
   industryName: "Painting",
-  appTitle: "PaintPro CRM",
+  appTitle: "PaintersMax",
   primaryColor: "blue",
 
   jobTerminology: "Job",

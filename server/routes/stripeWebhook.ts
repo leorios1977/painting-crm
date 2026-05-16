@@ -101,7 +101,7 @@ async function sendPaymentNotifications(
 
   const customerName = `${lead.firstName} ${lead.lastName}`.trim();
 
-  let businessName = "PaintPro CRM";
+  let businessName = "PaintersMax";
   try {
     const settingsRows = await db
       .select({ businessName: appSettings.businessName })

@@ -1,7 +1,7 @@
 /**
  * server/services/email.ts
  *
- * Resend transactional email service for PaintPro CRM.
+ * Resend transactional email service for PaintersMax.
  *
  * Provides:
  *   sendNewLeadNotification()   — Notifies business owner when a new lead is created
@@ -16,7 +16,7 @@
 
 import { ENV } from "../_core/env";
 
-const FROM_ADDRESS = "PaintPro CRM <noreply@agentflowllc.com>";
+const FROM_ADDRESS = "PaintersMax <noreply@agentflowllc.com>";
 
 // ─── Lazy Resend client ───────────────────────────────────────────────────────
 
@@ -85,7 +85,7 @@ export async function sendNewLeadNotification(
   const resend = getResendClient();
   if (!resend) return { sent: false, error: "RESEND_API_KEY not configured" };
 
-  const businessName = input.businessName || "PaintPro CRM";
+  const businessName = input.businessName || "PaintersMax";
   const leadName = `${input.leadFirstName} ${input.leadLastName}`.trim();
   const estimatedValue = input.estimatedValue
     ? `$${parseFloat(input.estimatedValue).toFixed(2)}`
@@ -136,7 +136,7 @@ export async function sendNewLeadNotification(
       <p style="color: #6b7280; font-size: 13px; margin: 0;">Log in to your CRM to follow up with this lead.</p>
     </div>
     <div style="background: #f9fafb; padding: 16px 32px; border-top: 1px solid #e5e7eb;">
-      <p style="color: #9ca3af; font-size: 12px; margin: 0;">Sent by ${businessName} via PaintPro CRM · <a href="mailto:noreply@agentflowllc.com" style="color: #9ca3af;">noreply@agentflowllc.com</a></p>
+      <p style="color: #9ca3af; font-size: 12px; margin: 0;">Sent by ${businessName} via PaintersMax · <a href="mailto:noreply@agentflowllc.com" style="color: #9ca3af;">noreply@agentflowllc.com</a></p>
     </div>
   </div>
 </body>
@@ -173,7 +173,7 @@ export async function sendInvoiceEmail(
   const resend = getResendClient();
   if (!resend) return { sent: false, error: "RESEND_API_KEY not configured" };
 
-  const businessName = input.businessName || "PaintPro CRM";
+  const businessName = input.businessName || "PaintersMax";
 
   const lineItemsHtml = input.lineItems && input.lineItems.length > 0
     ? `
@@ -268,7 +268,7 @@ export async function sendQuoteEmail(
   const resend = getResendClient();
   if (!resend) return { sent: false, error: "RESEND_API_KEY not configured" };
 
-  const businessName = input.businessName || "PaintPro CRM";
+  const businessName = input.businessName || "PaintersMax";
 
   const portalButtonHtml = input.portalUrl
     ? `<div style="text-align: center; margin: 28px 0;">

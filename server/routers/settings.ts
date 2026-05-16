@@ -9,7 +9,7 @@ import { ENV } from "../_core/env";
 
 // ─── Default branding fallback ────────────────────────────────────────────────
 const DEFAULT_BRANDING = {
-  businessName: "PaintPro CRM",
+  businessName: "PaintersMax",
   logoUrl: null as string | null,
   primaryColor: "#1e3a5f",
   secondaryColor: "#3b82f6",

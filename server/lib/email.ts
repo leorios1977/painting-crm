@@ -1,7 +1,7 @@
 /**
  * server/lib/email.ts
  *
- * Reusable Resend email utility for PaintPro CRM.
+ * Reusable Resend email utility for PaintersMax.
  *
  * Provides:
  *   sendEmail()                  — Low-level send wrapper with graceful error handling
@@ -58,7 +58,7 @@ export async function sendEmail(options: SendEmailOptions): Promise<EmailResult>
   const resend = getResendClient();
   if (!resend) return { sent: false, error: "RESEND_API_KEY not configured" };
 
-  const fromAddress = options.from ?? `PaintPro CRM <${getFromAddress()}>`;
+  const fromAddress = options.from ?? `PaintersMax <${getFromAddress()}>`;
   const toAddresses = Array.isArray(options.to) ? options.to : [options.to];
 
   try {
@@ -100,7 +100,7 @@ export interface NewLeadEmailInput {
 }
 
 export async function sendNewLeadEmail(input: NewLeadEmailInput): Promise<EmailResult> {
-  const businessName = input.businessName || "PaintPro CRM";
+  const businessName = input.businessName || "PaintersMax";
   const leadName = `${input.leadFirstName} ${input.leadLastName}`.trim();
   const dateReceived = input.dateReceived ?? new Date().toLocaleDateString();
 
@@ -154,7 +154,7 @@ export interface InvoiceSentEmailInput {
 }
 
 export async function sendInvoiceSentEmail(input: InvoiceSentEmailInput): Promise<EmailResult> {
-  const businessName = input.businessName || "PaintPro CRM";
+  const businessName = input.businessName || "PaintersMax";
 
   const lineItemsHtml = input.lineItems?.length
     ? `<table style="width: 100%; border-collapse: collapse; margin: 16px 0;">
@@ -232,7 +232,7 @@ export interface QuoteEstimateEmailInput {
 }
 
 export async function sendQuoteEstimateEmail(input: QuoteEstimateEmailInput): Promise<EmailResult> {
-  const businessName = input.businessName || "PaintPro CRM";
+  const businessName = input.businessName || "PaintersMax";
 
   const ctaButtonHtml = input.portalUrl
     ? `<div style="text-align: center; margin: 28px 0;">
@@ -293,7 +293,7 @@ export interface JobCompletionEmailInput {
 }
 
 export async function sendJobCompletionEmail(input: JobCompletionEmailInput): Promise<EmailResult> {
-  const businessName = input.businessName || "PaintPro CRM";
+  const businessName = input.businessName || "PaintersMax";
   const completionDate = input.completionDate ?? new Date().toLocaleDateString();
 
   const reviewButtonHtml = input.googleReviewLink

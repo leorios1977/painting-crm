@@ -111,7 +111,7 @@ export function registerPublicLeadsRoute(app: Express): void {
       console.log(`[PublicLeads] New lead created: id=${newLeadId} name="${name}" source="${source}"`);
 
       // ── Fetch business settings for notifications ────────────────────────────
-      let businessName = "PaintPro CRM";
+      let businessName = "PaintersMax";
       try {
         const settingsRows = await db
           .select({ businessName: appSettings.businessName })

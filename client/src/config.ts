@@ -69,7 +69,7 @@ const config = {
    * App title shown in the browser tab and UI header.
    * Injected at build time via VITE_APP_TITLE.
    */
-  appTitle: (import.meta.env.VITE_APP_TITLE as string) || "PaintPro CRM",
+  appTitle: (import.meta.env.VITE_APP_TITLE as string) || "PaintersMax",
 
   /**
    * App logo URL shown in the sidebar.

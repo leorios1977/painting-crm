@@ -215,16 +215,16 @@ export function registerEmailPasswordAuthRoutes(app: Express): void {
       try {
         await sendEmail({
           to: normalizedEmail,
-          subject: "Welcome to PaintPro — Let's Get Started!",
+          subject: "Welcome to PaintersMax — Let's Get Started!",
           html: `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px;">
               <div style="text-align: center; margin-bottom: 32px;">
-                <h1 style="color: #1d4ed8; font-size: 28px; margin: 0;">Welcome to PaintPro! 🎉</h1>
+                <h1 style="color: #1d4ed8; font-size: 28px; margin: 0;">Welcome to PaintersMax! 🎉</h1>
               </div>
               <p style="font-size: 16px; color: #374151;">Hi <strong>${ownerName.trim()}</strong>,</p>
               <p style="font-size: 16px; color: #374151;">
                 Your account for <strong>${businessName.trim()}</strong> is ready. You now have full access to
-                your PaintPro CRM dashboard — leads, invoicing, scheduling, SMS automation, and more.
+                your PaintersMax dashboard — leads, invoicing, scheduling, SMS automation, and more.
               </p>
               <div style="background: #f3f4f6; border-radius: 8px; padding: 16px; margin: 24px 0;">
                 <p style="margin: 0; font-size: 14px; color: #6b7280;">Account details</p>

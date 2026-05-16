@@ -255,11 +255,11 @@ export default function Settings() {
           <div className="space-y-1.5">
             <Label>Business Name</Label>
             <Input
-              placeholder={settings?.businessName || "PaintPro CRM"}
+              placeholder={settings?.businessName || "PaintersMax"}
               value={businessName}
               onChange={(e) => setBusinessName(e.target.value)}
             />
-            <p className="text-xs text-muted-foreground">Replaces "PaintPro CRM" in the sidebar and browser tab.</p>
+            <p className="text-xs text-muted-foreground">Replaces "PaintersMax" in the sidebar and browser tab.</p>
           </div>
 
           {/* Logo Upload */}

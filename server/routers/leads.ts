@@ -165,7 +165,7 @@ export const leadsRouter = router({
 
       // ── Fetch settings once for both email and SMS notifications ──
       const db2 = await getDb();
-      let businessName = "PaintPro CRM";
+      let businessName = "PaintersMax";
       let ownerPhone: string | undefined;
       if (db2) {
         try {
@@ -309,7 +309,7 @@ export const leadsRouter = router({
       if (input.stage === "quoted" && lead?.email) {
         try {
           const db = await getDb();
-          let businessName = "PaintPro CRM";
+          let businessName = "PaintersMax";
           if (db) {
             const settingsRows = await db
               .select({ businessName: appSettings.businessName })
@@ -352,7 +352,7 @@ export const leadsRouter = router({
               // Schedule review request 2 hours after job completion
               scheduleReviewRequest(input.id, 2 * 60 * 60 * 1000, ctx.user.id);
             }
-            const bName = settingsRows[0]?.businessName || "PaintPro CRM";
+            const bName = settingsRows[0]?.businessName || "PaintersMax";
             const reviewLink = settingsRows[0]?.googleReviewLink || undefined;
 
             // Send job completion email to customer (non-fatal)

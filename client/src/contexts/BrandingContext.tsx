@@ -17,7 +17,7 @@ export interface BrandingData {
 }
 
 const DEFAULT_BRANDING: BrandingData = {
-  businessName: "PaintPro CRM",
+  businessName: "PaintersMax",
   logoUrl: null,
   primaryColor: "#1e3a5f",
   secondaryColor: "#3b82f6",

@@ -1,5 +1,5 @@
 /**
- * PaintPro CRM — Embeddable Quote Form Widget
+ * PaintersMax — Embeddable Quote Form Widget
  * ============================================
  * Drop this single script tag anywhere on your website:
  *
@@ -9,7 +9,7 @@
  * It requires zero external dependencies and uses only inline styles.
  *
  * Configuration (optional — set before loading the script):
- *   window.PaintProWidget = {
+ *   window.PaintersMaxWidget = {
  *     apiUrl:      'https://paintersmax.app/api/public/leads',  // default
  *     source:      'dfw-painters.com',   // identifies which site sent the lead
  *     primaryColor: '#1d4ed8',           // button / accent color (CSS color)
@@ -33,7 +33,7 @@
       subtitle: "We respond within 24 hours.",
       containerId: null,
     },
-    global.PaintProWidget || {}
+    global.PaintersMaxWidget || {}
   );
 
   /* ── Helpers ────────────────────────────────────────────────────────────── */
@@ -257,7 +257,7 @@
           }
         })
         .catch(function (err) {
-          console.error("[PaintPro Widget] Submission error:", err);
+          console.error("[PaintersMax Widget] Submission error:", err);
           showError(
             "Unable to submit your request right now. Please try again or call us directly."
           );

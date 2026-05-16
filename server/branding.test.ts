@@ -81,7 +81,7 @@ describe("settings.getBranding (public)", () => {
     (getDb as ReturnType<typeof vi.fn>).mockResolvedValue(makeDbMock(null));
     const caller = appRouter.createCaller(makePublicCtx());
     const result = await caller.settings.getBranding();
-    expect(result.businessName).toBe("PaintPro CRM");
+    expect(result.businessName).toBe("PaintersMax");
     expect(result.primaryColor).toBe("#1e3a5f");
     expect(result.secondaryColor).toBe("#3b82f6");
     expect(result.logoUrl).toBeNull();
@@ -113,7 +113,7 @@ describe("settings.getBranding (public)", () => {
     }));
     const caller = appRouter.createCaller(makePublicCtx());
     const result = await caller.settings.getBranding();
-    expect(result.businessName).toBe("PaintPro CRM");
+    expect(result.businessName).toBe("PaintersMax");
     expect(result.primaryColor).toBe("#1e3a5f");
   });
 });
