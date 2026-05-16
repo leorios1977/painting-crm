@@ -76,7 +76,7 @@ export default function Login() {
                 <Input
                   id="email"
                   type="email"
-                  placeholder="admin@paintpro.com"
+                  placeholder="admin@paintersmax.app"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required

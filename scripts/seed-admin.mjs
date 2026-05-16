@@ -5,8 +5,8 @@
  * Run with: node scripts/seed-admin.mjs
  *
  * Uses env vars:
- *   OWNER_EMAIL    (default: admin@paintpro.com)
- *   OWNER_PASSWORD (default: paintpro2026)
+ *   OWNER_EMAIL    (default: admin@paintersmax.app)
+ *   OWNER_PASSWORD (default: paintersmax2026)
  *   DATABASE_URL   (required)
  */
 
@@ -14,8 +14,8 @@ import "dotenv/config";
 import postgres from "postgres";
 import bcrypt from "bcryptjs";
 
-const email = process.env.OWNER_EMAIL ?? "admin@paintpro.com";
-const password = process.env.OWNER_PASSWORD ?? "paintpro2026";
+const email = process.env.OWNER_EMAIL ?? "admin@paintersmax.app";
+const password = process.env.OWNER_PASSWORD ?? "paintersmax2026";
 const databaseUrl = process.env.DATABASE_URL;
 
 if (!databaseUrl) {

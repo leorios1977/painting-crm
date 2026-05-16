@@ -84,7 +84,7 @@ function createAdminContext(): TrpcContext {
     user: {
       id: 1,
       openId: "owner-open-id",
-      email: "admin@paintpro.com",
+      email: "admin@paintersmax.app",
       name: "Admin User",
       loginMethod: "manus",
       role: "admin",

@@ -5,7 +5,7 @@
  * These functions are used by main.tsx and useAuth.ts without creating a cycle.
  */
 
-const TOKEN_KEY = "paintpro_auth_token";
+const TOKEN_KEY = "paintersmax_auth_token";
 
 export function getAuthToken(): string | null {
   try {

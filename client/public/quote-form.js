@@ -15,7 +15,7 @@
  *     primaryColor: '#1d4ed8',           // button / accent color (CSS color)
  *     title:       'Get a Free Quote',   // form heading
  *     subtitle:    'We respond within 24 hours.',
- *     containerId: 'paintpro-quote',     // ID of a host element (optional)
+ *     containerId: 'paintersmax-quote',     // ID of a host element (optional)
  *   };
  */
 (function (global) {
@@ -184,7 +184,7 @@
 
     if (!host) {
       // Auto-inject a container right before the closing </body>
-      host = el("div", { id: "paintpro-quote-widget" });
+      host = el("div", { id: "paintersmax-quote-widget" });
       host.style.cssText = "padding:24px 16px;";
       document.body.appendChild(host);
     }
