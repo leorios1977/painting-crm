@@ -28,6 +28,7 @@ import AIAssistant from "./pages/AIAssistant";
 import Login from "./pages/Login";
 import Landing from "./pages/Landing";
 import Signup from "./pages/Signup";
+import Contact from "./pages/Contact";
 
 function Router() {
   return (
@@ -36,6 +37,7 @@ function Router() {
       <Route path="/" component={Landing} />
       <Route path="/signup" component={Signup} />
       <Route path="/login" component={Login} />
+      <Route path="/contact" component={Contact} />
       <Route path="/portal/:token" component={CustomerPortal} />
       <Route path="/blog" component={BlogList} />
       <Route path="/blog/:slug" component={BlogPost} />

@@ -91,11 +91,14 @@ export default function Landing() {
                 Log in
               </Button>
             </Link>
-            <a href="mailto:agentflowfounder@gmail.com">
-              <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white">
-                Schedule a Free Demo →
-              </Button>
-            </a>
+                        <Link href="/contact">
+              <a>
+                <Button
+                  size="sm" className="bg-blue-600 hover:bg-blue-700 text-white">
+                  Schedule a Free Demo →
+                </Button>
+              </a>
+            </Link>
           </div>
         </div>
       </header>
@@ -123,14 +126,16 @@ export default function Landing() {
             While your competitors are still juggling spreadsheets and missed calls, you could be running a fully automated painting business — one that captures leads, sends invoices, follows up automatically, and markets itself while you focus on the work. PaintersMax was built exclusively for painting contractors. We just launched. Your competitors haven't found us yet.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <a href="mailto:agentflowfounder@gmail.com">
-              <Button
-                size="lg"
-                className="bg-yellow-400 hover:bg-yellow-300 text-gray-900 font-bold text-base px-8 py-6 rounded-xl shadow-lg hover:shadow-xl transition-all"
-              >
-                Schedule a Free Demo →
-              </Button>
-            </a>
+            <Link href="/contact">
+              <a>
+                <Button
+                  size="lg"
+                  className="bg-yellow-400 hover:bg-yellow-300 text-gray-900 font-bold text-base px-8 py-6 rounded-xl shadow-lg hover:shadow-xl transition-all"
+                >
+                  Schedule a Free Demo →
+                </Button>
+              </a>
+            </Link>
             <a href="#features">
               <Button
                 size="lg"
@@ -241,10 +246,11 @@ export default function Landing() {
                   </li>
                 ))}
               </ul>
-              <a href="mailto:agentflowfounder@gmail.com"
-                className="w-full py-3 px-4 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl text-center hover:border-blue-500 hover:text-blue-600 transition-colors block">
-                Schedule a Free Demo →
-              </a>
+              <Link href="/contact">
+                <a className="w-full py-3 px-4 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl text-center hover:border-blue-500 hover:text-blue-600 transition-colors block">
+                  Schedule a Free Demo →
+                </a>
+              </Link>
               <p className="text-xs text-center text-gray-400 mt-2">No credit card required</p>
               <p className="text-xs text-center text-gray-400 mt-1">Upgrade anytime</p>
             </div>
@@ -285,10 +291,11 @@ export default function Landing() {
                   </li>
                 ))}
               </ul>
-              <a href="mailto:agentflowfounder@gmail.com"
-                className="w-full py-3 px-4 bg-blue-600 text-white font-semibold rounded-xl text-center hover:bg-blue-700 transition-colors block">
-                Schedule a Free Demo →
-              </a>
+              <Link href="/contact">
+                <a className="w-full py-3 px-4 bg-blue-600 text-white font-semibold rounded-xl text-center hover:bg-blue-700 transition-colors block">
+                  Schedule a Free Demo →
+                </a>
+              </Link>
               <p className="text-xs text-center text-gray-400 mt-2">No credit card required</p>
               <p className="text-xs text-center text-gray-400 mt-1">Upgrade anytime</p>
             </div>
@@ -334,10 +341,11 @@ export default function Landing() {
                   </li>
                 ))}
               </ul>
-              <a href="mailto:agentflowfounder@gmail.com"
-                className="w-full py-3 px-4 bg-gray-900 text-white font-semibold rounded-xl text-center hover:bg-gray-800 transition-colors block">
-                Schedule a Free Demo →
-              </a>
+              <Link href="/contact">
+                <a className="w-full py-3 px-4 bg-gray-900 text-white font-semibold rounded-xl text-center hover:bg-gray-800 transition-colors block">
+                  Schedule a Free Demo →
+                </a>
+              </Link>
               <p className="text-xs text-center text-gray-800 mt-2">No credit card required</p>
               <p className="text-xs text-center text-gray-800 mt-1">Upgrade anytime</p>
             </div>
@@ -376,10 +384,11 @@ export default function Landing() {
                   </li>
                 ))}
               </ul>
-              <a href="mailto:agentflowfounder@gmail.com"
-                className="w-full py-3 px-4 border-2 border-gray-600 text-white font-semibold rounded-xl text-center hover:border-yellow-400 hover:text-yellow-400 transition-colors block">
-                Contact Us →
-              </a>
+              <Link href="/contact">
+                <a className="w-full py-3 px-4 border-2 border-gray-600 text-white font-semibold rounded-xl text-center hover:border-yellow-400 hover:text-yellow-400 transition-colors block">
+                  Contact Us →
+                </a>
+              </Link>
               <p className="text-xs text-center text-gray-500 mt-2">Let's build something custom</p>
             </div>
 
@@ -431,10 +440,11 @@ export default function Landing() {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
-            <a href="mailto:agentflowfounder@gmail.com"
-              className="bg-yellow-400 text-gray-900 font-black text-lg px-10 py-4 rounded-xl hover:bg-yellow-300 transition-colors shadow-xl inline-block">
-              Schedule a Free Demo →
-            </a>
+            <Link href="/contact">
+              <a className="bg-yellow-400 text-gray-900 font-black text-lg px-10 py-4 rounded-xl hover:bg-yellow-300 transition-colors shadow-xl inline-block">
+                Schedule a Free Demo →
+              </a>
+            </Link>
             <a href="#pricing"
               className="border-2 border-white text-white font-semibold text-lg px-10 py-4 rounded-xl hover:bg-white hover:text-blue-700 transition-colors inline-block">
               See Pricing
