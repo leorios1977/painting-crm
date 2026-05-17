@@ -33,6 +33,7 @@ export default function Contact() {
   const [form, setForm] = useState<FormData>(INITIAL_FORM);
   const [status, setStatus] = useState<SubmitStatus>('idle');
   const [errorMsg, setErrorMsg] = useState('');
+  const [submittedEmail, setSubmittedEmail] = useState('');
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -75,6 +76,7 @@ export default function Contact() {
         throw new Error(data.error || 'Submission failed');
       }
 
+      setSubmittedEmail(form.email);
       setStatus('success');
       setForm(INITIAL_FORM);
     } catch (err) {
@@ -99,16 +101,24 @@ export default function Contact() {
             We received your demo request and will reach out 
             within 24 hours to schedule your free walkthrough.
           </p>
+          {submittedEmail && (
+            <p className="text-gray-500 text-sm mb-6">
+              Confirmation sent to:{' '}
+              <span className="font-semibold text-gray-700">
+                {submittedEmail}
+              </span>
+            </p>
+          )}
           <p className="text-gray-500 text-sm mb-8">
-            Check your email for a confirmation from 
-            agentflowfounder@gmail.com
+            We'll send a confirmation to the email 
+            you provided. Check your inbox shortly.
           </p>
           <div className="bg-blue-50 rounded-xl p-4 mb-8 text-left">
             <p className="text-blue-800 text-sm font-semibold mb-1">
               What happens next:
             </p>
             <ul className="text-blue-700 text-sm space-y-1">
-              <li>✓ Personal call from Rogelio (Agent Flow LLC)</li>
+              <li>✓ Personal onboarding call from the PaintersMax team</li>
               <li>✓ Live demo of your PaintersMax dashboard</li>
               <li>✓ Custom plan recommendation for your business</li>
               <li>✓ Founding member rate locked in at signup</li>

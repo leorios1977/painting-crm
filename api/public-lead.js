@@ -74,7 +74,7 @@ export default async function handler(req, res) {
             'Authorization': `Bearer ${resendKey}`,
           },
           body: JSON.stringify({
-            from: 'PaintersMax <noreply@paintersmax.app>',
+            from: 'PaintersMax <noreply@mail.paintersmax.app>',
             to: ['agentflowfounder@gmail.com'],
             subject: `🎨 New Lead — ${projectType || 'Painting Request'} (${source || 'website'})`,
             html: `
