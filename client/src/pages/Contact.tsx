@@ -101,14 +101,7 @@ export default function Contact() {
             We received your demo request and will reach out 
             within 24 hours to schedule your free walkthrough.
           </p>
-          {submittedEmail && (
-            <p className="text-gray-500 text-sm mb-6">
-              Confirmation sent to:{' '}
-              <span className="font-semibold text-gray-700">
-                {submittedEmail}
-              </span>
-            </p>
-          )}
+
           <p className="text-gray-500 text-sm mb-8">
             We'll send a confirmation to the email 
             you provided. Check your inbox shortly.
