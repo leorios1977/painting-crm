@@ -15,7 +15,7 @@ export function useLiveStats(): LiveStats {
 
   const fetchStats = async () => {
     try {
-      const response = await fetch('/api/public/stats');
+      const response = await fetch('/api/public-stats');
       if (response.ok) {
         const data = await response.json();
         setStats({
