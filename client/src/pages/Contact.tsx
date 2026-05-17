@@ -101,7 +101,7 @@ export default function Contact() {
           </p>
           <p className="text-gray-500 text-sm mb-8">
             Check your email for a confirmation from 
-            rogelio@agentflowllc.com
+            agentflowfounder@gmail.com
           </p>
           <div className="bg-blue-50 rounded-xl p-4 mb-8 text-left">
             <p className="text-blue-800 text-sm font-semibold mb-1">
@@ -391,9 +391,9 @@ export default function Contact() {
         <div className="mt-8 text-center">
           <p className="text-gray-500 text-sm">
             Questions? Email us directly at{' '}
-            <a href="mailto:rogelio@agentflowllc.com"
+            <a href="mailto:agentflowfounder@gmail.com"
               className="text-blue-600 hover:underline">
-              rogelio@agentflowllc.com
+              agentflowfounder@gmail.com
             </a>
           </p>
         </div>

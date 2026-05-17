@@ -16,7 +16,7 @@
 
 import { ENV } from "../_core/env";
 
-const FROM_ADDRESS = "PaintersMax <noreply@agentflowllc.com>";
+const FROM_ADDRESS = "PaintersMax <noreply@paintersmax.app>";
 
 // ─── Lazy Resend client ───────────────────────────────────────────────────────
 
@@ -136,7 +136,7 @@ export async function sendNewLeadNotification(
       <p style="color: #6b7280; font-size: 13px; margin: 0;">Log in to your CRM to follow up with this lead.</p>
     </div>
     <div style="background: #f9fafb; padding: 16px 32px; border-top: 1px solid #e5e7eb;">
-      <p style="color: #9ca3af; font-size: 12px; margin: 0;">Sent by ${businessName} via PaintersMax · <a href="mailto:noreply@agentflowllc.com" style="color: #9ca3af;">noreply@agentflowllc.com</a></p>
+      <p style="color: #9ca3af; font-size: 12px; margin: 0;">Sent by ${businessName} via PaintersMax · <a href="mailto:noreply@paintersmax.app" style="color: #9ca3af;">noreply@paintersmax.app</a></p>
     </div>
   </div>
 </body>

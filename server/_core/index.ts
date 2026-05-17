@@ -12,7 +12,7 @@ import { registerStripeWebhook } from "../routers";
 import { registerEmailPasswordAuthRoutes } from "../routes/emailPasswordAuth";
 import { corsMiddleware } from "../routes/cors";
 import { registerPublicLeadsRoute } from "../routes/publicLeads";
-import { registerDemoRequestRoute } from "../routes/demoRequest";
+import demoRequestRouter from "../routes/demoRequest";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -49,7 +49,7 @@ async function startServer() {
   // Public (unauthenticated) lead intake endpoint: POST /api/public/leads
   registerPublicLeadsRoute(app);
   // Demo request endpoint: POST /api/public/demo-request
-  registerDemoRequestRoute(app);
+  app.use("/api/public", demoRequestRouter);
   // Email/password auth endpoints: POST /api/auth/login, POST /api/auth/logout
   registerEmailPasswordAuthRoutes(app);
   // OAuth callback under /api/oauth/callback (kept for backward compatibility)
